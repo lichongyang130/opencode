@@ -8,10 +8,12 @@ import {
   Copy,
   FileText,
   ImageIcon,
+  LayoutGrid,
   Loader2,
   Mail,
   Pencil,
   Presentation,
+  RotateCcw,
   Search,
   Square,
   Video,
@@ -72,7 +74,18 @@ const HOME_CARDS: {
  *  消息气泡
  * ═══════════════════════════════════════════ */
 
-function MessageBubble({ m, isLastUser, onEdit }: { m: UIMessage; isLastUser?: boolean; onEdit?: () => void }) {
+function MessageBubble({
+  m,
+  isLastUser,
+  onEdit,
+  onRetry,
+}: {
+  m: UIMessage;
+  isLastUser?: boolean;
+  onEdit?: () => void;
+  /** G74: 出错回复的「重新生成」：撤回该轮并原样重发 */
+  onRetry?: () => void;
+}) {
   const [copied, setCopied] = useState(false);
   const copy = () => {
     navigator.clipboard?.writeText(m.content).then(
@@ -100,7 +113,11 @@ function MessageBubble({ m, isLastUser, onEdit }: { m: UIMessage; isLastUser?: b
         )}
       >
         {m.streaming && !m.content ? (
-          "正在思考…"
+          // C39: 思考中给一点呼吸感，不再是静止文字（保留原文案供读屏/测试）
+          <span className="inline-flex animate-pulse items-center gap-1.5">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            正在思考…
+          </span>
         ) : isUser ? (
           <div className="whitespace-pre-wrap">{m.content}</div>
         ) : (
@@ -110,9 +127,10 @@ function MessageBubble({ m, isLastUser, onEdit }: { m: UIMessage; isLastUser?: b
           </div>
         )}
         {!m.streaming && m.content && (
+          // C37: 复制/编辑常显（半透明），不再 hover 才出现 —— 触屏与新手也能找到
           <div
             className={cn(
-              "mt-1.5 flex justify-end gap-0.5 opacity-0 transition group-hover/msg:opacity-100",
+              "mt-1.5 flex justify-end gap-0.5 opacity-60 transition hover:opacity-100 group-hover/msg:opacity-100",
               isUser && "justify-start"
             )}
           >
@@ -137,6 +155,16 @@ function MessageBubble({ m, isLastUser, onEdit }: { m: UIMessage; isLastUser?: b
               {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
               {copied ? "已复制" : "复制"}
             </button>
+            {!isUser && onRetry && (
+              <button
+                onClick={onRetry}
+                title="重新生成（撤回本轮错误并重发）"
+                className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-red-500 transition hover:bg-red-50"
+              >
+                <RotateCcw className="h-3 w-3" />
+                重试
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -187,6 +215,7 @@ function SplitComposer({
   chipOn,
   onRecallUp,
   canRecall,
+  conversing,
 }: {
   input: string;
   setInput: (v: string | ((prev: string) => string)) => void;
@@ -228,9 +257,19 @@ function SplitComposer({
   onRecallUp: () => boolean;
   /** UX10: 当前是否处于召回态（可继续前翻） */
   canRecall: boolean;
+  /**
+   * C24: 是否处于「已有消息」的对话态。对话态下左侧 38% 能力网格默认折叠成
+   * 窄图标栏，把输入空间还给打字；空态（没消息）才展示完整能力区。
+   */
+  conversing?: boolean;
 }) {
   const [activeCat, setActiveCat] = useState<string>("brand");
+  // 空态默认展开完整能力区；进入对话态后默认折叠，用户可点窄栏重新展开。
+  // 两条 SplitComposer 分支（空态居中 / 对话态底栏）互斥挂载，因此这里读到的
+  // conversing 就是本实例生命周期内的稳定值，不会因后续状态变化而错位。
+  const [capsOpen, setCapsOpen] = useState(() => !conversing);
   const activeCategory = CAPABILITIES.find((c) => c.id === activeCat) ?? CAPABILITIES[0];
+  const collapsed = !!conversing && !capsOpen;
 
   const handleCapabilityClick = (item: SubCapability) => {
     setInput("");
@@ -241,53 +280,57 @@ function SplitComposer({
   return (
     <div className="rounded-2xl border border-[#e8ddca] bg-white shadow-sm overflow-hidden">
       <div className="flex min-h-[160px]">
-        {/* ──── 左侧能力区 (约 38%) ──── */}
-        <div className="flex w-[38%] shrink-0 flex-col border-r border-[#e8ddca] bg-[#faf6ee]">
-          {/* 分类标签栏 */}
-          <div className="flex items-center gap-0 border-b border-[#e8ddca] px-2 py-1.5">
-            {CAPABILITIES.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCat(cat.id)}
-                className={cn(
-                  "flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] transition",
-                  activeCat === cat.id
-                    ? "bg-brand-600 font-medium text-white"
-                    : "text-stone-500 hover:bg-stone-100"
-                )}
-              >
-                <span className="text-xs">{cat.emoji}</span>
-                <span className="hidden sm:inline">{cat.label}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* 子能力网格 */}
-          <div className="flex-1 overflow-y-auto p-2">
-            <div className="grid grid-cols-2 gap-1.5">
-              {activeCategory.items.map((item) => (
+        {/* ──── 左侧能力区 (约 38%)。C24: 对话态默认折叠，把宽度还给打字区 ──── */}
+        {!collapsed && (
+          <div className="flex w-[38%] shrink-0 flex-col border-r border-[#e8ddca] bg-[#faf6ee]">
+            {/* 分类标签栏 */}
+            <div className="flex items-center gap-0 border-b border-[#e8ddca] px-2 py-1.5">
+              {CAPABILITIES.map((cat) => (
                 <button
-                  key={item.id}
-                  onClick={() => handleCapabilityClick(item)}
+                  key={cat.id}
+                  title={cat.label}
+                  onClick={() => setActiveCat(cat.id)}
                   className={cn(
-                    "group flex items-start gap-1.5 rounded-lg border border-transparent px-2 py-2 text-left transition",
-                    "hover:border-stone-200 hover:bg-white hover:shadow-sm"
+                    "flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] transition",
+                    activeCat === cat.id
+                      ? "bg-brand-600 font-medium text-white"
+                      : "text-stone-500 hover:bg-stone-100"
                   )}
                 >
-                  <span className="mt-0.5 text-sm leading-none">{item.emoji}</span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-[11px] font-medium text-stone-700 group-hover:text-stone-900">
-                      {item.label}
-                    </span>
-                    <span className="block text-[9px] text-stone-400">
-                      {MODE_LABELS[item.mode]}
-                    </span>
-                  </span>
+                  <span className="text-xs">{cat.emoji}</span>
+                  <span className="hidden sm:inline">{cat.label}</span>
                 </button>
               ))}
             </div>
+
+            {/* 子能力网格 */}
+            <div className="flex-1 overflow-y-auto p-2">
+              <div className="grid grid-cols-2 gap-1.5">
+                {activeCategory.items.map((item) => (
+                  <button
+                    key={item.id}
+                    title={`${item.label}（${MODE_LABELS[item.mode]}）`}
+                    onClick={() => handleCapabilityClick(item)}
+                    className={cn(
+                      "group flex items-start gap-1.5 rounded-lg border border-transparent px-2 py-2 text-left transition",
+                      "hover:border-stone-200 hover:bg-white hover:shadow-sm"
+                    )}
+                  >
+                    <span className="mt-0.5 text-sm leading-none">{item.emoji}</span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-[11px] font-medium text-stone-700 group-hover:text-stone-900">
+                        {item.label}
+                      </span>
+                      <span className="block text-[10px] text-stone-400">
+                        {MODE_LABELS[item.mode]}
+                      </span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ──── 右侧输入区 (约 62%) ──── */}
         {/* relative：斜杠命令菜单 absolute 定位的参照物 */}
@@ -303,7 +346,7 @@ function SplitComposer({
                     onClick={() => setImgModel(m.id)}
                     title={m.region === "builtin" ? "免费演示模型" : `${m.providerLabel} · ${m.creditsPerImage} 积分/张`}
                     className={cn(
-                      "rounded-full border px-2 py-0.5 text-[10px] transition",
+                      "rounded-full border px-2.5 py-1 text-[11px] transition",
                       imgModel === m.id
                         ? "border-brand-500 bg-brand-50 font-medium text-brand-700"
                         : "border-stone-200 text-stone-500 hover:border-brand-300"
@@ -327,7 +370,7 @@ function SplitComposer({
                     key={s.id}
                     onClick={() => setImgSize(s.id)}
                     className={cn(
-                      "rounded-full border px-2 py-0.5 text-[10px] transition",
+                      "rounded-full border px-2.5 py-1 text-[11px] transition",
                       imgSize === s.id
                         ? "border-brand-500 bg-brand-50 font-medium text-brand-700"
                         : "border-stone-200 text-stone-500 hover:border-brand-300"
@@ -342,7 +385,7 @@ function SplitComposer({
                     key={c.n}
                     onClick={() => setImgCount(c.n)}
                     className={cn(
-                      "rounded-full border px-2 py-0.5 text-[10px] transition",
+                      "rounded-full border px-2.5 py-1 text-[11px] transition",
                       imgCount === c.n
                         ? "border-brand-500 bg-brand-50 font-medium text-brand-700"
                         : "border-stone-200 text-stone-500 hover:border-brand-300"
@@ -359,7 +402,7 @@ function SplitComposer({
                     key={st.id}
                     onClick={() => setImgStyle((v) => (v === st.id ? "" : st.id))}
                     className={cn(
-                      "rounded-full border px-2 py-0.5 text-[10px] transition",
+                      "rounded-full border px-2.5 py-1 text-[11px] transition",
                       imgStyle === st.id
                         ? "border-brand-500 bg-brand-50 font-medium text-brand-700"
                         : "border-stone-200 text-stone-500 hover:border-brand-300"
@@ -456,7 +499,7 @@ function SplitComposer({
           {/* 文字类模式参数：语气 / 长度 / 受众（点击即追加约束，再点取消） */}
           {mode !== "image" && !slashMatches && (
             <div className="flex flex-wrap items-center gap-1 border-b border-stone-100 px-3 py-1.5">
-              <span className="text-[10px] text-stone-400">语气</span>
+              <span className="text-[11px] text-stone-500" title="把语气要求拼到输入末尾，再点一次取消">语气</span>
               {TONE_CHIPS.map((c) => (
                 <button
                   key={c.id}
@@ -464,7 +507,7 @@ function SplitComposer({
                   title={c.suffix}
                   onClick={() => applyChip(c)}
                   className={cn(
-                    "rounded-full border px-2 py-0.5 text-[10px] transition",
+                    "rounded-full border px-2.5 py-1 text-[11px] transition",
                     chipOn(c)
                       ? "border-brand-500 bg-brand-50 font-medium text-brand-700"
                       : "border-stone-200 text-stone-500 hover:border-brand-300"
@@ -473,7 +516,7 @@ function SplitComposer({
                   {c.label}
                 </button>
               ))}
-              <span className="ml-1 text-[10px] text-stone-400">长度</span>
+              <span className="ml-1 text-[11px] text-stone-500" title="控制篇幅，点击拼到输入末尾，再点一次取消">长度</span>
               {LENGTH_CHIPS.map((c) => (
                 <button
                   key={c.id}
@@ -481,7 +524,7 @@ function SplitComposer({
                   title={c.suffix}
                   onClick={() => applyChip(c)}
                   className={cn(
-                    "rounded-full border px-2 py-0.5 text-[10px] transition",
+                    "rounded-full border px-2.5 py-1 text-[11px] transition",
                     chipOn(c)
                       ? "border-brand-500 bg-brand-50 font-medium text-brand-700"
                       : "border-stone-200 text-stone-500 hover:border-brand-300"
@@ -490,7 +533,7 @@ function SplitComposer({
                   {c.label}
                 </button>
               ))}
-              <span className="ml-1 text-[10px] text-stone-400">受众</span>
+              <span className="ml-1 text-[11px] text-stone-500" title="指定读者对象，点击拼到输入末尾，再点一次取消">受众</span>
               {AUDIENCE_CHIPS.map((c) => (
                 <button
                   key={c.id}
@@ -498,7 +541,7 @@ function SplitComposer({
                   title={c.suffix}
                   onClick={() => applyChip(c)}
                   className={cn(
-                    "rounded-full border px-2 py-0.5 text-[10px] transition",
+                    "rounded-full border px-2.5 py-1 text-[11px] transition",
                     chipOn(c)
                       ? "border-brand-500 bg-brand-50 font-medium text-brand-700"
                       : "border-stone-200 text-stone-500 hover:border-brand-300"
@@ -537,7 +580,7 @@ function SplitComposer({
                 mode === "image"
                   ? "描述你想要的画面…"
                   : mode === "chat"
-                    ? "分配任务，或问我任何事…"
+                    ? "想做什么？写下来告诉我…"
                     : `${MODE_LABELS[mode]}：描述你的需求…`
               }
               className="flex-1 min-h-[80px] w-full resize-none bg-transparent px-4 py-3 text-[14px] leading-relaxed outline-none placeholder:text-stone-400"
@@ -545,8 +588,18 @@ function SplitComposer({
           </div>
 
           {/* 底部工具栏 */}
-          <div className="flex items-center justify-between border-t border-stone-100 px-3 py-2">
+          <div className="flex items-center justify-between gap-2 border-t border-stone-100 px-3 py-2">
             <div className="flex min-w-0 items-center gap-2">
+              {conversing && (
+                <button
+                  onClick={() => setCapsOpen((v) => !v)}
+                  title={capsOpen ? "收起能力区，把输入框拉宽" : "展开能力区，挑选能力模板"}
+                  className="flex h-7 shrink-0 items-center gap-1 rounded-full border border-stone-200 px-2.5 text-[11px] text-stone-500 transition hover:border-brand-300 hover:text-brand-600"
+                >
+                  <LayoutGrid className="h-3 w-3" />
+                  {capsOpen ? "收起能力" : "展开能力"}
+                </button>
+              )}
               <button
                 onClick={() => void enhancePrompt()}
                 disabled={!input.trim() || enhancing}
@@ -554,7 +607,7 @@ function SplitComposer({
                 className="flex h-7 shrink-0 items-center gap-1 rounded-full border border-stone-200 px-2.5 text-[11px] text-stone-500 transition hover:border-brand-300 hover:text-brand-600 disabled:opacity-30"
               >
                 {enhancing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
-                优化
+                {enhancing ? "润色中…" : "润色提示词"}
               </button>
               {/* UX12: 实时 token/字数估算（estimateTokens 与计费同口径） */}
               {input.trim() && (
@@ -575,10 +628,12 @@ function SplitComposer({
                 }}
               />
               {sending ? (
+                // C35: 停止改红色圆钮，与「发送」在语义上一眼区分
                 <button
                   onClick={stopGeneration}
                   title="停止生成"
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-700 text-white transition hover:bg-stone-800"
+                  aria-label="停止生成"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-white transition hover:bg-red-700"
                 >
                   <Square className="h-3 w-3 fill-current" />
                 </button>
@@ -594,6 +649,12 @@ function SplitComposer({
               )}
             </div>
           </div>
+          {/* C31/32/33: 对话态常驻一行快捷键提示（空态的整句提示保留在原处） */}
+          {conversing && (
+            <p className="border-t border-stone-100 px-3 py-1 text-right text-[10px] text-stone-300">
+              Shift+回车换行 · ↑ 召回上一条 · / 快捷命令 · ⌘K 全局搜索
+            </p>
+          )}
         </div>
       </div>
     </div>
@@ -643,6 +704,8 @@ export function ChatPanel() {
     if (saved) {
       setInput(saved);
       inputRef.current?.focus();
+      // D50: 恢复草稿时明说一句，避免用户以为内容是自己刚打上去的
+      toast("已恢复这个会话上次未发送的草稿", "info");
     }
     // 仅在切换会话（activeId 变化）时恢复；输入过程不重放
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -773,6 +836,21 @@ export function ChatPanel() {
     setInput(stack[stack.length - 1 - recallIdx.current]);
     setRecallActive(true);
     return true;
+  };
+
+  /** G74: 出错回复上的「重试」：撤掉本轮（含错误气泡）再原样重发用户原问 */
+  const retryLast = () => {
+    const st = useChatStore.getState();
+    const convo = st.conversations.find((c) => c.id === st.activeId);
+    if (!convo || convo.messages.length === 0) return;
+    const text = [...convo.messages].reverse().find((mm) => mm.role === "user")?.content;
+    if (!text || !text.trim()) return;
+    st.editLastUserMessage();
+    // 等 editLastUserMessage 把尾部截掉后，把同一句话重发给模型
+    setTimeout(() => {
+      const s2 = useChatStore.getState();
+      if (s2.activeId && text.trim()) void s2.send(text);
+    }, 0);
   };
 
   /** 输入变更统一入口：手动编辑即退出 UX10 召回态（召回态下 ↑ 可继续前翻） */
@@ -919,6 +997,7 @@ export function ChatPanel() {
                   chipOn={chipOn}
                   onRecallUp={recallUp}
                   canRecall={recallActive}
+                  conversing={messages.length > 0}
                 />
               </div>
               <p className="mt-2 text-xs text-[#a8977f]">回车发送 · Shift+回车换行 · 点击左侧能力卡片快速开始</p>
@@ -953,12 +1032,14 @@ export function ChatPanel() {
               {messages.map((m, i) => {
                 const nextUser = messages.findIndex((x, j) => j > i && x.role === "user");
                 const isLastUser = m.role === "user" && nextUser === -1;
+                const isLastMsg = i === messages.length - 1;
                 return (
                   <MessageBubble
                     key={m.id}
                     m={m}
                     isLastUser={isLastUser}
                     onEdit={isLastUser ? () => useChatStore.getState().editLastUserMessage() : undefined}
+                    onRetry={m.error && isLastMsg ? retryLast : undefined}
                   />
                 );
               })}
@@ -1020,6 +1101,7 @@ export function ChatPanel() {
               chipOn={chipOn}
               onRecallUp={recallUp}
               canRecall={recallActive}
+              conversing={messages.length > 0}
             />
           </div>
         </div>

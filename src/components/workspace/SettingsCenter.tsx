@@ -15,11 +15,14 @@ import {
   KeyRound,
   ListTree,
   Loader2,
+  Monitor,
+  Moon,
   RefreshCw,
   Search,
   Server,
   ShieldCheck,
   Sparkles,
+  Sun,
   Trash2,
   Upload,
 } from "lucide-react";
@@ -49,6 +52,7 @@ import { cn } from "@/lib/utils";
 import type { ProviderId } from "@/lib/gateway";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { readRaw, removeKey } from "@/lib/safe-storage";
+import { readThemeMode, setThemeMode, type ThemeMode } from "@/lib/theme";
 
 type TestState = Record<string, "idle" | "testing" | "ok" | "fail">;
 export type SettingsTabId = "models" | "network" | "data" | "about";
@@ -144,6 +148,8 @@ export function SettingsCenter({
   const [lang, switchLang] = useLang();
 
   const [tab, setTab] = useState<SettingsTabId>(initialTab);
+  // E59: 外观主题并入设置中心（与工作台顶栏下拉同一套存储键）
+  const [theme, setTheme] = useState<ThemeMode>(readThemeMode());
   const [settings, setSettings] = useState<ProviderSettings>({});
   const [saved, setSaved] = useState(false);
   const [showKey, setShowKey] = useState<Record<string, boolean>>({});
@@ -1089,6 +1095,55 @@ export function SettingsCenter({
 
           {tab === "about" && (
             <div className="space-y-4">
+              {/* E59: 外观主题（浅色 / 深色 / 跟随系统） */}
+              <div className="rounded-2xl border border-stone-200/80 bg-white p-4 shadow-sm">
+                <div className="text-[14px] font-semibold text-stone-800">外观主题</div>
+                <div className="mt-0.5 text-xs text-stone-400">切换后立即生效并记住选择</div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {(
+                    [
+                      { id: "light", label: "浅色", icon: Sun, desc: "明亮暖白" },
+                      { id: "dark", label: "深色", icon: Moon, desc: "夜间护眼" },
+                      { id: "system", label: "跟随系统", icon: Monitor, desc: "随设备自动" },
+                    ] as { id: ThemeMode; label: string; icon: typeof Sun; desc: string }[]
+                  ).map((o) => {
+                    const cur = theme === o.id;
+                    return (
+                      <button
+                        key={o.id}
+                        onClick={() => {
+                          setTheme(o.id);
+                          setThemeMode(o.id);
+                          toast(
+                            o.id === "light"
+                              ? "已切换到浅色模式"
+                              : o.id === "dark"
+                                ? "已切换到深色模式"
+                                : "已切换到跟随系统",
+                            "info"
+                          );
+                        }}
+                        className={cn(
+                          "flex items-center gap-2 rounded-xl border px-3 py-2 transition",
+                          cur
+                            ? "border-orange-300 bg-orange-50"
+                            : "border-stone-200 hover:border-stone-300"
+                        )}
+                      >
+                        <o.icon className={cn("h-4 w-4", cur ? "text-orange-600" : "text-stone-400")} />
+                        <span className="text-left">
+                          <span className={cn("block text-xs font-medium", cur ? "text-orange-700" : "text-stone-700")}>
+                            {o.label}
+                          </span>
+                          <span className="block text-[10px] text-stone-400">{o.desc}</span>
+                        </span>
+                        {cur && <Check className="h-3.5 w-3.5 text-orange-600" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div className="rounded-2xl border border-stone-200/80 bg-white p-4 shadow-sm">
                 <div className="flex items-center gap-2.5">
                   <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 to-red-500 text-white shadow-sm">

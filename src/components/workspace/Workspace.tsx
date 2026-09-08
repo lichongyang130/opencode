@@ -2,27 +2,27 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Home, LayoutDashboard, Loader2, Menu, Monitor, Moon, Pencil, Plus, Sun, UserRound } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Check, Home, LayoutDashboard, Loader2, Menu, Monitor, Moon, Pencil, Plus, Settings, Sun } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { HistoryPanel } from "./HistoryPanel";
 import { ChatPanel } from "./ChatPanel";
 import { ArtifactPanel } from "./ArtifactPanel";
-import { SettingsModal } from "./SettingsModal";
+import { CommandPalette } from "@/components/shell/CommandPalette";
 import { Toaster } from "@/components/Toaster";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { PromptDialog } from "@/components/PromptDialog";
 import { useChatStore } from "@/lib/store/chat";
-import { initTheme, readThemeMode, setThemeMode } from "@/lib/theme";
+import { initTheme, readThemeMode, setThemeMode, type ThemeMode } from "@/lib/theme";
 import { toast } from "@/lib/store/toast";
 import { cn } from "@/lib/utils";
 
 export function Workspace() {
+  const router = useRouter();
   const {
     hydrated,
     hydrate,
-    settingsOpen,
-    setSettingsOpen,
     sending,
     conversations,
     activeId,
@@ -36,19 +36,26 @@ export function Workspace() {
   const [renameOpen, setRenameOpen] = useState(false);
   // UX20: 移动端历史抽屉开关（md 以下顶栏菜单按钮触发；桌面端常驻不受影响）
   const [mobileHistory, setMobileHistory] = useState(false);
-  // THEME1: 三态主题（浅色 → 深色 → 跟随系统循环）；initTheme 订阅系统偏好变化
-  const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
+  // THEME1: 三态主题（浅色 / 深色 / 跟随系统）。从「循环切换」改为三点菜单，
+  // 避免连点两次才能到目标主题的困惑（原按钮只有图标，状态含义不直观）
+  const [theme, setTheme] = useState<ThemeMode>("system");
+  const [themeMenuOpen, setThemeMenuOpen] = useState(false);
 
   useEffect(() => {
     return initTheme(() => setTheme(readThemeMode()));
   }, []);
-  const cycleTheme = () => {
-    const order = ["light", "dark", "system"] as const;
-    const next = order[(order.indexOf(theme) + 1) % order.length];
+  const applyTheme = (next: ThemeMode) => {
     setTheme(next);
     setThemeMode(next);
+    setThemeMenuOpen(false);
     toast(next === "light" ? "已切换到浅色模式" : next === "dark" ? "已切换到深色模式" : "已切换到跟随系统");
   };
+
+  const THEME_OPTIONS: { id: ThemeMode; label: string; icon: typeof Sun; desc: string }[] = [
+    { id: "light", label: "浅色", icon: Sun, desc: "明亮暖白" },
+    { id: "dark", label: "深色", icon: Moon, desc: "夜间护眼" },
+    { id: "system", label: "跟随系统", icon: Monitor, desc: "随设备自动" },
+  ];
 
   useEffect(() => {
     void hydrate();
@@ -65,7 +72,7 @@ export function Workspace() {
     if (!raw) return;
     try {
       const intent = JSON.parse(raw) as {
-        type: "send" | "fill" | "mode" | "new" | "convo";
+        type: "send" | "fill" | "mode" | "new" | "convo" | "history";
         mode?: import("@/lib/store/chat").WorkspaceMode;
         text?: string;
         id?: string;
@@ -89,6 +96,10 @@ export function Workspace() {
           break;
         case "convo":
           if (intent.id) void store.selectConversation(intent.id);
+          break;
+        // 首页「查看全部历史记录」：小屏打开历史抽屉（桌面端历史面板本就常驻）
+        case "history":
+          setMobileHistory(true);
           break;
       }
     } catch {}
@@ -152,8 +163,10 @@ export function Workspace() {
               {active && (
                 <button
                   onClick={() => setRenameOpen(true)}
-                  title="重命名当前任务"
-                  className="group flex max-w-[220px] items-center gap-1 truncate text-sm text-stone-400 transition hover:text-brand-600"
+                  // D45: 双击标题同样进入重命名，不再只有 hover 铅笔一个隐蔽入口
+                  onDoubleClick={() => setRenameOpen(true)}
+                  title="单击铅笔或双击标题即可重命名"
+                  className="group flex max-w-[220px] items-center gap-1 truncate rounded px-1 text-sm text-stone-400 transition hover:text-brand-600"
                 >
                   <span className="truncate">· {active.title}</span>
                   <Pencil className="h-3 w-3 shrink-0 opacity-0 transition group-hover:opacity-100" />
@@ -178,9 +191,11 @@ export function Workspace() {
             <Link
               href="/"
               title="返回首页"
-              className="rounded-lg p-1.5 text-stone-400 transition hover:bg-stone-100 hover:text-brand-600"
+              aria-label="返回首页"
+              className="flex items-center gap-1 rounded-lg p-1.5 text-stone-400 transition hover:bg-stone-100 hover:text-brand-600"
             >
               <Home className="h-4 w-4" />
+              <span className="hidden text-xs lg:inline">首页</span>
             </Link>
             <button
               onClick={() => setArtifactOpen(!artifactOpen)}
@@ -194,27 +209,70 @@ export function Workspace() {
             >
               <LayoutDashboard className="h-4 w-4" />
             </button>
-            {/* THEME1: 三态主题循环切换（浅色 → 深色 → 跟随系统） */}
+            {/* THEME1: 三态主题。改成下拉菜单一次选到位，并展示当前态 */ }
+            <div className="relative">
+              <button
+                onClick={() => setThemeMenuOpen((v) => !v)}
+                aria-haspopup="menu"
+                aria-expanded={themeMenuOpen}
+                aria-label="切换主题"
+                title="切换主题（浅色 / 深色 / 跟随系统）"
+                className={cn(
+                  "flex items-center gap-1 rounded-lg p-1.5 transition",
+                  themeMenuOpen
+                    ? "bg-brand-50 text-brand-600"
+                    : "text-stone-400 hover:bg-stone-100 hover:text-brand-600"
+                )}
+              >
+                {theme === "light" ? (
+                  <Sun className="h-4 w-4" />
+                ) : theme === "dark" ? (
+                  <Moon className="h-4 w-4" />
+                ) : (
+                  <Monitor className="h-4 w-4" />
+                )}
+              </button>
+              {themeMenuOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-0 top-full z-40 mt-1 w-40 overflow-hidden rounded-xl border border-stone-200 bg-white p-1 shadow-xl"
+                >
+                  {THEME_OPTIONS.map((o) => {
+                    const cur = theme === o.id;
+                    return (
+                      <button
+                        key={o.id}
+                        role="menuitemradio"
+                        aria-checked={cur}
+                        onClick={() => applyTheme(o.id)}
+                        className={cn(
+                          "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition hover:bg-stone-50",
+                          cur && "bg-brand-50"
+                        )}
+                      >
+                        <o.icon className={cn("h-4 w-4", cur ? "text-brand-600" : "text-stone-400")} />
+                        <span className="min-w-0 flex-1">
+                          <span className={cn("block text-xs", cur ? "font-medium text-brand-700" : "text-stone-700")}>
+                            {o.label}
+                          </span>
+                          <span className="block text-[10px] text-stone-400">{o.desc}</span>
+                        </span>
+                        {cur && <Check className="h-3.5 w-3.5 text-brand-600" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            {/* 设置统一走 /settings 页面（与首页同入口，不再另开一套弹窗） */}
             <button
-              onClick={cycleTheme}
-              title={theme === "light" ? "浅色模式（点击切换深色）" : theme === "dark" ? "深色模式（点击跟随系统）" : "跟随系统（点击切换浅色）"}
-              aria-label="切换主题"
+              onClick={() => router.push("/settings")}
+              title="设置中心（模型 / 数据 / 外观）"
+              aria-label="设置中心"
               className="rounded-lg p-1.5 text-stone-400 transition hover:bg-stone-100 hover:text-brand-600"
             >
-              {theme === "light" ? (
-                <Sun className="h-4 w-4" />
-              ) : theme === "dark" ? (
-                <Moon className="h-4 w-4" />
-              ) : (
-                <Monitor className="h-4 w-4" />
-              )}
+              <Settings className="h-4 w-4" />
             </button>
-            <span
-              title="李明"
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-rose-400 text-white shadow-sm"
-            >
-              <UserRound className="h-4 w-4" />
-            </span>
           </div>
         </header>
         {/* UX6: 全局细进度条 —— sending 期间顶栏底部持续走的不确定进度动画，比转圈更克制 */}
@@ -233,9 +291,6 @@ export function Workspace() {
           </ErrorBoundary>
         </div>
       </div>
-      <ErrorBoundary label="设置面板">
-        <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
-      </ErrorBoundary>
       <PromptDialog
         open={renameOpen}
         title="重命名任务"
@@ -248,6 +303,8 @@ export function Workspace() {
         }}
         onCancel={() => setRenameOpen(false)}
       />
+      {/* A5: 全局命令面板接线（Cmd/Ctrl+K），此前只在 mockup 里可用 */}
+      <CommandPalette />
       <Toaster />
     </div>
   );

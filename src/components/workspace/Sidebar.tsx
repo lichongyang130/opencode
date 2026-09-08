@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ChevronRight,
   Clapperboard,
@@ -43,11 +44,27 @@ const QUICK_MODES: { mode: WorkspaceMode; icon: ReactNode; label: string }[] = [
 ];
 
 export function Sidebar() {
-  const { newConversation, selectConversation, setSettingsOpen } = useChatStore();
+  const router = useRouter();
+  const { newConversation, selectConversation } = useChatStore();
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [packsOpen, setPacksOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const railRef = useRef<HTMLElement>(null);
+
+  /** 首次进入工作台：图标轨纯图标无文字，给一次逐项说明引导（5 秒内可关） */
+  const [showGuide, setShowGuide] = useState(false);
+  useEffect(() => {
+    const KEY = "opencanvas.rail.guide.v1";
+    try {
+      if (localStorage.getItem(KEY)) return;
+      localStorage.setItem(KEY, "1");
+      setShowGuide(true);
+      const t = setTimeout(() => setShowGuide(false), 6000);
+      return () => clearTimeout(t);
+    } catch {
+      return;
+    }
+  }, []);
 
   // 点击空白处 / Esc 关闭能力浮层
   useEffect(() => {
@@ -95,6 +112,7 @@ export function Sidebar() {
               <button
                 key={cat.id}
                 title={cat.label}
+                aria-label={cat.label}
                 onClick={() => setActiveCategory((prev) => (prev === cat.id ? null : cat.id))}
                 className={cn(
                   "group relative flex h-10 w-10 items-center justify-center rounded-xl transition",
@@ -146,7 +164,8 @@ export function Sidebar() {
         {QUICK_MODES.map((qm) => (
           <button
             key={qm.mode}
-            title={qm.label}
+            title={`新建${qm.label}`}
+            aria-label={`新建${qm.label}`}
             onClick={() => void newConversation(qm.mode)}
             className="flex h-10 w-10 items-center justify-center rounded-xl text-stone-400 transition hover:bg-brand-50 hover:text-brand-600"
           >
@@ -157,6 +176,7 @@ export function Sidebar() {
         {/* 模板库 & 素材包 */}
         <button
           title={`提示词模板库 (${TEMPLATES.length}+)`}
+          aria-label={`提示词模板库 (${TEMPLATES.length}+)`}
           onClick={() => setTemplatesOpen(true)}
           className="flex h-10 w-10 items-center justify-center rounded-xl text-stone-400 transition hover:bg-brand-50 hover:text-brand-600"
         >
@@ -164,6 +184,7 @@ export function Sidebar() {
         </button>
         <button
           title="一键素材包"
+          aria-label="一键素材包"
           onClick={() => setPacksOpen(true)}
           className="flex h-10 w-10 items-center justify-center rounded-xl text-amber-500/70 transition hover:bg-amber-50 hover:text-amber-600"
         >
@@ -173,15 +194,31 @@ export function Sidebar() {
         {/* 弹性空间 */}
         <div className="flex-1" />
 
-        {/* 设置 */}
+        {/* 设置：与首页统一走 /settings 页面 */}
         <button
-          title="模型设置"
-          onClick={() => setSettingsOpen(true)}
+          title="设置中心"
+          aria-label="设置中心"
+          onClick={() => router.push("/settings")}
           className="mt-1 flex h-10 w-10 items-center justify-center rounded-xl text-stone-400 transition hover:bg-stone-100 hover:text-brand-600"
         >
           <Settings className="h-[18px] w-[18px]" />
         </button>
       </aside>
+
+      {/* 首次进入的图标轨引导：6 秒后自动消失，可点击跳过 */}
+      {showGuide && (
+        <div
+          onClick={() => setShowGuide(false)}
+          className="pointer-events-auto fixed bottom-16 left-16 z-50 w-64 rounded-xl border border-[#e8ddca] bg-white p-3 shadow-2xl"
+        >
+          <p className="text-xs font-medium text-stone-800">左侧图标都是干什么的？</p>
+          <p className="mt-1 text-[11px] leading-5 text-stone-500">
+            🌏 品牌传播 · 🎬 内容视频 · 🖥️ 产品体验 · 📊 数据运营 · 📊 咨询策划 ——
+            点一下即可展开该分类下的能力；下方还有「AI 对话 / 快速文档 / 模板库 / 素材包」。
+          </p>
+          <p className="mt-1.5 text-right text-[10px] text-stone-300">点击任意处关闭 · 不再自动出现</p>
+        </div>
+      )}
 
       <TemplatesModal open={templatesOpen} onClose={() => setTemplatesOpen(false)} />
       <PacksModal open={packsOpen} onClose={() => setPacksOpen(false)} />

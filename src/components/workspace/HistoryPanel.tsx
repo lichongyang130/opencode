@@ -290,8 +290,21 @@ export function HistoryPanel({ mobileOpen, onMobileClose }: { mobileOpen?: boole
             恢复
           </button>
         ) : (
-          <span className="shrink-0 text-[11px] text-stone-400">
-            {formatTime(c.createdAt)}
+          <span className="flex shrink-0 items-center gap-1">
+            {/* D44: 行内快捷操作（归档）—— 桌面 hover 显示，避免误触 */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                void toggleArchive(c.id);
+                toast("已归档到归档会话", "success");
+              }}
+              title="归档此会话"
+              aria-label="归档此会话"
+              className="hidden rounded-md border border-stone-200 px-1.5 py-0.5 text-[10px] text-stone-500 transition group-hover/row:block hover:border-brand-300 hover:text-brand-600"
+            >
+              归档
+            </button>
+            <span className="text-[11px] text-stone-400">{formatTime(c.createdAt)}</span>
           </span>
         )}
       </div>
@@ -447,6 +460,7 @@ export function HistoryPanel({ mobileOpen, onMobileClose }: { mobileOpen?: boole
           <button
             onClick={toggleRail}
             title={railMode ? "展开历史面板" : "收起历史面板"}
+            aria-label={railMode ? "展开历史面板" : "收起历史面板"}
             className="flex h-7 w-7 items-center justify-center rounded-lg text-stone-400 transition hover:bg-stone-100 hover:text-brand-600"
           >
             <PanelLeftClose className="h-4 w-4" />
@@ -454,6 +468,7 @@ export function HistoryPanel({ mobileOpen, onMobileClose }: { mobileOpen?: boole
           <button
             onClick={() => setFolderDialog(true)}
             title="新建文件夹"
+            aria-label="新建文件夹"
             className="flex h-7 w-7 items-center justify-center rounded-lg text-stone-400 transition hover:bg-stone-100 hover:text-brand-600"
           >
             <FolderPlus className="h-4 w-4" />
@@ -461,6 +476,7 @@ export function HistoryPanel({ mobileOpen, onMobileClose }: { mobileOpen?: boole
           <button
             onClick={() => setShowArchived((v) => !v)}
             title={showArchived ? "返回对话历史" : "查看归档会话"}
+            aria-label={showArchived ? "返回对话历史" : "查看归档会话"}
             className={cn(
               "flex h-7 w-7 items-center justify-center rounded-lg transition hover:bg-stone-100",
               showArchived ? "text-brand-600" : "text-stone-400 hover:text-brand-600"
@@ -471,6 +487,7 @@ export function HistoryPanel({ mobileOpen, onMobileClose }: { mobileOpen?: boole
           <button
             onClick={startNew}
             title="新建对话"
+            aria-label="新建对话"
             className="flex h-7 w-7 items-center justify-center rounded-lg text-stone-400 transition hover:bg-stone-100 hover:text-brand-600"
           >
             <Sparkles className="h-4 w-4" />

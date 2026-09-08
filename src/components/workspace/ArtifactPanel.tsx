@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import {
   Check,
   CheckSquare,
+  ChevronLeft,
+  ChevronRight,
   Download,
   FileText as FileTextIcon,
   Image as ImageIcon,
@@ -27,16 +29,41 @@ import { DocView } from "./DocView";
 import { DocEmpty } from "./DocEmpty";
 import { StoryboardView } from "./StoryboardView";
 import { StoryboardEmpty } from "./StoryboardEmpty";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 function ImageGallery({ images, sending }: { images: UIImage[]; sending: boolean }) {
   // IMG8/IMG11 的动作都挂在 store 上，画廊只管编排交互
   const { deleteImages, clearImages, insertImageToDoc, applyImageToSlide } = useChatStore();
   // IMG7: 网格（默认，一次看多张）/ 大图（逐张细看）两种视图
   const [view, setView] = useState<"grid" | "single">("grid");
-  const [zoom, setZoom] = useState<UIImage | null>(null);
+  // F65: 放大查看用「索引 + 列表」而非单张对象，方便左右切换上一张/下一张
+  const zoomList = [...images].reverse();
+  const [zoomIdx, setZoomIdx] = useState<number | null>(null);
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const downloadRef = useRef<HTMLAnchorElement>(null);
+  /** F66/G76: 破坏性操作先过确认弹窗 */
+  const [confirm, setConfirm] = useState<
+    | { kind: "clear" }
+    | { kind: "multi" }
+    | { kind: "single"; id: string }
+    | null
+  >(null);
+
+  // 放大态支持 ←/→ 切换（F65）
+  useEffect(() => {
+    if (zoomIdx === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") setZoomIdx((v) => (v === null ? v : Math.max(0, v - 1)));
+      if (e.key === "ArrowRight") setZoomIdx((v) => (v === null ? v : Math.min(zoomList.length - 1, v + 1)));
+      if (e.key === "Escape") setZoomIdx(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zoomIdx !== null, zoomList.length]);
+
+  const zoom = zoomIdx !== null ? zoomList[zoomIdx] ?? null : null;
 
   const toggleSel = (id: string) =>
     setSelected((prev) => {
@@ -48,10 +75,20 @@ function ImageGallery({ images, sending }: { images: UIImage[]; sending: boolean
 
   const allSelected = images.length > 0 && images.every((i) => selected.has(i.id));
 
-  const deleteSelected = () => {
-    if (selected.size === 0) return;
-    deleteImages([...selected]);
-    setSelected(new Set());
+  /** 确认弹窗通过后真正执行删除/清空 */
+  const runDestructive = () => {
+    if (!confirm) return;
+    if (confirm.kind === "clear") {
+      clearImages();
+      setSelected(new Set());
+      setSelecting(false);
+    } else if (confirm.kind === "multi") {
+      deleteImages([...selected]);
+      setSelected(new Set());
+    } else {
+      deleteImages([confirm.id]);
+    }
+    setConfirm(null);
   };
 
   const download = (img: UIImage) => {
@@ -94,12 +131,9 @@ function ImageGallery({ images, sending }: { images: UIImage[]; sending: boolean
             <CheckSquare className="h-3.5 w-3.5" />
           </button>
           <button
-            onClick={() => {
-              clearImages();
-              setSelected(new Set());
-              setSelecting(false);
-            }}
+            onClick={() => setConfirm({ kind: "clear" })}
             title="清空画廊"
+            aria-label="清空画廊"
             className={iconBtn}
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -119,7 +153,7 @@ function ImageGallery({ images, sending }: { images: UIImage[]; sending: boolean
               {allSelected ? "取消全选" : "全选"}
             </button>
             <button
-              onClick={deleteSelected}
+              onClick={() => setConfirm({ kind: "multi" })}
               disabled={selected.size === 0}
               className="text-red-500 underline-offset-2 transition hover:underline disabled:text-stone-300 disabled:no-underline"
             >
@@ -144,7 +178,7 @@ function ImageGallery({ images, sending }: { images: UIImage[]; sending: boolean
               className={`animate-pulse rounded-xl border border-stone-100 bg-stone-100 ${view === "grid" ? "h-40" : "h-56"}`}
             />
           ))}
-        {[...images].reverse().map((img) => {
+        {[...images].reverse().map((img, gridIdx) => {
           const checked = selected.has(img.id);
           return (
             <figure
@@ -152,7 +186,7 @@ function ImageGallery({ images, sending }: { images: UIImage[]; sending: boolean
               className="group relative overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm"
             >
               <button
-                onClick={() => (selecting ? toggleSel(img.id) : setZoom(img))}
+                onClick={() => (selecting ? toggleSel(img.id) : setZoomIdx(gridIdx))}
                 className="block w-full"
                 title={selecting ? (checked ? "取消选中" : "选中") : "点击放大"}
               >
@@ -172,25 +206,28 @@ function ImageGallery({ images, sending }: { images: UIImage[]; sending: boolean
                   {checked && <Check className="h-3 w-3" />}
                 </span>
               )}
-              {/* 悬停操作：下载 / 插入文档 / 设为 PPT 配图 / 删除（批量模式下隐藏，避免误触） */}
+              {/* 图操作：下载 / 插入文档 / 设为 PPT 配图 / 删除（批量模式下隐藏，避免误触）。
+                  F63: 常显半透明而非 hover 才出现，触屏与新手也能发现 */}
               {!selecting && (
-                <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition group-hover:opacity-100">
-                  <button onClick={() => download(img)} title="下载/打开" className={iconBtn}>
+                <div className="absolute right-2 top-2 flex gap-1 opacity-80 transition hover:opacity-100 group-hover:opacity-100">
+                  <button onClick={() => download(img)} title="下载/打开" aria-label="下载图片" className={iconBtn}>
                     <Download className="h-3.5 w-3.5" />
                   </button>
                   <button
                     onClick={() => void insertImageToDoc(img.url, img.prompt)}
                     title="插入文档"
+                    aria-label="插入文档"
                     className={iconBtn}
                   >
                     <ImagePlus className="h-3.5 w-3.5" />
                   </button>
-                  <button onClick={() => applyImageToSlide(img.url)} title="设为 PPT 配图" className={iconBtn}>
+                  <button onClick={() => applyImageToSlide(img.url)} title="设为 PPT 配图" aria-label="设为 PPT 配图" className={iconBtn}>
                     <Presentation className="h-3.5 w-3.5" />
                   </button>
                   <button
-                    onClick={() => deleteImages([img.id])}
+                    onClick={() => setConfirm({ kind: "single", id: img.id })}
                     title="删除这张"
+                    aria-label="删除这张"
                     className="rounded-lg border border-stone-200 bg-white/90 p-1.5 text-stone-500 shadow-sm transition hover:border-red-300 hover:text-red-500"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -208,11 +245,45 @@ function ImageGallery({ images, sending }: { images: UIImage[]; sending: boolean
         })}
       </div>
 
-      {zoom && (
+      {zoom && zoomIdx !== null && (
         <div
           className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black/80 p-8"
-          onClick={() => setZoom(null)}
+          onClick={() => setZoomIdx(null)}
         >
+          <button
+            onClick={() => setZoomIdx(null)}
+            aria-label="关闭大图"
+            className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white/80 transition hover:bg-white/20"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          {/* F65: 上一张 / 下一张 */}
+          {zoomIdx > 0 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setZoomIdx((v) => (v === null ? v : v - 1));
+              }}
+              aria-label="上一张"
+              title="上一张（←）"
+              className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white/80 transition hover:bg-white/20"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+          )}
+          {zoomIdx < zoomList.length - 1 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setZoomIdx((v) => (v === null ? v : v + 1));
+              }}
+              aria-label="下一张"
+              title="下一张（→）"
+              className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white/80 transition hover:bg-white/20"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          )}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={zoom.url}
@@ -221,6 +292,9 @@ function ImageGallery({ images, sending }: { images: UIImage[]; sending: boolean
             onClick={(e) => e.stopPropagation()}
           />
           <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+            <span className="text-xs text-white/50">
+              {zoomIdx + 1} / {zoomList.length}
+            </span>
             <p className="max-w-md truncate text-xs text-white/70">{zoom.prompt}</p>
             <button onClick={() => download(zoom)} className={iconBtn} title="下载/打开">
               <Download className="h-3.5 w-3.5" />
@@ -228,6 +302,28 @@ function ImageGallery({ images, sending }: { images: UIImage[]; sending: boolean
           </div>
         </div>
       )}
+
+      {/* F66/G76: 清空 / 批量删除 / 单张删除统一先确认 */}
+      <ConfirmDialog
+        open={confirm !== null}
+        title={
+          confirm?.kind === "clear"
+            ? "清空全部图片？"
+            : confirm?.kind === "multi"
+              ? `删除选中的 ${selected.size} 张图片？`
+              : "删除这张图片？"
+        }
+        message={
+          confirm?.kind === "clear"
+            ? "清空后本会话的图片将全部移除，且无法撤销。"
+            : "删除后无法撤销。"
+        }
+        confirmText="删除"
+        cancelText="取消"
+        tone="danger"
+        onConfirm={runDestructive}
+        onCancel={() => setConfirm(null)}
+      />
     </>
   );
 }
@@ -267,12 +363,24 @@ export function ArtifactPanel({
     (mode === "video" && convo?.video) ||
     (mode === "chat" && lastAssistant);
 
-  // 有产物时自动弹出（但用户手动收起后不再强行弹出，直到下一次生成/切换会话）
+  // F61: 标题随产物类型变化，不再一律叫「AI 创作画布」这种概念词
+  const PANEL_TITLES: Record<string, string> = {
+    chat: "对话 · 文档产物",
+    docs: "文档",
+    slides: "PPT 画布",
+    image: "图片画廊",
+    research: "研究报告",
+    video: "视频分镜",
+  };
+
+  // F42: 只有「真产物」模式（PPT/文档/图/报告/分镜）才自动弹出；
+  // 纯聊天不再每次抢屏（手动点开仍可看最近回复的文档化视图）
+  const canAutoOpen = mode !== "chat";
   useEffect(() => {
-    if (hasArtifact && !artifactOpen && !artifactDismissed) {
+    if (hasArtifact && canAutoOpen && !artifactOpen && !artifactDismissed) {
       setArtifactOpen(true);
     }
-  }, [hasArtifact, artifactOpen, artifactDismissed, setArtifactOpen]);
+  }, [hasArtifact, canAutoOpen, artifactOpen, artifactDismissed, setArtifactOpen]);
 
   // 隐藏状态或无产物内容时不渲染
   if (!artifactOpen) {
@@ -285,7 +393,7 @@ export function ArtifactPanel({
       <div className="flex items-center justify-between border-b border-stone-100 px-5 py-3">
         <h2 className="flex items-center gap-2 text-[15px] font-semibold text-stone-800">
           <LayoutDashboard className="h-4 w-4 text-orange-500" />
-          AI 创作画布
+          {PANEL_TITLES[mode] ?? "AI 创作画布"}
         </h2>
         <button
           onClick={() => (onClose ? onClose() : setArtifactOpen(false))}
@@ -309,7 +417,7 @@ export function ArtifactPanel({
           <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-stone-100">
             <ImageIcon className="h-6 w-6" />
           </div>
-          <p className="text-sm">在左侧描述你想要的画面<br />生成的图片会展示在这里</p>
+          <p className="text-sm">描述你想要的画面并发送<br />生成的图片会展示在这里</p>
         </div>
       ) : /* 深度研究报告 */
       mode === "research" && convo?.report ? (
@@ -349,7 +457,7 @@ export function ArtifactPanel({
           <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-stone-100">
             <Search className="h-6 w-6" />
           </div>
-          <p className="text-sm">在左侧输入研究主题<br />生成带引用的研究报告，可一键转 PPT</p>
+          <p className="text-sm">输入研究主题并发送<br />生成带引用的研究报告，可一键转 PPT</p>
         </div>
       ) : /* 文档工作台 */
       mode === "docs" && convo?.doc ? (
@@ -377,7 +485,7 @@ export function ArtifactPanel({
           <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-stone-100">
             <LayoutDashboard className="h-6 w-6" />
           </div>
-          <p className="text-sm">在左侧输入 PPT 主题<br />例如「AI 写作助手产品发布会」</p>
+          <p className="text-sm">输入 PPT 主题并发送<br />例如「AI 写作助手产品发布会」</p>
         </div>
       ) : /* 分镜工作台（V4） */
       mode === "video" && convo?.video ? (

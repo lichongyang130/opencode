@@ -12,6 +12,7 @@ import {
   getOverrides,
 } from "@/lib/settings";
 import { cn } from "@/lib/utils";
+import { toast } from "@/lib/store/toast";
 import { useChatStore } from "@/lib/store/chat";
 import { ProviderLogo } from "./ProviderLogo";
 type ProviderId = ProviderIdType;
@@ -33,7 +34,8 @@ export const PROVIDER_NAME: Record<string, string> = {
   anthropic: "Anthropic / Claude",
   deepseek: "DeepSeek",
   dashscope: "阿里百炼 / 通义",
-  demo: "内置",
+  // E52: 「内置」是开发术语，普通用户看不懂，改叫「免费体验」
+  demo: "免费体验",
 };
 /** 按钮上显示的简短模型名 */
 function shortLabel(label: string) {
@@ -129,6 +131,7 @@ export function ModelSelector({ value, onChange }: { value: string; onChange: (i
       const next = { ...loadDynamicModels(), [provider]: data.models };
       saveDynamicModels(next);
       setDynamic(next);
+      toast(`已获取 ${data.models.length} 个模型`, "success");
     } catch (e) {
       setFetchError(`${PROVIDER_NAME[provider]}：${e instanceof Error ? e.message : "获取失败"}`);
     } finally {
@@ -187,13 +190,13 @@ export function ModelSelector({ value, onChange }: { value: string; onChange: (i
           </div>
 
           <div className="max-h-[56vh] overflow-y-auto p-1.5">
-            {/* 演示模型 */}
-            {(!q.trim() || "演示模型".toLowerCase().includes(q.trim().toLowerCase())) && (
+            {/* 免费演示模型 */}
+            {(!q.trim() || "免费演示".toLowerCase().includes(q.trim().toLowerCase())) && (
               <>
                 <GroupHeader name={PROVIDER_NAME.demo} available />
                 <ModelRow
-                  label="演示模型"
-                  sub="免费"
+                  label="免费演示"
+                  sub="无需密钥"
                   provider="demo"
                   active={value === "demo"}
                   available
@@ -210,6 +213,9 @@ export function ModelSelector({ value, onChange }: { value: string; onChange: (i
               const qq = q.trim().toLowerCase();
               const items = qq ? g.items.filter((it) => it.info.label.toLowerCase().includes(qq)) : g.items;
               if (qq && items.length === 0) return null;
+              // E51: 没配密钥的供应商平时直接折叠（避免 4 组灰项占满面板）；
+              // 仅在搜索时列出其模型供查看，并给「去配置」入口
+              if (!avail && !qq) return null;
               return (
                 <div key={g.provider}>
                   <GroupHeader
@@ -217,6 +223,14 @@ export function ModelSelector({ value, onChange }: { value: string; onChange: (i
                     available={avail}
                     fetching={fetching === g.provider}
                     onFetch={avail ? () => void fetchModels(g.provider) : undefined}
+                    onSetup={
+                      avail
+                        ? undefined
+                        : () => {
+                            setOpen(false);
+                            router.push("/settings");
+                          }
+                    }
                   />
                   {items.map(({ info, dynamic: isDynamic }) => (
                     <ModelRow
@@ -251,7 +265,7 @@ export function ModelSelector({ value, onChange }: { value: string; onChange: (i
             className="flex w-full items-center gap-2 border-t border-stone-100 bg-stone-50 px-3 py-2.5 text-sm font-medium text-brand-700 transition hover:bg-brand-50"
           >
             <KeyRound className="h-4 w-4" />
-            配置模型 API Key…
+            在设置中心配置真实模型…
           </button>
         </div>
       )}
@@ -264,11 +278,14 @@ function GroupHeader({
   available,
   fetching,
   onFetch,
+  onSetup,
 }: {
   name: string;
   available: boolean;
   fetching?: boolean;
   onFetch?: () => void;
+  /** E51: 未配置供应商的「去设置」快捷入口 */
+  onSetup?: () => void;
 }) {
   return (
     <div className="mt-1.5 flex items-center justify-between rounded-lg bg-stone-50 px-2.5 py-1.5 first:mt-0">
@@ -276,17 +293,33 @@ function GroupHeader({
         <span className={cn("h-1.5 w-1.5 rounded-full", available ? "bg-emerald-500" : "bg-stone-300")} />
         {name}
       </span>
-      {onFetch && (
-        <button
-          onClick={onFetch}
-          disabled={fetching}
-          title="从该供应商拉取最新模型列表"
-          className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-stone-400 transition hover:bg-white hover:text-orange-600 disabled:opacity-40"
-        >
-          {fetching ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-          获取模型
-        </button>
-      )}
+      <span className="flex items-center gap-1">
+        {!available && (
+          <span className="rounded-md bg-stone-200/70 px-1.5 py-0.5 text-[10px] text-stone-500">
+            未配置
+          </span>
+        )}
+        {onSetup && (
+          <button
+            onClick={onSetup}
+            title="配置该供应商的 API Key"
+            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-brand-600 transition hover:bg-white"
+          >
+            去设置
+          </button>
+        )}
+        {onFetch && (
+          <button
+            onClick={onFetch}
+            disabled={fetching}
+            title="从该供应商拉取最新模型列表"
+            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-stone-400 transition hover:bg-white hover:text-orange-600 disabled:opacity-40"
+          >
+            {fetching ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+            获取模型
+          </button>
+        )}
+      </span>
     </div>
   );
 }

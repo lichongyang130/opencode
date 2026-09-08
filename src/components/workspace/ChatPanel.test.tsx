@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ChatPanel } from "./ChatPanel";
@@ -109,7 +109,8 @@ describe("ChatPanel 空态", () => {
   it("chat 模式下 placeholder 为通用文案", () => {
     seed();
     render(<ChatPanel />);
-    expect(ta().placeholder).toBe("分配任务，或问我任何事…");
+    // C30: 文案由「分配任务…」改成了小白友好的说法
+    expect(ta().placeholder).toBe("想做什么？写下来告诉我…");
   });
 
   it("非 chat 模式下 placeholder 带模式名", () => {
@@ -623,8 +624,13 @@ describe("ChatPanel 斜杠命令", () => {
     seed();
     render(<ChatPanel />);
     type("/tr");
-    expect(screen.getByRole("button", { name: /翻译/ })).toBeDefined();
-    expect(screen.queryByRole("button", { name: /润色/ })).toBeNull();
+    // C34: 底栏按钮改叫「润色提示词」后与命令名「润色」撞词，
+    // 断言范围收敛到斜杠菜单内（菜单标题「快捷命令」所在容器），
+    // 只验证菜单自己的过滤逻辑
+    const header = screen.getByText(/快捷命令/).closest("div") as HTMLElement;
+    const menu = header.parentElement as HTMLElement;
+    expect(within(menu).getByRole("button", { name: /翻译/ })).toBeDefined();
+    expect(within(menu).queryByRole("button", { name: /润色/ })).toBeNull();
   });
 
   it("无匹配时给出空态提示", () => {
