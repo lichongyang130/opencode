@@ -1,0 +1,337 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for src/lib/slash.ts</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/lib</a> slash.ts</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>47/47</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>7/7</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>1/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>47/47</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line high'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a>
+<a name='L73'></a><a href='#L73'>73</a>
+<a name='L74'></a><a href='#L74'>74</a>
+<a name='L75'></a><a href='#L75'>75</a>
+<a name='L76'></a><a href='#L76'>76</a>
+<a name='L77'></a><a href='#L77'>77</a>
+<a name='L78'></a><a href='#L78'>78</a>
+<a name='L79'></a><a href='#L79'>79</a>
+<a name='L80'></a><a href='#L80'>80</a>
+<a name='L81'></a><a href='#L81'>81</a>
+<a name='L82'></a><a href='#L82'>82</a>
+<a name='L83'></a><a href='#L83'>83</a>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">291x</span>
+<span class="cline-any cline-yes">291x</span>
+<span class="cline-any cline-yes">25x</span>
+<span class="cline-any cline-yes">291x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import type { WorkspaceMode } from "@/lib/store/chat";
+&nbsp;
+/**
+ * 斜杠命令：在输入框以 "/" 开头时弹出。
+ * 两类：
+ * - action：直接执行（切换工作台等）
+ * - prompt：把片段插入/包裹到输入框
+ */
+export interface SlashCommand {
+  /** 触发词，不含 "/" */
+  cmd: string;
+  label: string;
+  desc: string;
+  /** action = 切换工作台；prompt = 插入指令片段 */
+  kind: "action" | "prompt";
+  mode?: WorkspaceMode;
+  /** kind=prompt 时插入的文本（{q} 会被当前输入替换） */
+  insert?: string;
+  /** insert 中光标偏移（相对插入后文本），不填则放末尾 */
+  cursor?: number;
+}
+&nbsp;
+export const SLASH_COMMANDS: SlashCommand[] = [
+  // —— 工作台切换 ——
+  { cmd: "chat", label: "对话", desc: "切换到 AI 对话工作台", kind: "action", mode: "chat" },
+  { cmd: "doc", label: "文档", desc: "切换到文档工作台", kind: "action", mode: "docs" },
+  { cmd: "ppt", label: "幻灯片", desc: "切换到 PPT 工作台", kind: "action", mode: "slides" },
+  { cmd: "image", label: "绘图", desc: "切换到 AI 绘图工作台", kind: "action", mode: "image" },
+  { cmd: "video", label: "视频", desc: "切换到视频脚本工作台", kind: "action", mode: "video" },
+  { cmd: "research", label: "深度研究", desc: "切换到深度研究工作台", kind: "action", mode: "research" },
+  { cmd: "pack", label: "一键素材包", desc: "一个主题，产出整套营销素材", kind: "prompt", insert: "【素材包】为「{q}」生成一整套营销素材" },
+  // —— 写作指令 ——
+  { cmd: "write", label: "撰写", desc: "围绕主题撰写完整内容", kind: "prompt", insert: "请围绕「{q}」撰写一篇内容完整、结构清晰的文章，包含引人入胜的开头、分节论述和总结。" },
+  { cmd: "translate", label: "翻译", desc: "中英互译，保留语气", kind: "prompt", insert: "请将以下内容翻译（中文↔英文自动识别），保留原意与语气，表达地道：\n\n{q}" },
+  { cmd: "polish", label: "润色", desc: "润色文字，更流畅专业", kind: "prompt", insert: "请润色以下文字，使其更流畅、专业、有感染力，保持原意不变：\n\n{q}" },
+  { cmd: "expand", label: "扩写", desc: "丰富细节与论据", kind: "prompt", insert: "请扩写以下内容，补充细节、论据与示例，使内容更充实：\n\n{q}" },
+  { cmd: "shorten", label: "精简", desc: "压缩篇幅，保留要点", kind: "prompt", insert: "请把以下内容精简为要点清晰的短文，保留核心信息：\n\n{q}" },
+  { cmd: "fix", label: "纠错", desc: "修正语法/错别字/标点", kind: "prompt", insert: "请检查并修正以下内容中的语法、错别字、用词与标点问题，输出修正后的版本并简要说明改动：\n\n{q}" },
+  { cmd: "outline", label: "大纲", desc: "生成内容大纲", kind: "prompt", insert: "请为「{q}」生成一份详细大纲，含层级标题与每节要点。" },
+  { cmd: "brainstorm", label: "头脑风暴", desc: "发散 10+ 创意点子", kind: "prompt", insert: "请围绕「{q}」进行头脑风暴，给出 15 个有创意、可落地的点子，每个一句话说明。" },
+  { cmd: "summarize", label: "总结", desc: "提炼摘要与要点", kind: "prompt", insert: "请总结以下内容，输出：一句话摘要 + 3-5 个关键要点：\n\n{q}" },
+  { cmd: "email", label: "写邮件", desc: "生成商务邮件", kind: "prompt", insert: "请帮我写一封邮件，主题/目的：{q}。语气专业礼貌，结构完整（称呼、正文、结尾）。" },
+  { cmd: "table", label: "表格化", desc: "整理成 Markdown 表格", kind: "prompt", insert: "请把以下信息整理成结构清晰的 Markdown 表格，并补充表头：\n\n{q}" },
+];
+&nbsp;
+/** 语气 / 长度 / 受众 快捷参数：一键叠加到 prompt */
+export interface PromptChip {
+  id: string;
+  label: string;
+  /** 追加到 prompt 末尾的约束 */
+  suffix: string;
+}
+&nbsp;
+export const TONE_CHIPS: PromptChip[] = [
+  { id: "professional", label: "专业", suffix: "语气：专业严谨、用词准确。" },
+  { id: "friendly", label: "亲切", suffix: "语气：亲切自然、像朋友聊天。" },
+  { id: "humorous", label: "幽默", suffix: "语气：轻松幽默、有梗但不油腻。" },
+  { id: "formal", label: "正式", suffix: "语气：正式书面、适合公文/商务场景。" },
+  { id: "inspiring", label: "感染力", suffix: "语气：有感染力、能打动人、激发行动。" },
+  { id: "neutral", label: "客观", suffix: "语气：客观中立、只陈述事实与数据。" },
+];
+&nbsp;
+export const LENGTH_CHIPS: PromptChip[] = [
+  { id: "short", label: "简短", suffix: "篇幅：简短精炼，控制在 200 字以内。" },
+  { id: "medium", label: "适中", suffix: "篇幅：适中，500 字左右。" },
+  { id: "long", label: "详尽", suffix: "篇幅：详尽深入，1500 字以上，分小节展开。" },
+];
+&nbsp;
+export const AUDIENCE_CHIPS: PromptChip[] = [
+  { id: "beginner", label: "小白", suffix: "受众：零基础读者，避免术语，多用类比。" },
+  { id: "pro", label: "专业人士", suffix: "受众：行业专业人士，可以使用术语并深入细节。" },
+  { id: "boss", label: "给老板", suffix: "受众：决策者/管理层，结论先行、突出重点与建议。" },
+  { id: "customer", label: "给客户", suffix: "受众：外部客户，突出价值、可信度与行动号召。" },
+  { id: "student", label: "给学生", suffix: "受众：学生，循序渐进、配例子、便于理解记忆。" },
+];
+&nbsp;
+/** 匹配斜杠命令：输入以 / 开头时调用，返回过滤后的命令 */
+export function matchSlash(input: string): SlashCommand[] | null {
+  const m = /^\/([a-z]*)$/i.exec(input.trim());
+  if (!m) return null;
+  const q = m[1].toLowerCase();
+  if (!q) return SLASH_COMMANDS;
+  return SLASH_COMMANDS.filter((c) =&gt; c.cmd.startsWith(q) || c.label.includes(m[1]));
+}
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-09-08T05:13:56.958Z
+            </div>
+        <script src="../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../sorter.js"></script>
+        <script src="../../block-navigation.js"></script>
+    </body>
+</html>
+    

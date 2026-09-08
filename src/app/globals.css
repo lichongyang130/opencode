@@ -1,0 +1,231 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #fafaf9;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: #1c1917;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 细滚动条 */
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #d6d3d1;
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 流式光标 */
+.streaming-cursor::after {
+  content: "▍";
+  margin-left: 1px;
+  animation: blink 1s steps(1) infinite;
+  color: #7916ff;
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* UX6: 顶栏细进度条的不确定进度动画（1/3 宽度横向往返） */
+@keyframes ocprogress {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   暗色模式：html.dark 上做整站覆盖。
+   页面组件使用大量硬编码颜色（Tailwind 任意值 + 标准类），
+   这里按 Tailwind 编译出的类名逐一映射为暖色暗板，
+   避免逐页加 dark: 变体。品牌橙色（渐变按钮、强调色）保持不变。
+   ══════════════════════════════════════════════════════════ */
+
+html.dark {
+  color-scheme: dark;
+  --bg: #161311;
+}
+
+html.dark body {
+  background: var(--bg);
+  color: #e8e1d8;
+}
+
+html.dark *::-webkit-scrollbar-thumb {
+  background: #46403a;
+}
+
+/* ── 背景：页面 / 卡片 / 分层 ── */
+.dark .bg-white { background-color: #211d19; }
+.dark .bg-stone-50 { background-color: #241f1b; }
+.dark .bg-stone-100 { background-color: #2b2620; }
+.dark .bg-stone-200 { background-color: #37312a; }
+.dark .bg-stone-300 { background-color: #46403a; }
+.dark .bg-\[\#fbf8f4\], .dark .bg-\[\#fdfaf6\], .dark .bg-\[\#fbf8f3\],
+.dark .bg-\[\#faf6ee\], .dark .bg-\[\#fcf8f0\], .dark .bg-\[\#fbf7ef\],
+.dark .bg-\[\#faf7f1\], .dark .bg-\[\#f9f5ec\], .dark .bg-\[\#f8f2e7\],
+.dark .bg-\[\#f6f1e9\], .dark .bg-\[\#f5efe4\], .dark .bg-\[\#f2ecdf\],
+.dark .bg-\[\#fdfaf3\] { background-color: #161311; }
+.dark .bg-\[\#fdfaf5\] { background-color: #262220; }
+.dark .bg-\[\#fdf6ee\] { background-color: #2b2118; }
+.dark .bg-\[\#fdeee1\], .dark .bg-\[\#fdeee3\], .dark .bg-\[\#fbe9d7\] { background-color: #382416; }
+.dark .bg-\[\#fbf3ec\] { background-color: #32231a; }
+.dark .bg-\[\#fdf1e3\] { background-color: #3a2817; }
+
+/* ── 低饱和彩色底（图标底、徽章底）── */
+.dark .bg-orange-50 { background-color: #382416; }
+.dark .bg-red-50 { background-color: #38191a; }
+.dark .bg-emerald-50 { background-color: #12271c; }
+.dark .bg-sky-50 { background-color: #12222e; }
+.dark .bg-blue-50 { background-color: #152230; }
+.dark .bg-violet-50 { background-color: #221a33; }
+.dark .bg-amber-50 { background-color: #33240f; }
+.dark .bg-lime-50 { background-color: #1e2913; }
+.dark .bg-cyan-50 { background-color: #102528; }
+.dark .bg-fuchsia-50 { background-color: #2c1530; }
+.dark .bg-indigo-50 { background-color: #1b1d38; }
+.dark .bg-teal-50 { background-color: #0f2723; }
+.dark .bg-pink-50 { background-color: #2e1420; }
+.dark .bg-rose-50 { background-color: #301419; }
+.dark .bg-orange-100 { background-color: #45280f; }
+
+/* ── 边框 ── */
+.dark .border-stone-50 { border-color: #2b2520; }
+.dark .border-stone-100 { border-color: #2c2620; }
+.dark .border-stone-200 { border-color: #37312a; }
+.dark .border-stone-300 { border-color: #46403a; }
+.dark .border-white { border-color: #3a342e; }
+.dark .border-\[\#ece6db\], .dark .border-\[\#eadfd0\], .dark .border-\[\#e8ddca\],
+.dark .border-\[\#e3d8c6\], .dark .border-\[\#eee4d4\], .dark .border-\[\#eee4d3\],
+.dark .border-\[\#e7dccb\], .dark .border-\[\#e5ddcf\], .dark .border-\[\#e9e4d9\] { border-color: #37312a; }
+.dark .border-\[\#f0eadf\], .dark .border-\[\#efe9dd\], .dark .border-\[\#f5f0e8\] { border-color: #2e2823; }
+.dark .border-\[\#e0b79c\] { border-color: #5a4433; }
+.dark .border-\[\#f0c9a8\], .dark .border-\[\#f2d8bd\] { border-color: #6b4c33; }
+.dark .border-orange-100 { border-color: #3a2c1c; }
+.dark .border-orange-200 { border-color: #5c3a1e; }
+.dark .border-orange-300 { border-color: #7a4a24; }
+.dark .border-red-200 { border-color: #5c2a26; }
+.dark .border-red-300 { border-color: #7a3a34; }
+.dark .divide-\[\#f0eadf\] > :not([hidden]) ~ :not([hidden]) { border-color: #2e2823; }
+.dark .divide-orange-100 > :not([hidden]) ~ :not([hidden]) { border-color: #3a2c1c; }
+.dark .divide-stone-100 > :not([hidden]) ~ :not([hidden]) { border-color: #2c2620; }
+
+/* ── 文本 ── */
+.dark .text-stone-900 { color: #f0eae2; }
+.dark .text-stone-800 { color: #e8e1d8; }
+.dark .text-stone-700 { color: #d5cdc2; }
+.dark .text-stone-600 { color: #bfb6a9; }
+.dark .text-stone-500 { color: #a39a8d; }
+.dark .text-stone-400 { color: #857c6f; }
+.dark .text-stone-300 { color: #5f574c; }
+.dark .text-\[\#c05f3c\] { color: #f09a63; }
+.dark .text-\[\#8a7a66\] { color: #a39482; }
+.dark .text-\[\#a8977f\] { color: #b3a28c; }
+.dark .text-\[\#6b5b48\] { color: #a89a86; }
+.dark .text-\[\#4a2e1d\] { color: #d8b49a; }
+.dark .text-orange-600 { color: #fb923c; }
+.dark .text-orange-700 { color: #fdba74; }
+.dark .text-emerald-600 { color: #34d399; }
+.dark .text-sky-600 { color: #4cc2ff; }
+.dark .text-amber-600 { color: #fbbf24; }
+.dark .text-red-600 { color: #f87171; }
+.dark .placeholder\:text-stone-400::placeholder { color: #6f665a; }
+
+/* ── hover 态 ── */
+.dark .hover\:bg-white:hover { background-color: #2a2520; }
+.dark .hover\:bg-stone-50:hover { background-color: #241f1b; }
+.dark .hover\:bg-stone-100:hover { background-color: #2b2620; }
+.dark .hover\:bg-\[\#fdfaf5\]:hover { background-color: #262220; }
+.dark .hover\:bg-\[\#fdeee1\]:hover { background-color: #422a19; }
+.dark .hover\:bg-\[\#fbe3d2\]:hover { background-color: #4a2f1c; }
+.dark .hover\:bg-\[\#efe7da\]:hover { background-color: #2e2822; }
+.dark .hover\:bg-\[\#faf5ec\]:hover { background-color: #262220; }
+.dark .hover\:text-stone-900:hover { color: #f0eae2; }
+.dark .hover\:text-stone-800:hover { color: #e8e1d8; }
+.dark .hover\:text-stone-700:hover { color: #d5cdc2; }
+.dark .hover\:text-stone-600:hover { color: #bfb6a9; }
+.dark .hover\:text-stone-500:hover { color: #a39a8d; }
+.dark .hover\:text-\[\#c05f3c\]:hover { color: #f09a63; }
+.dark .hover\:border-\[\#e0b79c\]:hover { border-color: #5a4433; }
+.dark .hover\:border-\[\#c05f3c\]:hover { border-color: #8a4a2a; }
+.dark .hover\:border-stone-300:hover { border-color: #46403a; }
+.dark .hover\:border-stone-200:hover { border-color: #37312a; }
+.dark .hover\:border-orange-300:hover { border-color: #7a4a24; }
+
+/* 暗色下的流式光标 */
+.dark .streaming-cursor::after { color: #f09a63; }
+
+/* ── 无障碍：键盘焦点可见性（仅键盘导航时显示，不影响鼠标点击） ── */
+:focus-visible {
+  outline: 2px solid #f07a3f;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+html.dark :focus-visible {
+  outline-color: #f09a63;
+}
+
+/* 引用溯源：点击角标后来源条目的高亮闪烁 */
+.cite-flash {
+  background-color: rgba(240, 122, 63, 0.18);
+  transition: background-color 0.4s ease;
+}
+
+/* 暗色：表格斑马纹（odd:bg-stone-50/60 编译类） */
+.dark .odd\:bg-stone-50\/60:nth-child(odd) {
+  background-color: rgba(43, 38, 32, 0.55);
+}
+.dark .group-hover\/table\:block {
+  display: none;
+}
+.dark .group:hover .group-hover\/table\:block {
+  display: block;
+}
+
+/* ── THEME5: 深色对比度校准 ──
+   行内代码 text-brand-700(#a94f31) 在暗底 bg-stone-100(#2b2620) 上
+   对比度仅约 2.4:1（WCAG AA 要求 4.5:1），提亮到 400 档；
+   代码块 bg-stone-900 深底在暗色下保持不变（本就是深色），仅微调外框 */
+.dark .markdown-body code,
+.dark .text-brand-700 { color: #e8a778; }
+.dark .markdown-body .bg-stone-900 { background-color: #0f0d0b; }
+/* 幻灯片画布：浅色画纸在暗色下保留亮底（幻灯片导出/放映视觉不变），
+   但外框改为暗色描边避免亮块刺眼 */
+.dark .slide-canvas-frame { border-color: #46403a; }
+
+/* ── THEME6: prefers-reduced-motion 时关闭非必要动画 ──
+   流式光标闪烁、骨架呼吸、进度条往返、mermaid 加载转圈属于纯装饰动效；
+   用户开启系统减动效后全部静止（保留 opacity 过渡以满足瞬时反馈） */
+@media (prefers-reduced-motion: reduce) {
+  .streaming-cursor::after,
+  .animate-pulse,
+  .animate-\[ocprogress_1\.2s_ease-in-out_infinite\],
+  .animate-spin {
+    animation: none !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}

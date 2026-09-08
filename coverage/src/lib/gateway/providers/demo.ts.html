@@ -1,0 +1,496 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for src/lib/gateway/providers/demo.ts</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../../../prettify.css" />
+    <link rel="stylesheet" href="../../../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../../../index.html">All files</a> / <a href="index.html">src/lib/gateway/providers</a> demo.ts</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">25.83% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>31/120</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">45.45% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>5/11</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>2/2</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">25.83% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>31/120</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line low'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a>
+<a name='L73'></a><a href='#L73'>73</a>
+<a name='L74'></a><a href='#L74'>74</a>
+<a name='L75'></a><a href='#L75'>75</a>
+<a name='L76'></a><a href='#L76'>76</a>
+<a name='L77'></a><a href='#L77'>77</a>
+<a name='L78'></a><a href='#L78'>78</a>
+<a name='L79'></a><a href='#L79'>79</a>
+<a name='L80'></a><a href='#L80'>80</a>
+<a name='L81'></a><a href='#L81'>81</a>
+<a name='L82'></a><a href='#L82'>82</a>
+<a name='L83'></a><a href='#L83'>83</a>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a>
+<a name='L91'></a><a href='#L91'>91</a>
+<a name='L92'></a><a href='#L92'>92</a>
+<a name='L93'></a><a href='#L93'>93</a>
+<a name='L94'></a><a href='#L94'>94</a>
+<a name='L95'></a><a href='#L95'>95</a>
+<a name='L96'></a><a href='#L96'>96</a>
+<a name='L97'></a><a href='#L97'>97</a>
+<a name='L98'></a><a href='#L98'>98</a>
+<a name='L99'></a><a href='#L99'>99</a>
+<a name='L100'></a><a href='#L100'>100</a>
+<a name='L101'></a><a href='#L101'>101</a>
+<a name='L102'></a><a href='#L102'>102</a>
+<a name='L103'></a><a href='#L103'>103</a>
+<a name='L104'></a><a href='#L104'>104</a>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a>
+<a name='L109'></a><a href='#L109'>109</a>
+<a name='L110'></a><a href='#L110'>110</a>
+<a name='L111'></a><a href='#L111'>111</a>
+<a name='L112'></a><a href='#L112'>112</a>
+<a name='L113'></a><a href='#L113'>113</a>
+<a name='L114'></a><a href='#L114'>114</a>
+<a name='L115'></a><a href='#L115'>115</a>
+<a name='L116'></a><a href='#L116'>116</a>
+<a name='L117'></a><a href='#L117'>117</a>
+<a name='L118'></a><a href='#L118'>118</a>
+<a name='L119'></a><a href='#L119'>119</a>
+<a name='L120'></a><a href='#L120'>120</a>
+<a name='L121'></a><a href='#L121'>121</a>
+<a name='L122'></a><a href='#L122'>122</a>
+<a name='L123'></a><a href='#L123'>123</a>
+<a name='L124'></a><a href='#L124'>124</a>
+<a name='L125'></a><a href='#L125'>125</a>
+<a name='L126'></a><a href='#L126'>126</a>
+<a name='L127'></a><a href='#L127'>127</a>
+<a name='L128'></a><a href='#L128'>128</a>
+<a name='L129'></a><a href='#L129'>129</a>
+<a name='L130'></a><a href='#L130'>130</a>
+<a name='L131'></a><a href='#L131'>131</a>
+<a name='L132'></a><a href='#L132'>132</a>
+<a name='L133'></a><a href='#L133'>133</a>
+<a name='L134'></a><a href='#L134'>134</a>
+<a name='L135'></a><a href='#L135'>135</a>
+<a name='L136'></a><a href='#L136'>136</a>
+<a name='L137'></a><a href='#L137'>137</a>
+<a name='L138'></a><a href='#L138'>138</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import type { ChatCompletionParams, ProviderAdapter } from "../types";
+&nbsp;
+/**
+ * 内置免费演示模型：无需任何 API 密钥。
+ * 逐块吐出一段模拟回复，让产品在零配置下也能完整体验流式交互。
+ * 第 1 阶段接入真实模型后可保留为离线/降级方案。
+ */
+export const demoProvider: ProviderAdapter = {
+  id: "demo",
+  isConfigured() {
+    return true;
+  },
+  async *streamChat({ messages }: ChatCompletionParams) {
+    const last = [...messages].reverse().find((m) =&gt; m.role === "user");
+    const question = last?.<span class="branch-0 cbranch-no" title="branch not covered" >content ?? "";</span>
+&nbsp;
+    // 识别"表格 / 对比"类请求：输出 Markdown 表格，便于体验表格渲染与 CSV 导出
+    if (/表格|对比|套餐/.test(question)) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >      const table = [</span>
+<span class="cstat-no" title="statement not covered" >        "| 套餐 | 免费版 | 专业版 | 团队版 |",</span>
+<span class="cstat-no" title="statement not covered" >        "| --- | --- | --- | --- |",</span>
+<span class="cstat-no" title="statement not covered" >        "| 每日对话 | 10 次 | 不限量 | 不限量 |",</span>
+<span class="cstat-no" title="statement not covered" >        "| 高级模型 | — | ✅ | ✅ |",</span>
+<span class="cstat-no" title="statement not covered" >        "| 无水印导出 | — | ✅ | ✅ |",</span>
+<span class="cstat-no" title="statement not covered" >        "| 价格 | ¥0 | ¥39/月 | ¥99/月 |",</span>
+<span class="cstat-no" title="statement not covered" >        "",</span>
+<span class="cstat-no" title="statement not covered" >        "上表为演示数据，悬停表格右上角可一键导出 CSV。",</span>
+<span class="cstat-no" title="statement not covered" >      ].join("\n");</span>
+<span class="cstat-no" title="statement not covered" >      const chunks = table.match(/[\s\S]{1,24}/g) ?? [table];</span>
+<span class="cstat-no" title="statement not covered" >      for (const chunk of chunks) {</span>
+<span class="cstat-no" title="statement not covered" >        yield chunk;</span>
+<span class="cstat-no" title="statement not covered" >        await new Promise((r) =&gt; setTimeout(r, 24));</span>
+<span class="cstat-no" title="statement not covered" >      }</span>
+<span class="cstat-no" title="statement not covered" >      return;</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
+&nbsp;
+    // 识别 mermaid 请求：输出图表源码，体验自动渲染
+    if (/mermaid|流程图|时序图|甘特图/i.test(question)) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >      const chart = [</span>
+<span class="cstat-no" title="statement not covered" >        "这是一张 Mermaid 流程图（自动渲染为图表）：",</span>
+<span class="cstat-no" title="statement not covered" >        "",</span>
+<span class="cstat-no" title="statement not covered" >        "```mermaid",</span>
+<span class="cstat-no" title="statement not covered" >        "graph TD",</span>
+<span class="cstat-no" title="statement not covered" >        "  A[用户输入需求] --&gt; B{选择能力}",</span>
+<span class="cstat-no" title="statement not covered" >        "  B --&gt;|写文档| C[文档工作台]",</span>
+<span class="cstat-no" title="statement not covered" >        "  B --&gt;|做PPT| D[幻灯片工作台]",</span>
+<span class="cstat-no" title="statement not covered" >        "  B --&gt;|查资料| E[深度研究]",</span>
+<span class="cstat-no" title="statement not covered" >        "  C --&gt; F[导出成果]",</span>
+<span class="cstat-no" title="statement not covered" >        "  D --&gt; F",</span>
+<span class="cstat-no" title="statement not covered" >        "  E --&gt; F",</span>
+<span class="cstat-no" title="statement not covered" >        "```",</span>
+<span class="cstat-no" title="statement not covered" >        "",</span>
+<span class="cstat-no" title="statement not covered" >        "图表源码可在代码块右上角复制。",</span>
+<span class="cstat-no" title="statement not covered" >      ].join("\n");</span>
+<span class="cstat-no" title="statement not covered" >      const chunks = chart.match(/[\s\S]{1,24}/g) ?? [chart];</span>
+<span class="cstat-no" title="statement not covered" >      for (const chunk of chunks) {</span>
+<span class="cstat-no" title="statement not covered" >        yield chunk;</span>
+<span class="cstat-no" title="statement not covered" >        await new Promise((r) =&gt; setTimeout(r, 24));</span>
+<span class="cstat-no" title="statement not covered" >      }</span>
+<span class="cstat-no" title="statement not covered" >      return;</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
+&nbsp;
+    // 识别"代码"类请求：输出带围栏的代码示例，便于体验代码块复制等能力
+    if (/代码|函数|code/i.test(question)) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >      const code = [</span>
+<span class="cstat-no" title="statement not covered" >        "这是一个防抖函数示例：",</span>
+<span class="cstat-no" title="statement not covered" >        "",</span>
+<span class="cstat-no" title="statement not covered" >        "```js",</span>
+<span class="cstat-no" title="statement not covered" >        "function debounce(fn, delay = 300) {",</span>
+<span class="cstat-no" title="statement not covered" >        "  let timer = null;",</span>
+<span class="cstat-no" title="statement not covered" >        "  return (...args) =&gt; {",</span>
+<span class="cstat-no" title="statement not covered" >        "    clearTimeout(timer);",</span>
+<span class="cstat-no" title="statement not covered" >        "    timer = setTimeout(() =&gt; fn(...args), delay);",</span>
+<span class="cstat-no" title="statement not covered" >        "  };",</span>
+<span class="cstat-no" title="statement not covered" >        "}",</span>
+<span class="cstat-no" title="statement not covered" >        "```",</span>
+<span class="cstat-no" title="statement not covered" >        "",</span>
+<span class="cstat-no" title="statement not covered" >        "在输入框右上角可一键复制代码。",</span>
+<span class="cstat-no" title="statement not covered" >      ].join("\n");</span>
+<span class="cstat-no" title="statement not covered" >      const chunks = code.match(/[\s\S]{1,24}/g) ?? [code];</span>
+<span class="cstat-no" title="statement not covered" >      for (const chunk of chunks) {</span>
+<span class="cstat-no" title="statement not covered" >        yield chunk;</span>
+<span class="cstat-no" title="statement not covered" >        await new Promise((r) =&gt; setTimeout(r, 24));</span>
+<span class="cstat-no" title="statement not covered" >      }</span>
+<span class="cstat-no" title="statement not covered" >      return;</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
+&nbsp;
+    // 识别"大纲 / 提纲"类请求：输出结构化 Markdown，便于体验目录、转 PPT 等能力
+    if (/大纲|提纲|多级标题/.test(question)) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >      const outline = [</span>
+<span class="cstat-no" title="statement not covered" >        "# 智能手机产品介绍大纲",</span>
+<span class="cstat-no" title="statement not covered" >        "",</span>
+<span class="cstat-no" title="statement not covered" >        "## 一、产品定位",</span>
+<span class="cstat-no" title="statement not covered" >        "面向年轻创作者的 AI 影像旗舰：一句话定位 + 目标人群画像。",</span>
+<span class="cstat-no" title="statement not covered" >        "",</span>
+<span class="cstat-no" title="statement not covered" >        "## 二、核心亮点",</span>
+<span class="cstat-no" title="statement not covered" >        "1. 影像系统：一英寸大底 + AI 摄影助手",</span>
+<span class="cstat-no" title="statement not covered" >        "2. 性能：旗舰芯片与散热架构",</span>
+<span class="cstat-no" title="statement not covered" >        "3. AI 能力：实时转录、圈选搜索、AI 修图",</span>
+<span class="cstat-no" title="statement not covered" >        "",</span>
+<span class="cstat-no" title="statement not covered" >        "## 三、设计与做工",</span>
+<span class="cstat-no" title="statement not covered" >        "机身工艺、配色方案、握持手感与防护等级。",</span>
+<span class="cstat-no" title="statement not covered" >        "",</span>
+<span class="cstat-no" title="statement not covered" >        "## 四、价格与上市计划",</span>
+<span class="cstat-no" title="statement not covered" >        "定价策略、首发权益与开售时间表。",</span>
+<span class="cstat-no" title="statement not covered" >        "",</span>
+<span class="cstat-no" title="statement not covered" >        "## 五、总结",</span>
+<span class="cstat-no" title="statement not covered" >        "一段 30 秒的电梯陈述，把以上要点串起来。",</span>
+<span class="cstat-no" title="statement not covered" >      ].join("\n");</span>
+<span class="cstat-no" title="statement not covered" >      const outlineChunks = outline.match(/[\s\S]{1,24}/g) ?? [outline];</span>
+<span class="cstat-no" title="statement not covered" >      for (const chunk of outlineChunks) {</span>
+<span class="cstat-no" title="statement not covered" >        yield chunk;</span>
+<span class="cstat-no" title="statement not covered" >        await new Promise((r) =&gt; setTimeout(r, 24));</span>
+<span class="cstat-no" title="statement not covered" >      }</span>
+<span class="cstat-no" title="statement not covered" >      return;</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
+&nbsp;
+    const reply = [
+      `你好！我是内置演示模型 👋 你刚才说的是：「${question.slice(0, 80)}」`,
+      "",
+      "当前没有配置任何真实大模型密钥，所以我在本地模拟流式回复。",
+      "要接入真实模型，请在项目根目录创建 .env.local（参考 .env.example），填入任意一个密钥：",
+      "",
+      "• 海外：OPENAI_API_KEY（GPT）或 ANTHROPIC_API_KEY（Claude）",
+      "• 国内：DEEPSEEK_API_KEY（DeepSeek）或 DASHSCOPE_API_KEY（通义千问）",
+      "",
+      "配置后刷新页面，即可在右上角模型选择器切换。后续阶段我还会接入：",
+      "PPT 生成、深度研究、AI 绘图、视频生成、品牌中心与积分订阅系统。",
+    ].join("\n");
+&nbsp;
+    const chunks = reply.match(/[\s\S]{1,24}/g<span class="branch-0 cbranch-no" title="branch not covered" >) ?? [reply];</span>
+    for (const chunk of chunks) {
+      yield chunk;
+      await new Promise((r) =&gt; setTimeout(r, 28));
+    }
+  },
+};
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-09-08T05:13:56.958Z
+            </div>
+        <script src="../../../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../../../sorter.js"></script>
+        <script src="../../../../block-navigation.js"></script>
+    </body>
+</html>
+    
