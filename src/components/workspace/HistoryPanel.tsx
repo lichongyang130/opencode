@@ -413,13 +413,15 @@ export function HistoryPanel({
   }
 
   // UX1: 非受控（无 railCollapsed prop）时收起态保留 48px 悬停展开条；
-  // R5：Workspace 受控收起＝完全隐藏，主区不出现第二条竖栏
+  // R5：Workspace 受控收起＝桌面完全隐藏（主区不出现第二条竖栏）；
+  // 移动端抽屉（mobileOpen）不受“桌面收起偏好”影响，走到下方全量面板分支
   const railConvos = conversations.filter((c) => !c.archived).slice(0, 12);
   if (railMode && !railHover) {
-    if (railCollapsed !== undefined) {
+    if (railCollapsed !== undefined && !mobileOpen) {
       return null;
     }
-    return (
+    if (railCollapsed === undefined) {
+      return (
       <aside
         onMouseEnter={() => setRailHover(true)}
         className="hidden w-12 shrink-0 flex-col items-center gap-1 border-r border-[#e8ddca] bg-[#fbf7ef] py-3 md:flex"
@@ -459,7 +461,8 @@ export function HistoryPanel({
           })}
         </div>
       </aside>
-    );
+      );
+    }
   }
 
   return (
