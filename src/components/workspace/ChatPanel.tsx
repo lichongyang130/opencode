@@ -161,7 +161,7 @@ function MessageBubble({
         <div className="flex w-full max-w-full gap-3">
           <span
             aria-hidden
-            className="mt-0.5 flex h-7 w-7 shrink-0 select-none items-center justify-center rounded-lg bg-stone-900 text-[12px] font-bold text-white shadow-sm"
+            className="mt-0.5 flex h-7 w-7 shrink-0 select-none items-center justify-center rounded-lg bg-violet-600 text-[12px] font-bold text-white shadow-sm dark:bg-violet-500"
           >
             O
           </span>
@@ -691,7 +691,7 @@ function SplitComposer({
               onClick={submit}
               disabled={!input.trim()}
               title={input.trim() ? "发送（回车）" : "输入内容后可发送"}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-stone-900 text-white shadow-sm transition hover:bg-stone-700 disabled:bg-stone-100 disabled:text-stone-300 disabled:shadow-none"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-600 text-white shadow-sm shadow-violet-200 transition hover:bg-violet-700 disabled:bg-stone-100 disabled:text-stone-300 disabled:shadow-none dark:bg-violet-500 dark:hover:bg-violet-400 dark:shadow-none"
             >
               <ArrowUp className="h-4 w-4" />
             </button>
