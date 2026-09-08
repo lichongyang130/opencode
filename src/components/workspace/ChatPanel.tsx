@@ -877,6 +877,9 @@ export function ChatPanel() {
   const deckLoading = mode === "slides" && convo?.deckStatus === "loading";
   // 助手身份行小标签：当前模型名（Codex 每条消息头部同款）
   const modelLabel = MODELS.find((m) => m.id === model)?.label ?? model;
+  // d4：仅有当前这一个（新开）会话＝新用户，空态给建议卡引导；
+  // 已有历史会话＝老用户，回到纯净 r5 空态（只欢迎语 + 输入框）
+  const isFirstTime = conversations.length <= 1;
 
   const scrollToBottom = (smooth = true) =>
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: smooth ? "smooth" : "auto" });
@@ -1119,32 +1122,34 @@ export function ChatPanel() {
               </div>
               <p className="mt-2 text-xs text-stone-400">回车发送 · Shift+回车换行 · 点上方「技能」可切换 文档 / PPT / 图片</p>
 
-              {/* ChatGPT/Codex 风格空态：4 张建议卡（浅色卡片 + 图标 + 一句说明） */}
-              <div className="mx-auto mt-7 grid max-w-2xl grid-cols-1 gap-3 text-left sm:grid-cols-2">
-                {HOME_CARDS.slice(0, 4).map((q) => {
-                  const Icon = q.icon;
-                  return (
-                    <button
-                      key={q.title}
-                      aria-label={q.title}
-                      onClick={() => {
-                        useChatStore.getState().setMode(q.mode);
-                        setInput(q.prompt);
-                        setTimeout(() => inputRef.current?.focus(), 0);
-                      }}
-                      className="flex items-start gap-3 rounded-2xl border border-stone-200 bg-white p-4 text-left transition hover:border-stone-300 hover:bg-stone-50"
-                    >
-                      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-stone-100 text-stone-600">
-                        <Icon className="h-[18px] w-[18px]" />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block text-sm font-semibold text-stone-800">{q.title}</span>
-                        <span className="mt-0.5 block text-xs text-stone-500">{q.desc}</span>
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+              {/* d4：新用户（无历史会话）空态给 2×2 建议卡引导；老用户回落纯净 r5 */}
+              {isFirstTime && (
+                <div className="mx-auto mt-7 grid max-w-2xl grid-cols-1 gap-3 text-left sm:grid-cols-2">
+                  {HOME_CARDS.slice(0, 4).map((q) => {
+                    const Icon = q.icon;
+                    return (
+                      <button
+                        key={q.title}
+                        aria-label={q.title}
+                        onClick={() => {
+                          useChatStore.getState().setMode(q.mode);
+                          setInput(q.prompt);
+                          setTimeout(() => inputRef.current?.focus(), 0);
+                        }}
+                        className="flex items-start gap-3 rounded-2xl border border-stone-200 bg-white p-4 text-left transition hover:border-stone-300 hover:bg-stone-50"
+                      >
+                        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-stone-100 text-stone-600">
+                          <Icon className="h-[18px] w-[18px]" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold text-stone-800">{q.title}</span>
+                          <span className="mt-0.5 block text-xs text-stone-500">{q.desc}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-5">
