@@ -497,7 +497,10 @@ export const useChatStore = create<ChatState>((set, get) => {
     convoCursor: null,
     loadingMore: false,
     settingsOpen: false,
-    artifactOpen: !isNarrowScreen(),
+    // AI 对话默认纯净：产物画布默认关闭。纯 chat 不弹右侧面板（Codex 极简）；
+    // 文档/PPT/研究等产物模式有产物时由 ArtifactPanel 自动弹出。窄屏下仍默认
+    // dismissed，避免自动弹出的覆盖式画布挡住对话。
+    artifactOpen: false,
     artifactDismissed: isNarrowScreen(),
     docBusy: false,
     docSaveState: "idle",
