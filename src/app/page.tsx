@@ -1,815 +1,508 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
+  ArrowDown,
   ArrowRight,
-  ArrowUp,
   BarChart3,
-  Bell,
-  Bot,
-  BrainCircuit,
-  ChevronDown,
-  ChevronLeft,
+  Check,
   ChevronRight,
-  Code2,
-  Database,
+  Clapperboard,
+  Download,
   FileText,
-  FileUp,
   Globe,
-  Home,
   Image as ImageIcon,
-  LayoutGrid,
-  LayoutTemplate,
-  Lightbulb,
-  MessageSquare,
-  PanelRight,
+  LayoutDashboard,
+  Monitor,
   Presentation,
-  ScanSearch,
-  Settings,
-  SlidersHorizontal,
-  X,
-  Share2,
+  Search,
   Sparkles,
-  Wrench,
+  Wand2,
 } from "lucide-react";
-import type { WorkspaceMode } from "@/lib/store/chat";
-import { ModelSelector } from "@/components/workspace/ModelSelector";
-import { ArtifactPanel } from "@/components/workspace/ArtifactPanel";
-import { AppLauncherMenu, NotificationBell } from "@/components/shell/TopBarMenus";
-import { useChatStore } from "@/lib/store/chat";
-import { loadDocuments } from "@/lib/documents";
-import { toast } from "@/lib/store/toast";
 import { cn } from "@/lib/utils";
 
-/* ---------------- 数据 ---------------- */
+/* ════════════════════════════════════════════════════════
+ *  首页 · 编辑排版风（对应效果图 home-c5-editorial）
+ *  “灵感进来，作品出去” —— 打字机排版导向的营销落地页。
+ *  视觉主角是暖米三栏工作台的「浏览器窗口」产品图，
+ *  下方 01/02/03 编号式功能纵列，底栏收束到单一 CTA。
+ * ════════════════════════════════════════════════════════ */
 
-/** 侧边导航：每一项都指向真实存在的页面（此前全部指向 /chat） */
-const NAV_ITEMS = [
-  { icon: Home, label: "首页", route: "/" },
-  { icon: MessageSquare, label: "AI 对话", route: "/chat" },
-  { icon: Bot, label: "智能体", route: "/agents" },
-  { icon: Database, label: "知识库", route: "/knowledge" },
-  { icon: FileText, label: "文档中心", route: "/docs" },
-  { icon: LayoutTemplate, label: "模板中心", route: "/templates" },
-  { icon: Wrench, label: "工具箱", route: "/tools" },
-  { icon: LayoutGrid, label: "更多应用", route: "/apps" },
+const NAV_LINKS = [
+  { label: "怎么用", href: "#how" },
+  { label: "能做什么", href: "#capabilities" },
 ];
 
-/** 快捷操作：全部指向真实可执行的动作，不再有「点了没下文」的占位项 */
-const QUICK_ACTIONS: Array<{
-  icon: typeof FileText;
-  label: string;
-  color: string;
-  mode: WorkspaceMode;
-  prompt?: string;
-}> = [
-  { icon: FileText, label: "写文档", color: "text-blue-500", mode: "docs" },
-  { icon: Presentation, label: "做PPT", color: "text-orange-500", mode: "slides" },
-  { icon: ImageIcon, label: "生成图片", color: "text-emerald-500", mode: "image" },
-  {
-    icon: ScanSearch,
-    label: "深度研究",
-    color: "text-cyan-500",
-    mode: "research",
-    prompt: "请帮我深度研究：",
-  },
-  { icon: Lightbulb, label: "头脑风暴", color: "text-amber-500", mode: "chat", prompt: "围绕以下主题做一次头脑风暴，给出 10 个有创意的想法：" },
-  { icon: BarChart3, label: "数据分析", color: "text-violet-500", mode: "chat", prompt: "帮我分析以下数据，给出关键洞察和图表建议：\n" },
+/* 图标轨里的能力图标（产品窗口缩略图用） */
+const RAIL_CAPS = [
+  { icon: Globe, tint: "text-rose-500" },
+  { icon: Clapperboard, tint: "text-violet-500" },
+  { icon: Monitor, tint: "text-sky-500" },
+  { icon: LayoutDashboard, tint: "text-emerald-500" },
+  { icon: Presentation, tint: "text-amber-500" },
 ];
 
-/** 常用场景卡：点击跳转到对应工作台并填入真实开场提示词 */
-const SCENE_CARDS: Array<{
-  icon: typeof FileText;
-  title: string;
-  desc: string;
-  tile: string;
-  bg: string;
-  mode: WorkspaceMode;
-  prompt?: string;
-}> = [
-  {
-    icon: Presentation,
-    title: "一键做 PPT",
-    desc: "给个主题，自动生成整套幻灯片",
-    tile: "from-orange-400 to-red-400",
-    bg: "bg-orange-50/60",
-    mode: "slides",
-  },
-  {
-    icon: FileText,
-    title: "文档写作",
-    desc: "周报、方案、计划书直接成稿",
-    tile: "from-blue-400 to-sky-400",
-    bg: "bg-blue-50/60",
-    mode: "docs",
-  },
-  {
-    icon: ImageIcon,
-    title: "AI 绘图",
-    desc: "描述想法，生成精美图片",
-    tile: "from-pink-400 to-rose-400",
-    bg: "bg-pink-50/60",
-    mode: "image",
-  },
-  {
-    icon: ScanSearch,
-    title: "深度研究",
-    desc: "联网查证，产出带引用的报告",
-    tile: "from-emerald-400 to-teal-400",
-    bg: "bg-emerald-50/60",
-    mode: "research",
-    prompt: "请帮我深度研究：",
-  },
-  {
-    icon: Share2,
-    title: "写营销文案",
-    desc: "小红书、公众号、广告语都能写",
-    tile: "from-violet-400 to-purple-400",
-    bg: "bg-violet-50/60",
-    mode: "chat",
-    prompt: "为下面的产品写 5 条小红书风格的营销文案：",
-  },
-  {
-    icon: Code2,
-    title: "代码助手",
-    desc: "写代码、修 bug、讲思路",
-    tile: "from-indigo-400 to-blue-500",
-    bg: "bg-indigo-50/60",
-    mode: "chat",
-    prompt: "你是资深工程师，请帮我：",
-  },
+/* 历史面板行（缩略图用，长度各异模拟真实标题） */
+const HISTORY_ROWS = [
+  { w: "w-24", active: true, chip: "bg-orange-200", icon: Presentation, tint: "text-orange-600" },
+  { w: "w-20", active: false, chip: "bg-sky-200", icon: FileText, tint: "text-sky-600" },
+  { w: "w-28", active: false, chip: "bg-emerald-200", icon: Search, tint: "text-emerald-600" },
+  { w: "w-24", active: false, chip: "bg-violet-200", icon: ImageIcon, tint: "text-violet-600" },
+  { w: "w-20", active: false, chip: "bg-amber-200", icon: MessageIcon, tint: "text-amber-600" },
 ];
 
-/** 会话产物 → 图标（最近列表不再一律显示成「文档」） */
-const ARTIFACT_ICONS: Record<string, typeof FileText> = {
-  PPT: Presentation,
-  研究报告: ScanSearch,
-  文档: FileText,
-  图片: ImageIcon,
-};
-
-interface RecentConvo {
-  id: string;
-  title: string;
-  mode?: string;
-  updatedAt?: number;
-  /** 产物类型标签：PPT / 研究报告 / 文档 / 图片 */
-  artifact?: string | null;
+function MessageIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+    </svg>
+  );
 }
 
-/* ---------------- 页面 ---------------- */
-
-export default function HomePage() {
-  const router = useRouter();
-  // 当前路径驱动导航高亮，避免侧栏永远把「首页」点亮
-  const pathname = usePathname();
-  const { model, setModel } = useChatStore();
-  const [input, setInput] = useState("");
-  const [greeting, setGreeting] = useState("你好");
-  const [recent, setRecent] = useState<RecentConvo[]>([]);
-  const [featureOpen, setFeatureOpen] = useState(false);
-  const [thinking, setThinking] = useState(false);
-  const [webSearch, setWebSearch] = useState(false);
-  const [attachment, setAttachment] = useState<{ name: string; content: string } | null>(null);
-  const [latestDoc, setLatestDoc] = useState<{ name: string } | null>(null);
-  const [dragOver, setDragOver] = useState(false);
-  /** AI 创作画布显隐（右上角按钮控制，默认收起） */
-  const [canvasOpen, setCanvasOpen] = useState(false);
-  const [canvasConvoId, setCanvasConvoId] = useState<string | null>(null);
-  const taRef = useRef<HTMLTextAreaElement>(null);
-  const featureRef = useRef<HTMLDivElement>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
-  const railRef = useRef<HTMLDivElement>(null);
-
-  /** 常用场景：左右箭头滚动一屏 */
-  const scrollRail = (dir: -1 | 1) => {
-    const el = railRef.current;
-    if (!el) return;
-    el.scrollBy({ left: dir * Math.max(el.clientWidth * 0.8, 240), behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    const onClick = (e: MouseEvent) => {
-      const t = e.target as Node;
-      if (featureRef.current && !featureRef.current.contains(t)) setFeatureOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      setFeatureOpen(false);
-    };
-    document.addEventListener("mousedown", onClick);
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onClick);
-      window.removeEventListener("keydown", onKey);
-    };
-  }, []);
-
-  useEffect(() => {
-    const h = new Date().getHours();
-    setGreeting(h < 6 ? "夜深了" : h < 12 ? "上午好" : h < 18 ? "下午好" : "晚上好");
-    // 拉取最近对话（供「继续上次 / 最近任务」真实数据展示）
-    fetch("/api/conversations")
-      .then((r) => r.json())
-      .then(
-        (d: {
-          conversations?: Array<{
-            id: string;
-            title: string;
-            archived?: boolean;
-            mode?: string;
-            updatedAt?: number;
-            deck?: unknown;
-            report?: unknown;
-            doc?: unknown;
-            images?: unknown[];
-          }>;
-        }) => {
-          const list = (d.conversations ?? []).filter((c) => !c.archived);
-          setRecent(
-            list.slice(0, 8).map((c) => ({
-              id: c.id,
-              title: c.title,
-              mode: c.mode,
-              updatedAt: c.updatedAt,
-              artifact: c.deck
-                ? "PPT"
-                : c.report
-                  ? "研究报告"
-                  : c.doc
-                    ? "文档"
-                    : (c.images?.length ?? 0) > 0
-                      ? "图片"
-                      : null,
-            })),
-          );
-          // AI 画布默认展示「最近一条有产物的会话」，没有就展示最近一条
-          const withArtifact = list.find(
-            (c) => c.deck || c.report || c.doc || (c.images?.length ?? 0) > 0,
-          );
-          setCanvasConvoId((withArtifact ?? list[0])?.id ?? null);
-        },
-      )
-      .catch(() => {});
-    // 文档中心：取最新文档（本地数据，读得到就用）
-    try {
-      const docs = loadDocuments().filter((d) => !d.trashed);
-      setLatestDoc(docs[0] ? { name: docs[0].name } : null);
-    } catch {}
-  }, []);
-
-  /** 读取文本文件作为附件（上传按钮与拖拽共用） */
-  const readFile = (f: File) => {
-    const isText =
-      /\\.(txt|md|mdx|csv|json|log|yaml|yml|ini|tsv|xml)$/i.test(f.name) ||
-      f.type.startsWith("text/");
-    if (!isText) {
-      toast("目前支持文本文件：txt / md / csv / json / log 等", "error");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const content = String(reader.result ?? "").slice(0, 12000);
-      setAttachment({ name: f.name, content });
-      toast(`已读取附件《${f.name}》，发送时一并发给模型`, "success");
-    };
-    reader.readAsText(f);
-  };
-
-  /** 把意图写入 sessionStorage，交给 /chat 工作区消费 */
-  const goChat = (intent?: Record<string, unknown>) => {
-    if (intent) {
-      try {
-        sessionStorage.setItem("oc:homeIntent", JSON.stringify({ ...intent, ts: Date.now() }));
-      } catch {}
-    }
-    router.push("/chat");
-  };
-
-  const submit = () => {
-    const text = input.trim();
-    if (!text) return goChat();
-    goChat({
-      type: "send",
-      mode: "chat",
-      text,
-      deep: thinking,
-      web: webSearch,
-      attachment: attachment ?? undefined,
-    });
-  };
-
-  const openConvo = (id: string) => goChat({ type: "convo", id });
-
+/* ---------- 产品窗口：暖米三栏工作台（纯 CSS 绘制，保证锐利） ---------- */
+function ProductWindow() {
   return (
-    <div className="flex h-screen overflow-hidden bg-[#fdfaf6] text-stone-800">
-      {/* ============ 移动端顶部导航（侧栏在小屏隐藏，这里补上入口） ============ */}
-      <div className="fixed inset-x-0 top-0 z-30 border-b border-stone-100 bg-white/95 backdrop-blur md:hidden">
-        <div className="flex items-center gap-2 px-4 pt-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-500 text-base font-bold text-white shadow-sm">
-            O
-          </div>
-          <span className="text-[15px] font-semibold tracking-tight">OpenCanvas</span>
-          <button
-            onClick={() => router.push("/settings")}
-            aria-label="设置中心"
-            title="设置中心"
-            className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg text-stone-500 transition hover:bg-stone-100"
-          >
-            <Settings className="h-4 w-4" />
-          </button>
+    <div className="rounded-2xl border border-stone-200/90 bg-white shadow-[0_40px_90px_-20px_rgba(41,37,36,0.35)]">
+      {/* 浏览器标题栏 */}
+      <div className="flex items-center gap-2 border-b border-stone-100 bg-[#faf7f2] px-4 py-2.5">
+        <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
+        <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
+        <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+        <div className="mx-auto flex h-5 w-44 items-center justify-center gap-1 rounded-md bg-white text-[9px] text-stone-400">
+          opencanvas.app/chat
         </div>
-        <nav className="flex gap-1 overflow-x-auto px-3 py-2">
-          {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.route;
-            return (
-              <button
-                key={item.label}
-                onClick={() => router.push(item.route)}
-                aria-current={isActive ? "page" : undefined}
-                className={
-                  isActive
-                    ? "flex shrink-0 items-center gap-1.5 rounded-lg bg-orange-50 px-2.5 py-1.5 text-[12.5px] font-medium text-orange-600"
-                    : "flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12.5px] text-stone-600"
-                }
-              >
-                <item.icon className="h-4 w-4" />
-                {item.label}
-              </button>
-            );
-          })}
-        </nav>
       </div>
 
-      {/* ============ 左侧导航 ============ */}
-      <aside className="hidden w-[208px] shrink-0 flex-col border-r border-stone-100 bg-white md:flex">
-        {/* Logo */}
-        <div className="flex items-center gap-2.5 px-4 pb-2 pt-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-500 text-lg font-bold text-white shadow-sm">
+      {/* 三栏主体 */}
+      <div className="flex h-[300px] text-left">
+        {/* 图标轨 */}
+        <div className="flex w-10 flex-col items-center gap-2 border-r border-[#e8ddca] bg-[#f5efe4] py-3">
+          <div className="mb-1 flex h-5 w-5 items-center justify-center rounded-md bg-orange-500 text-[8px] font-bold text-white">
             O
           </div>
-          <span className="text-[16px] font-semibold tracking-tight">OpenCanvas</span>
+          {RAIL_CAPS.map((c, i) => (
+            <c.icon key={i} className={cn("h-3 w-3", c.tint)} />
+          ))}
+          <div className="my-1 h-px w-4 bg-stone-200" />
         </div>
 
-        {/* 导航 */}
-        <nav className="mt-3 flex flex-col gap-0.5 px-2">
-          {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.route;
-            return (
-              <button
-                key={item.label}
-                onClick={() => router.push(item.route)}
-                aria-current={isActive ? "page" : undefined}
-                className={
-                  isActive
-                    ? "flex items-center gap-3 rounded-xl bg-orange-50 px-2.5 py-2.5 text-[13.5px] font-medium text-orange-600"
-                    : "flex items-center gap-3 rounded-xl px-2.5 py-2.5 text-[13.5px] text-stone-600 transition hover:bg-stone-50 hover:text-stone-900"
-                }
-              >
-                <item.icon className="h-[18px] w-[18px]" strokeWidth={isActive ? 2.2 : 1.8} />
-                {item.label}
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* 最近对话 */}
-        <div className="mt-5 flex-1 overflow-y-auto px-3.5">
-          <p className="mb-2 text-xs font-medium text-stone-400">最近对话</p>
-          <div className="flex flex-col gap-0.5 -mx-2">
-            {recent.length === 0 && (
-              <p className="px-2 py-1 text-xs text-stone-300">暂无历史对话</p>
-            )}
-            {recent.map((c) => {
-              const Icon = (c.artifact && ARTIFACT_ICONS[c.artifact]) || FileText;
-              return (
-                <button
-                  key={c.id}
-                  onClick={() => openConvo(c.id)}
-                  title={c.title}
-                  className="flex items-center gap-2 truncate rounded-lg px-2 py-1.5 text-left text-[13px] text-stone-500 transition hover:bg-stone-50 hover:text-stone-800"
-                >
-                  <Icon className="h-3.5 w-3.5 shrink-0 text-stone-300" />
-                  <span className="truncate">{c.title}</span>
-                </button>
-              );
-            })}
-          </div>
-          <button
-            onClick={() => goChat({ type: "history" })}
-            className="mt-2 flex items-center gap-1 text-xs text-stone-400 transition hover:text-orange-600"
-          >
-            查看全部历史记录 <ArrowRight className="h-3 w-3" />
-          </button>
-        </div>
-
-        {/* 设置入口 */}
-        <div className="border-t border-stone-100 p-2">
-          <button
-            onClick={() => router.push("/settings")}
-            title="设置中心：模型 / 数据 / 备份"
-            className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2.5 text-[13.5px] text-stone-600 transition hover:bg-stone-50 hover:text-stone-900"
-          >
-            <Settings className="h-[18px] w-[18px]" strokeWidth={1.8} />
-            设置
-            <span className="ml-auto text-[11px] text-stone-300">模型 / 备份</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* ============ 主区域 ============ */}
-      <main className="relative flex-1 overflow-y-auto pt-[92px] md:pt-0">
-        {/* 背景光晕 */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(60%_100%_at_50%_0%,rgba(255,183,148,0.18),rgba(244,114,182,0.07)_55%,transparent_100%)]" />
-
-        {/* 顶栏 */}
-        <header className="relative z-10 flex items-center justify-end gap-2 px-8 pt-5">
-          {/* AI 创作画布：点击显示 / 再点隐藏 */}
-          <button
-            onClick={() => setCanvasOpen((v) => !v)}
-            title={canvasOpen ? "隐藏 AI 画布" : "显示 AI 画布"}
-            aria-label={canvasOpen ? "隐藏 AI 画布" : "显示 AI 画布"}
-            aria-pressed={canvasOpen}
-            className={
-              canvasOpen
-                ? "flex h-9 w-9 items-center justify-center rounded-lg bg-orange-50 text-orange-600 transition hover:bg-orange-100"
-                : "flex h-9 w-9 items-center justify-center rounded-lg text-stone-500 transition hover:bg-white hover:text-stone-800"
-            }
-          >
-            <PanelRight className="h-[18px] w-[18px]" />
-          </button>
-
-          <button
-            onClick={() => router.push("/settings")}
-            title="设置中心"
-            aria-label="设置中心"
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-stone-500 transition hover:bg-white hover:text-stone-800"
-          >
-            <Settings className="h-[18px] w-[18px]" />
-          </button>
-
-          {/* 最近动态 */}
-          <NotificationBell />
-
-          {/* 更多应用 */}
-          <AppLauncherMenu />
-
-          <button
-            onClick={() => goChat({ type: "new" })}
-            className="ml-2 rounded-xl border border-orange-200 bg-white px-4 py-2 text-sm font-medium text-orange-600 shadow-sm transition hover:border-orange-300 hover:bg-orange-50"
-          >
-            新建对话
-          </button>
-        </header>
-
-        <div className="relative z-10 mx-auto max-w-[1080px] px-8 pb-16">
-          {/* 问候 */}
-          <div className="mt-10 text-center">
-            <h1 className="text-[40px] font-bold leading-tight tracking-tight text-stone-900">
-              {greeting} 👋
-            </h1>
-            <p className="mt-1 bg-gradient-to-r from-orange-500 via-pink-500 to-violet-500 bg-clip-text text-[34px] font-bold tracking-tight text-transparent">
-              今天想创造点什么？
-            </p>
-            <p className="mt-3 text-[15px] text-stone-500">
-              用 AI 把想法变成现实，探索<span className="font-medium text-stone-700">无限可能</span>
-            </p>
-          </div>
-
-          {/* 输入舱（支持拖拽文本文件直接附上） */}
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragOver(true);
-            }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setDragOver(false);
-              const f = e.dataTransfer.files?.[0];
-              if (f) readFile(f);
-            }}
-            className={cn(
-              "mt-8 rounded-2xl border bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,0.05)] transition",
-              dragOver ? "border-orange-400 ring-2 ring-orange-200" : "border-stone-200/80",
-              dragOver && "relative"
-            )}
-          >
-            {dragOver && (
-              <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-orange-500/10 backdrop-blur-[1px]">
-                <span className="rounded-full bg-white px-4 py-2 text-sm font-medium text-orange-600 shadow-md">
-                  松手即可上传文本文件
-                </span>
-              </div>
-            )}
-            <textarea
-              ref={taRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  submit();
-                }
-              }}
-              rows={3}
-              placeholder="描述你的需求，开始创作…"
-              className="w-full resize-none bg-transparent text-[15px] leading-relaxed text-stone-800 outline-none placeholder:text-stone-400"
-            />
-            {attachment && (
-              <div className="mt-2 flex items-center gap-2 rounded-lg bg-stone-100 px-2.5 py-1.5 text-[13px] text-stone-600">
-                <FileUp className="h-3.5 w-3.5 shrink-0 text-stone-400" />
-                <span className="min-w-0 truncate">{attachment.name}</span>
-                <span className="shrink-0 text-[11px] text-stone-400">
-                  {attachment.content.length} 字
-                </span>
-                <button
-                  onClick={() => setAttachment(null)}
-                  aria-label="移除附件"
-                  className="ml-auto text-stone-400 transition hover:text-stone-700"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            )}
-            <div className="mt-2 flex items-center justify-between">
-              <div ref={featureRef} className="relative">
-                <button
-                  onClick={() => setFeatureOpen((v) => !v)}
-                  aria-haspopup="menu"
-                  aria-expanded={featureOpen}
-                  className={cn(
-                    "flex h-[38px] items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium transition",
-                    featureOpen
-                      ? "border-orange-300 bg-orange-50 text-orange-600"
-                      : "border-stone-200 text-stone-600 hover:border-stone-300 hover:bg-stone-50"
-                  )}
-                >
-                  <SlidersHorizontal className="h-4 w-4" />
-                  功能
-                  <span className="text-stone-400">
-                    {[thinking && "深度", webSearch && "联网"].filter(Boolean).join(" · ")}
-                  </span>
-                  <ChevronDown
-                    className={cn("h-3.5 w-3.5 text-stone-400 transition-transform", featureOpen && "rotate-180")}
-                  />
-                </button>
-
-                {featureOpen && (
-                  <div className="absolute left-0 top-[calc(100%+6px)] z-30 w-[248px] overflow-hidden rounded-xl border border-stone-200 bg-white p-1.5 shadow-xl">
-                    <button
-                      onClick={() => setThinking((v) => !v)}
-                      className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition hover:bg-orange-50"
-                    >
-                      <BrainCircuit className={cn("h-4 w-4", thinking ? "text-orange-500" : "text-stone-400")} />
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-[13px] text-stone-800">深度思考</span>
-                        <span className="block text-[11px] text-stone-400">慢速逐点推理，更适合复杂问题</span>
-                      </span>
-                      <Toggle on={thinking} />
-                    </button>
-                    <button
-                      onClick={() => setWebSearch((v) => !v)}
-                      className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition hover:bg-orange-50"
-                    >
-                      <Globe className={cn("h-4 w-4", webSearch ? "text-orange-500" : "text-stone-400")} />
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-[13px] text-stone-800">联网搜索</span>
-                        <span className="block text-[11px] text-stone-400">检索互联网最新信息回答</span>
-                      </span>
-                      <Toggle on={webSearch} />
-                    </button>
-
-                    <div className="my-1 border-t border-stone-100" />
-
-                    <button
-                      onClick={() => fileRef.current?.click()}
-                      className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition hover:bg-orange-50"
-                    >
-                      <FileUp className="h-4 w-4 text-stone-400" />
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-[13px] text-stone-800">上传文件</span>
-                        <span className="block text-[11px] text-stone-400">支持 txt / md / csv / json 等文本</span>
-                      </span>
-                      <ChevronRight className="h-3.5 w-3.5 text-stone-300" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        setFeatureOpen(false);
-                        router.push("/agents");
-                      }}
-                      className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition hover:bg-orange-50"
-                    >
-                      <Bot className="h-4 w-4 text-stone-400" />
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-[13px] text-stone-800">选择智能体</span>
-                        <span className="block text-[11px] text-stone-400">去智能体广场挑选专家 AI</span>
-                      </span>
-                      <ChevronRight className="h-3.5 w-3.5 text-stone-300" />
-                    </button>
-                  </div>
+        {/* 历史面板 */}
+        <div className="hidden w-32 flex-col border-r border-[#e8ddca] bg-[#fbf7ef] px-2 py-3 sm:flex">
+          <div className="mb-2 text-[9px] font-semibold text-stone-500">对话历史</div>
+          <div className="space-y-1.5">
+            {HISTORY_ROWS.map((r, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-md px-1.5 py-1",
+                  r.active ? "bg-orange-50 ring-1 ring-orange-100" : ""
                 )}
-              </div>
-              <input
-                ref={fileRef}
-                type="file"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) readFile(f);
-                  setFeatureOpen(false);
-                  e.currentTarget.value = "";
-                }}
-              />
-              <div className="flex shrink-0 items-center gap-2">
-                <ModelSelector value={model} onChange={(id, provider) => setModel(id, provider)} />
-                <button
-                  onClick={submit}
-                  aria-label="发送"
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-md shadow-orange-200 transition hover:brightness-105 active:scale-95"
-                >
-                  <ArrowUp className="h-5 w-5" strokeWidth={2.4} />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* 继续上次 + 最近文档 */}
-          {(recent[0] || latestDoc) && (
-            <div className="mt-5 flex flex-wrap items-center gap-2.5">
-              <span className="text-[12.5px] font-medium text-stone-400">继续上次</span>
-              {recent[0] && (
-                <button
-                  onClick={() => openConvo(recent[0].id)}
-                  title={recent[0].title}
-                  className="flex max-w-[300px] items-center gap-1.5 rounded-full border border-stone-200/80 bg-white px-3 py-1.5 text-[12.5px] text-stone-600 shadow-sm transition hover:border-orange-300 hover:text-orange-600"
-                >
-                  <MessageSquare className="h-3.5 w-3.5 shrink-0 text-orange-400" />
-                  <span className="truncate">{recent[0].title}</span>
-                </button>
-              )}
-              {latestDoc && (
-                <button
-                  onClick={() => router.push("/docs")}
-                  title={latestDoc.name}
-                  className="flex max-w-[300px] items-center gap-1.5 rounded-full border border-stone-200/80 bg-white px-3 py-1.5 text-[12.5px] text-stone-600 shadow-sm transition hover:border-orange-300 hover:text-orange-600"
-                >
-                  <FileText className="h-3.5 w-3.5 shrink-0 text-sky-400" />
-                  <span className="truncate">{latestDoc.name}</span>
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* 快捷操作 */}
-          <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-6">
-            {QUICK_ACTIONS.map((a) => (
-              <button
-                key={a.label}
-                onClick={() =>
-                  a.prompt
-                    ? goChat({ type: "fill", mode: a.mode, text: a.prompt })
-                    : goChat({ type: "mode", mode: a.mode })
-                }
-                className="flex items-center justify-center gap-2 rounded-xl border border-stone-200/80 bg-white py-3 text-[13.5px] font-medium text-stone-700 shadow-sm transition  hover:border-stone-300 hover:shadow"
               >
-                <a.icon className={`h-4 w-4 ${a.color}`} />
-                {a.label}
-              </button>
+                <span className={cn("flex h-4 w-4 shrink-0 items-center justify-center rounded", r.chip)}>
+                  <r.icon className={cn("h-2 w-2", r.tint)} />
+                </span>
+                <span className={cn("h-1.5 rounded-full bg-stone-200", r.w)} />
+              </div>
             ))}
           </div>
-
-          {/* 常用场景 */}
-          <div className="mt-10">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="flex items-center gap-2 text-[15px] font-semibold text-stone-800">
-                  <Sparkles className="h-4 w-4 text-orange-500" /> 常用场景
-                </h2>
-                <p className="mt-0.5 text-xs text-stone-400">点一张卡片，直接开始干</p>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => scrollRail(-1)}
-                  title="向前翻"
-                  aria-label="向前翻"
-                  className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-400 transition hover:text-stone-700"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => scrollRail(1)}
-                  title="向后翻"
-                  aria-label="向后翻"
-                  className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-600 transition hover:text-stone-900"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            <div
-              ref={railRef}
-              className="mt-4 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            >
-              {SCENE_CARDS.map((c) => (
-                <div
-                  key={c.title}
-                  className={`group flex w-[62%] shrink-0 snap-start flex-col rounded-2xl border border-stone-200/70 ${c.bg} p-4 transition hover:shadow-lg hover:shadow-stone-200/60 sm:w-[30%] xl:w-[15.5%]`}
-                >
-                  <div
-                    className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${c.tile} text-white shadow-sm`}
-                  >
-                    <c.icon className="h-6 w-6" />
-                  </div>
-                  <p className="mt-4 text-[14.5px] font-semibold text-stone-800">{c.title}</p>
-                  <p className="mt-1 min-h-[36px] text-xs leading-relaxed text-stone-500">
-                    {c.desc}
-                  </p>
-                  <button
-                    onClick={() =>
-                      c.prompt
-                        ? goChat({ type: "fill", mode: c.mode, text: c.prompt })
-                        : goChat({ type: "mode", mode: c.mode })
-                    }
-                    className="mt-3 self-start rounded-lg border border-stone-300/80 bg-white/80 px-3 py-1.5 text-xs font-medium text-stone-600 transition group-hover:border-orange-300 group-hover:text-orange-600"
-                  >
-                    立即使用
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* 最近任务（真实数据，取代写死的示例） */}
-          {recent.length > 0 && (
-            <div className="mt-10">
-              <h2 className="text-[15px] font-semibold text-stone-800">最近任务</h2>
-              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                {recent.map((r) => {
-                  const Icon = (r.artifact && ARTIFACT_ICONS[r.artifact]) || MessageSquare;
-                  const color =
-                    r.artifact === "PPT"
-                      ? "text-orange-500"
-                      : r.artifact === "研究报告"
-                        ? "text-emerald-500"
-                        : r.artifact === "图片"
-                          ? "text-pink-500"
-                          : r.artifact === "文档"
-                            ? "text-sky-500"
-                            : "text-stone-400";
-                  return (
-                    <button
-                      key={r.id}
-                      onClick={() => openConvo(r.id)}
-                      title={r.title}
-                      className="flex items-center gap-2.5 rounded-xl border border-stone-200/80 bg-white px-4 py-3.5 text-left text-[13.5px] font-medium text-stone-700 shadow-sm transition  hover:border-stone-300 hover:shadow"
-                    >
-                      <Icon className={`h-[18px] w-[18px] shrink-0 ${color}`} />
-                      <span className="truncate">{r.title}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
-      </main>
 
-      {/* AI 创作画布：点右上角按钮显示 / 隐藏。窄屏浮层，宽屏贴靠右侧 */}
-      {canvasOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-30 bg-stone-900/25 md:hidden"
-            onClick={() => setCanvasOpen(false)}
-          />
-          <div className="fixed inset-y-0 right-0 z-40 flex w-full max-w-[26rem] flex-col border-l border-stone-200 bg-white shadow-2xl md:static md:z-auto md:w-[26rem] md:max-w-none md:shadow-none lg:w-[30rem]">
-            <ArtifactPanel
-              conversationId={canvasConvoId ?? undefined}
-              onClose={() => setCanvasOpen(false)}
-            />
+        {/* 主对话区 */}
+        <div className="flex min-w-0 flex-1 flex-col bg-[#f9f5ec]">
+          {/* 顶栏 */}
+          <div className="flex items-center justify-between border-b border-[#e8ddca] px-3 py-2">
+            <div className="text-[10px] font-semibold text-stone-700">智能助手</div>
+            <div className="flex items-center gap-1.5">
+              <span className="h-3.5 w-3.5 rounded-full bg-orange-100 p-0.5 text-[6px] text-orange-500">
+                <Sparkles className="h-2 w-2" />
+              </span>
+              <span className="h-3.5 w-3.5 rounded-full bg-stone-100" />
+            </div>
           </div>
-        </>
-      )}
+          <div className="flex-1 space-y-2 overflow-hidden px-3 py-3">
+            {/* 问候 */}
+            <div className="text-[11px] font-semibold text-[#4a2e1d]">欢迎回来，今天想做点什么？</div>
+            {/* 用户气泡 */}
+            <div className="ml-auto w-40 rounded-lg rounded-tr-sm bg-orange-500 px-2 py-1.5 text-[8.5px] leading-relaxed text-white">
+              帮我做一份 AI 写作产品的发布会 PPT
+            </div>
+            {/* 助手输出区 */}
+            <div className="w-52 rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-[8px] leading-4 text-stone-500">
+              <div className="mb-1 flex items-center gap-1 font-medium text-stone-700">
+                发布会方案 · 12 页
+                <span className="ml-auto rounded bg-orange-50 px-1 text-[6.5px] text-orange-500">生成中</span>
+              </div>
+              <div className="h-1 w-full rounded bg-stone-100" />
+              <div className="mt-1 h-1 w-11/12 rounded bg-stone-100" />
+              <div className="mt-1 h-1 w-4/5 rounded bg-stone-100" />
+            </div>
+            <div className="w-44 rounded-lg border border-stone-200 bg-white px-2 py-1.5 text-[8px] leading-4 text-stone-500">
+              <div className="mb-1 font-medium text-stone-700">卖点：3 分钟从想法到成稿</div>
+              <div className="h-1 w-full rounded bg-stone-100" />
+              <div className="mt-1 h-1 w-3/4 rounded bg-stone-100" />
+            </div>
+          </div>
+          {/* 输入条 */}
+          <div className="border-t border-[#e8ddca] bg-[#fdfaf3] px-3 py-2">
+            <div className="flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-2 py-1.5">
+              <span className="h-1.5 w-16 rounded-full bg-stone-200" />
+              <span className="ml-auto flex h-[18px] w-[18px] items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-red-500 text-white">
+                <ArrowRight className="h-2.5 w-2.5" strokeWidth={3} />
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
-function Toggle({ on }: { on: boolean }) {
+/* ---------- 功能步骤（01 / 02 / 03） ---------- */
+const STEPS = [
+  {
+    n: "01",
+    title: "输入一句话",
+    desc: "不用学工具、不用背指令。把你想做的事用大白话说出来，AI 会自己判断该用对话、文档、PPT 还是研究来完成。",
+    art: (
+      <div className="flex items-center gap-2 rounded-xl border border-stone-200/80 bg-white px-3 py-2 shadow-sm">
+        <span className="text-[11px] text-stone-400">帮我整理一下本周的周报…</span>
+        <span className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-red-500 text-white">
+          <ArrowRight className="h-3 w-3" strokeWidth={3} />
+        </span>
+      </div>
+    ),
+  },
+  {
+    n: "02",
+    title: "AI 自动成稿",
+    desc: "文档边想边写、PPT 按页排版、研究带引用出报告。生成过程实时可见，随时叫停、随时改写，产出直接落在右边的创作画布。",
+    art: (
+      <div className="w-full max-w-[260px] space-y-1.5 rounded-xl border border-stone-200/80 bg-white p-3 shadow-sm">
+        <div className="flex items-center gap-1 text-[10px] text-stone-400">
+          <span className="h-1 w-24 rounded bg-orange-300" />
+          <span className="ml-auto rounded bg-orange-50 px-1 text-[9px] text-orange-500">第 5 / 12 页</span>
+        </div>
+        <div className="h-1 w-11/12 rounded bg-stone-100" />
+        <div className="h-1 w-full rounded bg-stone-100" />
+        <div className="h-1 w-4/5 rounded bg-stone-100" />
+      </div>
+    ),
+  },
+  {
+    n: "03",
+    title: "一键导出分享",
+    desc: "PPT 导出 .pptx、文档导出 Word / Markdown、图片直接下载。生成分享链接，发给谁都能看。",
+    art: (
+      <div className="flex items-center gap-2 rounded-xl border border-stone-200/80 bg-white px-3 py-2 shadow-sm">
+        {["PPTX", "WORD", "LINK"].map((f) => (
+          <span
+            key={f}
+            className="flex items-center gap-1 rounded-md bg-stone-100 px-2 py-1 text-[9px] font-medium text-stone-500"
+          >
+            <Download className="h-2.5 w-2.5" />
+            {f}
+          </span>
+        ))}
+      </div>
+    ),
+  },
+];
+
+/* ---------- 能做什么（底部轻量模块） ---------- */
+const CAPS = [
+  { icon: FileText, label: "文档", desc: "周报 / 方案 / 计划书" },
+  { icon: Presentation, label: "PPT", desc: "主题 → 整套幻灯片" },
+  { icon: Search, label: "深度研究", desc: "联网查证 · 带引用报告" },
+  { icon: ImageIcon, label: "图片", desc: "一句话生成 & 编辑" },
+  { icon: Clapperboard, label: "视频脚本", desc: "分镜 / 口播 / 带货" },
+  { icon: BarChart3, label: "数据分析", desc: "上传数据直接洞察" },
+];
+
+/* ---------- 页面 ---------- */
+export default function HomePage() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const scrollTo = (href: string) => {
+    if (href.startsWith("#")) {
+      document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
-    <span
-      className={cn(
-        "relative h-5 w-9 shrink-0 rounded-full transition",
-        on ? "bg-orange-500" : "bg-stone-200"
-      )}
-    >
-      <span
-        className={cn(
-          "absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all",
-          on ? "left-[18px]" : "left-0.5"
-        )}
-      />
-    </span>
+    <div className="min-h-screen bg-[#fbf8f2] text-stone-900 antialiased">
+      {/* ═══════ 顶部导航 ═══════ */}
+      <header className="sticky top-0 z-50 border-b border-stone-100/80 bg-[#fbf8f2]/85 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-6xl items-center gap-8 px-6">
+          <Link href="/" className="flex items-center gap-2.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-500 text-[15px] font-bold text-white shadow-sm">
+              O
+            </span>
+            <span className="text-[15px] font-semibold tracking-tight">OpenCanvas</span>
+          </Link>
+
+          <nav className="hidden items-center gap-6 md:flex">
+            {NAV_LINKS.map((l) => (
+              <button
+                key={l.href}
+                onClick={() => scrollTo(l.href)}
+                className="text-[13px] text-stone-500 transition hover:text-stone-900"
+              >
+                {l.label}
+              </button>
+            ))}
+          </nav>
+
+          <div className="ml-auto flex items-center gap-3">
+            <Link
+              href="/chat"
+              className="hidden rounded-lg px-3 py-2 text-[13px] text-stone-500 transition hover:text-stone-900 sm:inline-flex"
+            >
+              进入工作台
+            </Link>
+            <Link
+              href="/chat"
+              className="inline-flex items-center gap-1.5 rounded-full bg-stone-900 px-4 py-2 text-[13px] font-medium text-white transition hover:bg-stone-700"
+            >
+              免费开始
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* ═══════ Hero：左标题 + 右倾斜产品窗口 ═══════ */}
+      <section className="relative overflow-hidden">
+        {/* 氛围光晕 */}
+        <div className="pointer-events-none absolute -right-40 -top-40 h-[480px] w-[480px] rounded-full bg-orange-200/30 blur-3xl" />
+        <div className="pointer-events-none absolute -left-40 top-40 h-[420px] w-[420px] rounded-full bg-rose-100/40 blur-3xl" />
+
+        <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-6 pb-20 pt-16 md:pt-24 lg:grid-cols-[1.05fr_1fr] lg:gap-10">
+          {/* 文案侧 */}
+          <div
+            className={cn(
+              "transition-all duration-700",
+              mounted ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
+            )}
+          >
+            <p className="inline-flex items-center gap-2 rounded-full border border-orange-200/70 bg-orange-50 px-3 py-1 text-xs font-medium text-orange-600">
+              <Sparkles className="h-3.5 w-3.5" />
+              一站式 AI 创作工作空间
+            </p>
+            <h1 className="mt-6 text-[44px] font-bold leading-[1.08] tracking-tight md:text-[64px]">
+              灵感进来，
+              <br />
+              <span className="bg-gradient-to-r from-orange-500 via-rose-500 to-violet-500 bg-clip-text text-transparent">
+                作品出去。
+              </span>
+            </h1>
+            <p className="mt-6 max-w-md text-[15px] leading-7 text-stone-500 md:text-base">
+              给 AI 一句话，文档、PPT、报告、图片、视频一次到位。
+              <br className="hidden md:block" />
+              不用学工具，不用排格式 —— 说的就是人话，回的是一份能用的成品。
+            </p>
+
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Link
+                href="/chat"
+                className="group inline-flex h-12 items-center gap-2 rounded-full bg-stone-900 px-6 text-[14px] font-medium text-white shadow-lg shadow-stone-900/10 transition hover:bg-stone-700"
+              >
+                开始第一次创作
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+              <button
+                onClick={() => scrollTo("#how")}
+                className="inline-flex h-12 items-center gap-2 rounded-full border border-stone-200 bg-white px-6 text-[14px] font-medium text-stone-700 transition hover:border-stone-300"
+              >
+                看看怎么用
+                <ArrowDown className="h-4 w-4 text-stone-400" />
+              </button>
+            </div>
+
+            <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-stone-400">
+              <span className="flex items-center gap-1.5">
+                <Check className="h-3.5 w-3.5 text-emerald-500" /> 内置免费演示模型
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Check className="h-3.5 w-3.5 text-emerald-500" /> 无需信用卡
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Check className="h-3.5 w-3.5 text-emerald-500" /> 数据自动保存
+              </span>
+            </div>
+          </div>
+
+          {/* 产品窗口侧（轻微倾斜） */}
+          <div className="relative [perspective:1600px]">
+            {/* 底部渐变“地板” */}
+            <div className="absolute -inset-6 -z-10 rounded-[36px] bg-gradient-to-br from-orange-100/70 via-rose-50/60 to-transparent blur-2xl" />
+            <div
+              className={cn(
+                "transition-all duration-700 [transform-style:preserve-3d]",
+                mounted
+                  ? "translate-y-0 rotate-[2deg] opacity-100"
+                  : "translate-y-10 rotate-[4deg] opacity-0",
+                "lg:hover:rotate-0 lg:transition-transform"
+              )}
+            >
+              <ProductWindow />
+            </div>
+
+            {/* 悬浮玻璃标签 */}
+            <div
+              className={cn(
+                "absolute -left-4 -top-5 flex items-center gap-2 rounded-xl border border-white/70 bg-white/90 px-3 py-2 shadow-lg backdrop-blur transition-all delay-200",
+                mounted ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+              )}
+            >
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-100 text-orange-500">
+                <Presentation className="h-4 w-4" />
+              </span>
+              <span className="text-[11px] leading-tight text-stone-700">
+                PPT · 12 页
+                <span className="mt-0.5 flex items-center gap-1 text-[10px] font-medium text-emerald-600">
+                  <Check className="h-3 w-3" /> 已生成
+                </span>
+              </span>
+            </div>
+            <div
+              className={cn(
+                "absolute -bottom-5 right-2 flex items-center gap-2 rounded-xl border border-white/70 bg-white/90 px-3 py-2 shadow-lg backdrop-blur transition-all delay-300",
+                mounted ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+              )}
+            >
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+                <Wand2 className="h-4 w-4" />
+              </span>
+              <span className="text-[11px] leading-tight text-stone-700">
+                文档已自动保存
+                <span className="block text-[10px] text-stone-400">3 分钟前还在改写中…</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 一条细分割线 */}
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="h-px w-full bg-stone-200/70" />
+      </div>
+
+      {/* ═══════ 01/02/03 功能步骤 ═══════ */}
+      <section id="how" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-24">
+        <div className="max-w-lg">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-500">Workflow</p>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">三步，从想法到成品</h2>
+          <p className="mt-3 text-[14px] leading-6 text-stone-500">不折腾的创作流程 —— 你只负责说，剩下的交给它。</p>
+        </div>
+
+        <div className="mt-14 space-y-2">
+          {STEPS.map((s, i) => (
+            <div
+              key={s.n}
+              className={cn(
+                "grid items-center gap-6 rounded-3xl px-4 py-8 transition sm:px-8 md:grid-cols-[150px_1.2fr_1fr]",
+                i % 2 === 1 && "md:[&>*:nth-child(2)]:order-3 md:[&>*:nth-child(3)]:order-2"
+              )}
+            >
+              {/* 巨型编号 */}
+              <div className="select-none text-[84px] font-bold leading-none tracking-tight text-stone-200/90 md:text-[110px]">
+                {s.n}
+              </div>
+              {/* 文案 */}
+              <div className="md:pr-6">
+                <h3 className="text-2xl font-bold tracking-tight text-stone-900 md:text-[26px]">{s.title}</h3>
+                <p className="mt-3 max-w-md text-[14px] leading-7 text-stone-500">{s.desc}</p>
+              </div>
+              {/* 迷你示意 */}
+              <div className="flex items-center justify-center md:justify-end">{s.art}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ═══════ 能做什么 ═══════ */}
+      <section id="capabilities" className="scroll-mt-20 border-y border-stone-100 bg-[#fdfaf5]">
+        <div className="mx-auto max-w-6xl px-6 py-20">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-500">Capabilities</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">一个工作台，六种本事</h2>
+            </div>
+            <Link
+              href="/chat"
+              className="inline-flex items-center gap-1 text-[13px] font-medium text-orange-600 transition hover:text-orange-700"
+            >
+              去试试
+              <ChevronRight className="h-4 w-4" />
+            </Link>
+          </div>
+
+          <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-3">
+            {CAPS.map((c) => (
+              <Link
+                key={c.label}
+                href="/chat"
+                className="group rounded-2xl border border-stone-200/80 bg-white p-5 transition hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md"
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500 transition group-hover:bg-orange-500 group-hover:text-white">
+                  <c.icon className="h-5 w-5" />
+                </span>
+                <div className="mt-3 text-[15px] font-semibold text-stone-800">{c.label}</div>
+                <div className="mt-0.5 text-xs text-stone-400">{c.desc}</div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════ 收束 CTA ═══════ */}
+      <section className="mx-auto max-w-6xl px-6 py-24 text-center">
+        <p className="text-[15px] text-stone-400">与其攒一堆工具，不如要一个懂你的助手</p>
+        <h2 className="mx-auto mt-4 max-w-2xl text-4xl font-bold leading-tight tracking-tight md:text-5xl">
+          现在，说出你的<span className="bg-gradient-to-r from-orange-500 to-rose-500 bg-clip-text text-transparent">第一句灵感</span>
+        </h2>
+        <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+          <Link
+            href="/chat"
+            className="group inline-flex h-[52px] items-center gap-2 rounded-full bg-gradient-to-br from-orange-500 to-red-500 px-8 text-[15px] font-semibold text-white shadow-xl shadow-orange-200 transition hover:brightness-105"
+          >
+            开始第一次创作
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+          <Link
+            href="/mockup"
+            className="inline-flex h-[52px] items-center rounded-full border border-stone-200 bg-white px-7 text-[15px] font-medium text-stone-700 transition hover:border-stone-300"
+          >
+            先看产品演示
+          </Link>
+        </div>
+        <p className="mt-5 text-xs text-stone-400">30 秒上手 · 不配密钥也能完整体验 · 数据保存在本地</p>
+      </section>
+
+      {/* ═══════ 页脚 ═══════ */}
+      <footer className="border-t border-stone-100">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-8 text-xs text-stone-400 sm:flex-row">
+          <span className="flex items-center gap-2">
+            <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-orange-500 to-red-500 text-[9px] font-bold text-white">
+              O
+            </span>
+            © 2026 OpenCanvas
+          </span>
+          <div className="flex items-center gap-5">
+            <Link href="/chat" className="transition hover:text-stone-600">
+              进入工作台
+            </Link>
+            <Link href="/settings" className="transition hover:text-stone-600">
+              设置中心
+            </Link>
+            <Link href="/tools" className="transition hover:text-stone-600">
+              工具箱
+            </Link>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }
