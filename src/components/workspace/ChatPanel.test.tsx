@@ -159,45 +159,42 @@ describe("ChatPanel 空态", () => {
   });
 });
 
-/* ─────────────── 能力区 ─────────────── */
+/* ─────────────── 技能选择（单框下拉） ─────────────── */
 
-describe("ChatPanel 能力区", () => {
-  it("渲染全部能力分类", () => {
+describe("ChatPanel 技能选择", () => {
+  const openSkill = () => fireEvent.click(screen.getByTitle(/技能选择/));
+
+  it("输入框内渲染技能下拉（当前为对话）", () => {
     seed();
     render(<ChatPanel />);
-    for (const cat of ["品牌与传播", "内容与视频", "产品与体验", "数据与运营", "咨询与策划"]) {
-      expect(screen.getByRole("button", { name: new RegExp(cat) })).toBeDefined();
+    expect(screen.getByTitle(/技能选择/)).toBeDefined();
+    expect(screen.getByRole("button", { name: /AI 对话/ })).toBeDefined();
+  });
+
+  it("展开后列出全部六种技能", () => {
+    seed();
+    render(<ChatPanel />);
+    openSkill();
+    for (const m of ["AI 对话", "文档", "PPT", "图片", "深度研究", "视频"]) {
+      expect(screen.getByRole("option", { name: new RegExp(m) })).toBeDefined();
     }
   });
 
-  it("默认展示第一个分类的子能力", () => {
+  it("选择技能切到对应模式", () => {
     seed();
     render(<ChatPanel />);
-    expect(screen.getByRole("button", { name: /产品官网/ })).toBeDefined();
-    expect(screen.queryByRole("button", { name: /产品宣传片/ })).toBeNull();
+    openSkill();
+    fireEvent.click(screen.getByRole("option", { name: /PPT/ }));
+    expect(useChatStore.getState().conversations[0].mode).toBe("slides");
   });
 
-  it("切换分类后展示对应子能力", () => {
-    seed();
-    render(<ChatPanel />);
-    fireEvent.click(screen.getByRole("button", { name: /内容与视频/ }));
-    expect(screen.getByRole("button", { name: /产品宣传片/ })).toBeDefined();
-    expect(screen.queryByRole("button", { name: /产品官网/ })).toBeNull();
-  });
-
-  it("点击子能力切到它声明的工作模式", () => {
-    seed();
-    render(<ChatPanel />);
-    fireEvent.click(screen.getByRole("button", { name: /活动海报/ }));
-    expect(useChatStore.getState().conversations[0].mode).toBe("image");
-  });
-
-  it("点击子能力会清空已输入内容", () => {
+  it("切换技能后已输入内容保留", () => {
     seed();
     render(<ChatPanel />);
     type("写点什么");
-    fireEvent.click(screen.getByRole("button", { name: /活动海报/ }));
-    expect(ta().value).toBe("");
+    openSkill();
+    fireEvent.click(screen.getByRole("option", { name: /图片/ }));
+    expect(ta().value).toBe("写点什么");
   });
 });
 
@@ -552,7 +549,7 @@ describe("ChatPanel 预填", () => {
 
 describe("ChatPanel 提示词参数", () => {
   it("渲染语气/长度/受众三组参数", () => {
-    seed();
+    seed({ mode: "docs" });
     render(<ChatPanel />);
     expect(screen.getByRole("button", { name: "专业" })).toBeDefined();
     expect(screen.getByRole("button", { name: "简短" })).toBeDefined();
@@ -560,7 +557,7 @@ describe("ChatPanel 提示词参数", () => {
   });
 
   it("点击参数把约束追加到输入", () => {
-    seed();
+    seed({ mode: "docs" });
     render(<ChatPanel />);
     type("写一篇稿子");
     fireEvent.click(screen.getByRole("button", { name: "专业" }));
@@ -568,7 +565,7 @@ describe("ChatPanel 提示词参数", () => {
   });
 
   it("再次点击同一参数取消约束", () => {
-    seed();
+    seed({ mode: "docs" });
     render(<ChatPanel />);
     type("写一篇稿子");
     fireEvent.click(screen.getByRole("button", { name: "专业" }));
@@ -577,7 +574,7 @@ describe("ChatPanel 提示词参数", () => {
   });
 
   it("多组参数可以叠加", () => {
-    seed();
+    seed({ mode: "docs" });
     render(<ChatPanel />);
     type("写一篇稿子");
     fireEvent.click(screen.getByRole("button", { name: "专业" }));
@@ -587,14 +584,14 @@ describe("ChatPanel 提示词参数", () => {
   });
 
   it("空输入时点击参数直接把约束作为正文", () => {
-    seed();
+    seed({ mode: "docs" });
     render(<ChatPanel />);
     fireEvent.click(screen.getByRole("button", { name: "给老板" }));
     expect(ta().value).toBe("受众：决策者/管理层，结论先行、突出重点与建议。");
   });
 
   it("提交时带上叠加的约束", () => {
-    const spies = seed();
+    const spies = seed({ mode: "docs" });
     render(<ChatPanel />);
     type("写一篇稿子");
     fireEvent.click(screen.getByRole("button", { name: "简短" }));
@@ -702,7 +699,7 @@ describe("ChatPanel 斜杠命令", () => {
   });
 
   it("斜杠开头的输入不被参数按钮改写", () => {
-    seed();
+    seed({ mode: "docs" });
     render(<ChatPanel />);
     // 带空格后命令面板收起、参数区重新出现，但 applyChip 仍要保护命令输入
     type("/write 年度总结");
