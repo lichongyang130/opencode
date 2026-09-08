@@ -97,12 +97,15 @@ function MessageBubble({
   isLastUser,
   onEdit,
   onRetry,
+  agentLabel,
 }: {
   m: UIMessage;
   isLastUser?: boolean;
   onEdit?: () => void;
   /** G74: 出错回复的「重新生成」：撤回该轮并原样重发 */
   onRetry?: () => void;
+  /** 助手身份行右侧的小标签（当前模型名），仿 Codex 每条消息的模型头 */
+  agentLabel?: string;
 }) {
   const [copied, setCopied] = useState(false);
   const copy = () => {
@@ -163,6 +166,15 @@ function MessageBubble({
             O
           </span>
           <div className="min-w-0 flex-1">
+            {/* Codex 风格：助手消息开头一行身份 —— 产品名 + 当前模型小标签 */}
+            <div className="mb-1 flex items-center gap-2">
+              <span className="text-[13px] font-semibold text-stone-900">OpenCanvas</span>
+              {agentLabel && (
+                <span className="rounded-md bg-stone-100 px-1.5 py-0.5 text-[10px] font-normal text-stone-500">
+                  {agentLabel}
+                </span>
+              )}
+            </div>
             {m.streaming && !m.content ? (
               <span className="inline-flex animate-pulse items-center gap-1.5 text-sm text-stone-400">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -798,6 +810,8 @@ export function ChatPanel() {
 
   const messages = convo?.messages ?? [];
   const mode: WorkspaceMode = convo?.mode ?? "chat";
+  // 助手身份行小标签：当前模型名（Codex 每条消息头部同款）
+  const modelLabel = MODELS.find((m) => m.id === model)?.label ?? model;
 
   const scrollToBottom = (smooth = true) =>
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: smooth ? "smooth" : "auto" });
@@ -1038,21 +1052,31 @@ export function ChatPanel() {
               </div>
               <p className="mt-2 text-xs text-stone-400">回车发送 · Shift+回车换行 · 点上方「技能」可切换 文档 / PPT / 图片</p>
 
-              <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-                <span className="text-sm text-stone-500">试试：</span>
-                {HOME_CARDS.slice(0, 4).map((q) => (
-                  <button
-                    key={q.title}
-                    onClick={() => {
-                      useChatStore.getState().setMode(q.mode);
-                      setInput(q.prompt);
-                      setTimeout(() => inputRef.current?.focus(), 0);
-                    }}
-                    className="rounded-full border border-stone-200 bg-white px-3.5 py-1.5 text-sm text-stone-600 transition hover:bg-stone-50 hover:text-stone-900"
-                  >
-                    {q.title}
-                  </button>
-                ))}
+              {/* ChatGPT/Codex 风格空态：4 张建议卡（浅色卡片 + 图标 + 一句说明） */}
+              <div className="mx-auto mt-7 grid max-w-2xl grid-cols-1 gap-3 text-left sm:grid-cols-2">
+                {HOME_CARDS.slice(0, 4).map((q) => {
+                  const Icon = q.icon;
+                  return (
+                    <button
+                      key={q.title}
+                      aria-label={q.title}
+                      onClick={() => {
+                        useChatStore.getState().setMode(q.mode);
+                        setInput(q.prompt);
+                        setTimeout(() => inputRef.current?.focus(), 0);
+                      }}
+                      className="flex items-start gap-3 rounded-2xl border border-stone-200 bg-white p-4 text-left transition hover:border-stone-300 hover:bg-stone-50"
+                    >
+                      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-stone-100 text-stone-600">
+                        <Icon className="h-[18px] w-[18px]" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold text-stone-800">{q.title}</span>
+                        <span className="mt-0.5 block text-xs text-stone-500">{q.desc}</span>
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ) : (
@@ -1076,6 +1100,7 @@ export function ChatPanel() {
                     isLastUser={isLastUser}
                     onEdit={isLastUser ? () => useChatStore.getState().editLastUserMessage() : undefined}
                     onRetry={m.error && isLastMsg ? retryLast : undefined}
+                    agentLabel={modelLabel}
                   />
                 );
               })}
