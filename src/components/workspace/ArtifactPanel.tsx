@@ -455,6 +455,11 @@ export function ArtifactPanel({
     video: "视频分镜",
   };
 
+  // d1：沉浸 / 对照。沉浸＝画布加宽为主角（适合复杂产物专注编辑）；
+  // 对照＝当前适中宽度与对话并排。切换只作用于本组件 UI，不持久化。
+  const [immersive, setImmersive] = useState(() => mode === "docs" || mode === "research");
+  const wideCanvas = immersive;
+
   // F42: 只有「真产物」模式（PPT/文档/图/报告/分镜）才自动弹出；
   // 纯聊天不再每次抢屏（手动点开仍可看最近回复的文档化视图）
   const canAutoOpen = mode !== "chat";
@@ -475,13 +480,11 @@ export function ArtifactPanel({
     return null;
   }
 
-  // d3：文档/研究模式下画布加宽为主角，对话退居左列；其余模式保持适中宽度
-  const wideCanvas = mode === "docs" || mode === "research";
 
   return (
     <aside
       className={cn(
-        "absolute inset-y-0 right-0 z-30 flex w-full shrink-0 flex-col border-l border-stone-200 bg-white shadow-2xl sm:static sm:shadow-none",
+        "absolute inset-y-0 right-0 z-30 flex w-full shrink-0 flex-col border-l border-stone-200 bg-white shadow-2xl transition-[width] duration-200 sm:static sm:shadow-none",
         wideCanvas ? "sm:w-[42rem] lg:w-[47rem]" : "sm:w-[26rem] lg:w-[30rem]"
       )}
     >
@@ -491,13 +494,30 @@ export function ArtifactPanel({
           <LayoutDashboard className="h-4 w-4 text-orange-500" />
           {PANEL_TITLES[mode] ?? "AI 创作画布"}
         </h2>
-        <button
-          onClick={() => (onClose ? onClose() : setArtifactOpen(false))}
-          title="关闭画布"
-          className="rounded-lg p-1.5 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
-        >
-          <X className="h-4 w-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setImmersive((v) => !v)}
+            title={wideCanvas ? "对照模式（并排看对话与画布）" : "沉浸模式（画布加宽，专注编辑）"}
+            aria-pressed={wideCanvas}
+            className={cn(
+              "flex items-center gap-1 rounded-lg p-1.5 text-[11px] transition",
+              wideCanvas
+                ? "bg-stone-100 text-stone-600"
+                : "text-stone-400 hover:bg-stone-100 hover:text-stone-700"
+            )}
+          >
+            <Maximize2 className="h-3.5 w-3.5" />
+            <span className="hidden lg:inline">{wideCanvas ? "对照" : "沉浸"}</span>
+          </button>
+          <button
+            onClick={() => (onClose ? onClose() : setArtifactOpen(false))}
+            title="收起画布"
+            aria-label="收起画布"
+            className="rounded-lg p-1.5 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {/* 图像画廊：sending 时进入画廊分支而不是整屏转圈 —— 骨架屏占位（IMG10） */}
