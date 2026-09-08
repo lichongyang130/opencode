@@ -20,6 +20,7 @@ import {
   Sparkles,
   Wand2,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* ════════════════════════════════════════════════════════
@@ -209,14 +210,24 @@ const STEPS = [
   },
 ];
 
-/* ---------- 能做什么（底部轻量模块） ---------- */
-const CAPS = [
-  { icon: FileText, label: "文档", desc: "周报 / 方案 / 计划书" },
-  { icon: Presentation, label: "PPT", desc: "主题 → 整套幻灯片" },
-  { icon: Search, label: "深度研究", desc: "联网查证 · 带引用报告" },
-  { icon: ImageIcon, label: "图片", desc: "一句话生成 & 编辑" },
-  { icon: Clapperboard, label: "视频脚本", desc: "分镜 / 口播 / 带货" },
-  { icon: BarChart3, label: "数据分析", desc: "上传数据直接洞察" },
+/* ---------- 能做什么（底部轻量模块） ----------
+ * mode：点卡后直接开对应模式的空会话，进工作台即是那个创作模式的对话框。
+ * 数据分析没有专门模式，落回 chat 由对话完成。
+ */
+type CapDef = {
+  icon: LucideIcon;
+  label: string;
+  desc: string;
+  mode: "docs" | "slides" | "research" | "image" | "video" | "chat";
+};
+
+const CAPS: CapDef[] = [
+  { icon: FileText, label: "文档", desc: "周报 / 方案 / 计划书", mode: "docs" },
+  { icon: Presentation, label: "PPT", desc: "主题 → 整套幻灯片", mode: "slides" },
+  { icon: Search, label: "深度研究", desc: "联网查证 · 带引用报告", mode: "research" },
+  { icon: ImageIcon, label: "图片", desc: "一句话生成 & 编辑", mode: "image" },
+  { icon: Clapperboard, label: "视频脚本", desc: "分镜 / 口播 / 带货", mode: "video" },
+  { icon: BarChart3, label: "数据分析", desc: "上传数据直接洞察", mode: "chat" },
 ];
 
 /* ---------- 页面 ---------- */
@@ -228,6 +239,15 @@ export default function HomePage() {
     if (href.startsWith("#")) {
       document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
     }
+  };
+
+  // 首页任一 CTA → 工作台时都“新开一个空 AI 对话框”：把意图写进
+  // sessionStorage（oc:homeIntent），Workspace 水合后读到会 new 一个会话并选中，
+  // 而不是恢复上次的旧会话。加 ts 由 Workspace 侧做 30 秒过期兜底。
+  const enterChat = (intent: { type: "new" } | { type: "mode"; mode: CapDef["mode"] }) => {
+    try {
+      sessionStorage.setItem("oc:homeIntent", JSON.stringify({ ...intent, ts: Date.now() }));
+    } catch {}
   };
 
   return (
@@ -257,12 +277,14 @@ export default function HomePage() {
           <div className="ml-auto flex items-center gap-3">
             <Link
               href="/chat"
+              onClick={() => enterChat({ type: "new" })}
               className="hidden rounded-lg px-3 py-2 text-[13px] text-stone-500 transition hover:text-stone-900 sm:inline-flex"
             >
               进入工作台
             </Link>
             <Link
               href="/chat"
+              onClick={() => enterChat({ type: "new" })}
               className="inline-flex items-center gap-1.5 rounded-full bg-stone-900 px-4 py-2 text-[13px] font-medium text-white transition hover:bg-stone-700"
             >
               免费开始
@@ -306,6 +328,7 @@ export default function HomePage() {
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
                 href="/chat"
+                onClick={() => enterChat({ type: "new" })}
                 className="group inline-flex h-12 items-center gap-2 rounded-full bg-stone-900 px-6 text-[14px] font-medium text-white shadow-lg shadow-stone-900/10 transition hover:bg-stone-700"
               >
                 开始第一次创作
@@ -432,6 +455,7 @@ export default function HomePage() {
             </div>
             <Link
               href="/chat"
+              onClick={() => enterChat({ type: "new" })}
               className="inline-flex items-center gap-1 text-[13px] font-medium text-orange-600 transition hover:text-orange-700"
             >
               去试试
@@ -444,6 +468,7 @@ export default function HomePage() {
               <Link
                 key={c.label}
                 href="/chat"
+                onClick={() => enterChat({ type: "mode", mode: c.mode })}
                 className="group rounded-2xl border border-stone-200/80 bg-white p-5 transition hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md"
               >
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500 transition group-hover:bg-orange-500 group-hover:text-white">
@@ -466,6 +491,7 @@ export default function HomePage() {
         <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/chat"
+            onClick={() => enterChat({ type: "new" })}
             className="group inline-flex h-[52px] items-center gap-2 rounded-full bg-gradient-to-br from-orange-500 to-red-500 px-8 text-[15px] font-semibold text-white shadow-xl shadow-orange-200 transition hover:brightness-105"
           >
             开始第一次创作
@@ -491,7 +517,11 @@ export default function HomePage() {
             © 2026 OpenCanvas
           </span>
           <div className="flex items-center gap-5">
-            <Link href="/chat" className="transition hover:text-stone-600">
+            <Link
+              href="/chat"
+              onClick={() => enterChat({ type: "new" })}
+              className="transition hover:text-stone-600"
+            >
               进入工作台
             </Link>
             <Link href="/settings" className="transition hover:text-stone-600">
