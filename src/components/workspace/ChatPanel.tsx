@@ -118,74 +118,95 @@ function MessageBubble({
   const isUser = m.role === "user";
 
   return (
-    <div className={cn("group/msg flex", isUser ? "justify-end" : "justify-start")}>
-      <div
-        className={cn(
-          "max-w-[88%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
-          isUser
-            ? "bg-brand-600 text-white"
-            : m.error
-              ? "border border-red-200 bg-red-50 text-red-700"
-              : "border border-stone-200 bg-white text-stone-800",
-          m.streaming && !m.content && "text-stone-400"
-        )}
-      >
-        {m.streaming && !m.content ? (
-          // C39: 思考中给一点呼吸感，不再是静止文字（保留原文案供读屏/测试）
-          <span className="inline-flex animate-pulse items-center gap-1.5">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            正在思考…
-          </span>
-        ) : isUser ? (
-          <div className="whitespace-pre-wrap">{m.content}</div>
-        ) : (
-          <div className="markdown-body">
-            <Markdown content={m.content} />
-            {m.streaming && <span className="streaming-cursor" />}
-          </div>
-        )}
-        {!m.streaming && m.content && (
-          // C37: 复制/编辑常显（半透明），不再 hover 才出现 —— 触屏与新手也能找到
+    <div className={cn("group/msg w-full", isUser ? "flex justify-end" : "flex justify-start")}>
+      {isUser ? (
+        /* ChatGPT 风格：用户消息 = 右侧浅灰圆角块 */
+        <div className="max-w-[85%]">
           <div
             className={cn(
-              "mt-1.5 flex justify-end gap-0.5 opacity-60 transition hover:opacity-100 group-hover/msg:opacity-100",
-              isUser && "justify-start"
+              "whitespace-pre-wrap rounded-3xl bg-stone-200/70 px-4 py-2 text-[15px] leading-7 text-stone-800",
+              m.error && "border border-red-200 bg-red-50 text-red-700"
             )}
           >
-            {isUser && isLastUser && onEdit && (
-              <button
-                onClick={onEdit}
-                title="编辑并重新发送"
-                className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-white/70 transition hover:bg-white/10"
-              >
-                <Pencil className="h-3 w-3" />
-                编辑
-              </button>
-            )}
-            <button
-              onClick={copy}
-              title="复制"
-              className={cn(
-                "flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] transition",
-                isUser ? "text-white/70 hover:bg-white/10" : "text-stone-400 hover:bg-stone-100"
+            {m.content}
+          </div>
+          {!m.streaming && m.content && (
+            <div className="mt-1 flex justify-end gap-0.5 opacity-60 transition hover:opacity-100 group-hover/msg:opacity-100">
+              {isLastUser && onEdit && (
+                <button
+                  onClick={onEdit}
+                  title="编辑并重新发送"
+                  className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
+                >
+                  <Pencil className="h-3 w-3" />
+                  编辑
+                </button>
               )}
-            >
-              {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-              {copied ? "已复制" : "复制"}
-            </button>
-            {!isUser && onRetry && (
               <button
-                onClick={onRetry}
-                title="重新生成（撤回本轮错误并重发）"
-                className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-red-500 transition hover:bg-red-50"
+                onClick={copy}
+                title="复制"
+                className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
               >
-                <RotateCcw className="h-3 w-3" />
-                重试
+                {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                {copied ? "已复制" : "复制"}
               </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* ChatGPT / Codex 风格：助手消息 = 黑色小方块头像 + 无边框纯文字 */
+        <div className="flex w-full max-w-full gap-3">
+          <span
+            aria-hidden
+            className="mt-0.5 flex h-7 w-7 shrink-0 select-none items-center justify-center rounded-lg bg-stone-900 text-[12px] font-bold text-white shadow-sm"
+          >
+            O
+          </span>
+          <div className="min-w-0 flex-1">
+            {m.streaming && !m.content ? (
+              <span className="inline-flex animate-pulse items-center gap-1.5 text-sm text-stone-400">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                正在思考…
+              </span>
+            ) : (
+              <div className={cn("text-[15px] leading-7", m.error && "rounded-2xl border border-red-200 bg-red-50 px-3 py-2 text-red-700")}>
+                <div className="markdown-body">
+                  <Markdown content={m.content} />
+                  {m.streaming && <span className="streaming-cursor" />}
+                </div>
+              </div>
+            )}
+            {!m.streaming && m.content && (
+              <div className="mt-1.5 flex items-center gap-0.5 opacity-60 transition hover:opacity-100 group-hover/msg:opacity-100">
+                <button
+                  onClick={copy}
+                  title="复制"
+                  className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
+                >
+                  {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                  {copied ? "已复制" : "复制"}
+                </button>
+                {onRetry && (
+                  <button
+                    onClick={onRetry}
+                    title="重新生成（撤回本轮错误并重发）"
+                    className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-red-500 transition hover:bg-red-50"
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    重试
+                  </button>
+                )}
+              </div>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+ *  分体式输入舱组件 (E5)
     </div>
   );
 }
@@ -307,7 +328,7 @@ function SplitComposer({
   };
 
   return (
-    <div className="rounded-[22px] border border-[#e5d9c6] bg-white shadow-[0_1px_2px_rgba(74,46,29,0.04),0_10px_28px_-16px_rgba(74,46,29,0.18)] transition-shadow duration-200 focus-within:border-orange-300 focus-within:shadow-[0_1px_2px_rgba(74,46,29,0.04),0_12px_32px_-14px_rgba(234,88,12,0.35)]">
+    <div className="rounded-[26px] border border-stone-200/90 bg-white shadow-[0_2px_4px_rgba(0,0,0,0.02),0_12px_32px_-18px_rgba(0,0,0,0.18)] transition-shadow duration-200 focus-within:shadow-[0_2px_4px_rgba(0,0,0,0.02),0_16px_40px_-16px_rgba(0,0,0,0.26)]">
       <div className="relative flex min-w-0 flex-col">
         {/* 图片模式参数（IMG1~6）：模型直选 / 尺寸 / 张数 / 风格 / 负向 / 参考图 / 历史 */}
           {mode === "image" && (
@@ -563,7 +584,7 @@ function SplitComposer({
           </div>
 
           {/* ──── 底部工具栏：技能选择 ▾ ｜ 润色提示词 · 模型下拉 · 发送，全部收在输入框下方 ──── */}
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 rounded-b-[22px] border-t border-[#f0e5d3] bg-[#fbf7f0] px-2.5 py-2">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 border-t border-stone-100 px-2.5 py-2.5">
           {/* 技能选择下拉 */}
           <div ref={skillRef} className="relative">
             <button
@@ -571,7 +592,7 @@ function SplitComposer({
               aria-haspopup="listbox"
               aria-expanded={skillOpen}
               title="技能选择：对话 / 文档 / PPT / 图片 / 研究 / 视频"
-              className="flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 text-[13px] font-medium text-stone-700 transition hover:border-orange-300 hover:bg-orange-50/50 hover:text-orange-600"
+              className="flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 text-[13px] font-medium text-stone-700 transition hover:border-stone-300 hover:bg-stone-50 hover:text-stone-900"
             >
               {(() => {
                 const Icon = SKILL_META[mode].icon;
@@ -658,7 +679,7 @@ function SplitComposer({
               onClick={submit}
               disabled={!input.trim()}
               title={input.trim() ? "发送（回车）" : "输入内容后可发送"}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white shadow-sm shadow-orange-200 transition hover:bg-brand-700 disabled:bg-stone-100 disabled:text-stone-300 disabled:shadow-none"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-stone-900 text-white shadow-sm transition hover:bg-stone-700 disabled:bg-stone-100 disabled:text-stone-300 disabled:shadow-none"
             >
               <ArrowUp className="h-4 w-4" />
             </button>
@@ -958,18 +979,18 @@ export function ChatPanel() {
   }, [input]);
 
   return (
-    <div className="relative flex min-w-0 flex-1 flex-col bg-[#f9f5ec]">
+    <div className="relative flex min-w-0 flex-1 flex-col bg-white text-stone-800">
       <div
         ref={scrollRef}
-        className={cn("flex-1 overflow-y-auto px-6", messages.length === 0 ? "bg-[#f6f1e9] py-10" : "py-8")}
+        className={cn("flex-1 overflow-y-auto px-6", messages.length === 0 ? "bg-white py-12" : "bg-white py-10")}
       >
-        <div className={cn("mx-auto w-full", messages.length === 0 ? "max-w-4xl" : "max-w-2xl")}>
+        <div className="mx-auto w-full max-w-[760px]">
           {messages.length === 0 ? (
             <div className="pt-4 text-center">
-              <h1 className="font-serif text-3xl font-semibold tracking-tight text-[#4a2e1d] md:text-4xl">
+              <h1 className="text-3xl font-semibold tracking-tight text-stone-900 md:text-4xl">
                 欢迎回来，今天想做点什么？
               </h1>
-              <p className="mt-2 text-sm text-[#8a7a66]">用 AI 把想法变成现实。</p>
+              <p className="mt-2 text-sm text-stone-500">用 AI 把想法变成现实。</p>
 
               {/* E5 分体式输入舱 */}
               <div className="mx-auto mt-8 max-w-3xl">
@@ -1015,10 +1036,10 @@ export function ChatPanel() {
                   conversing={messages.length > 0}
                 />
               </div>
-              <p className="mt-2 text-xs text-[#a8977f]">回车发送 · Shift+回车换行 · 点上方「技能」可切换 文档 / PPT / 图片</p>
+              <p className="mt-2 text-xs text-stone-400">回车发送 · Shift+回车换行 · 点上方「技能」可切换 文档 / PPT / 图片</p>
 
               <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-                <span className="text-sm text-[#8a7a66]">试试：</span>
+                <span className="text-sm text-stone-500">试试：</span>
                 {HOME_CARDS.slice(0, 4).map((q) => (
                   <button
                     key={q.title}
@@ -1027,7 +1048,7 @@ export function ChatPanel() {
                       setInput(q.prompt);
                       setTimeout(() => inputRef.current?.focus(), 0);
                     }}
-                    className="rounded-full border border-[#e3d8c6] bg-white px-3.5 py-1.5 text-sm text-[#6b5b48] transition hover:border-[#c05f3c] hover:text-[#c05f3c]"
+                    className="rounded-full border border-stone-200 bg-white px-3.5 py-1.5 text-sm text-stone-600 transition hover:bg-stone-50 hover:text-stone-900"
                   >
                     {q.title}
                   </button>
@@ -1067,7 +1088,7 @@ export function ChatPanel() {
       {messages.length === 0 && (
         <p
           aria-hidden
-          className="pointer-events-none absolute bottom-3 right-5 hidden select-none text-[11px] text-[#d4c4ac] lg:block"
+          className="pointer-events-none absolute bottom-3 right-5 hidden select-none text-[11px] text-stone-300 lg:block"
         >
           数据保存在本地 · 30 秒上手 · 不配密钥也能完整体验
         </p>
@@ -1085,7 +1106,7 @@ export function ChatPanel() {
 
       {/* 对话中底部的分体式输入舱 */}
       {messages.length > 0 && (
-        <div className="border-t border-[#e8ddca] bg-[#fdfaf3] px-6 py-3">
+        <div className="px-6 pb-4 pt-1">
           <div className="mx-auto w-full max-w-3xl">
             <SplitComposer
               input={input}
