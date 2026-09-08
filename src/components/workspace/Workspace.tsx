@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Home, LayoutDashboard, Loader2, Menu, Monitor, Moon, PanelLeft, Pencil, Plus, Settings, Sun } from "lucide-react";
+import { Check, LayoutDashboard, Loader2, Menu, Monitor, Moon, PanelLeft, Pencil, Plus, Sun } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { HistoryPanel } from "./HistoryPanel";
 import { ChatPanel } from "./ChatPanel";
@@ -178,7 +177,7 @@ export function Workspace() {
         />
       )}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between gap-3 border-b border-[#e8ddca] bg-[#faf6ee] px-3 py-1.5">
+        <header className="flex items-center justify-between gap-3 border-b border-[#eee2d2] bg-[#f9f5ec] px-3 py-1.5">
           <div className="flex min-w-0 items-center gap-1.5">
             {/* UX20: 移动端打开历史抽屉 */}
             <button
@@ -230,15 +229,6 @@ export function Workspace() {
                 {stage || "生成中…"}
               </span>
             )}
-            <Link
-              href="/"
-              title="返回首页"
-              aria-label="返回首页"
-              className="flex items-center gap-1 rounded-lg p-1.5 text-stone-400 transition hover:bg-stone-100 hover:text-brand-600"
-            >
-              <Home className="h-4 w-4" />
-              <span className="hidden text-xs lg:inline">首页</span>
-            </Link>
             <button
               onClick={() => setArtifactOpen(!artifactOpen)}
               title={artifactOpen ? "关闭产物画布" : "打开产物画布"}
@@ -306,15 +296,6 @@ export function Workspace() {
                 </div>
               )}
             </div>
-            {/* 设置统一走 /settings 页面（与首页同入口，不再另开一套弹窗） */}
-            <button
-              onClick={() => router.push("/settings")}
-              title="设置中心（模型 / 数据 / 外观）"
-              aria-label="设置中心"
-              className="rounded-lg p-1.5 text-stone-400 transition hover:bg-stone-100 hover:text-brand-600"
-            >
-              <Settings className="h-4 w-4" />
-            </button>
           </div>
         </header>
         {/* UX6: 全局细进度条 —— sending 期间顶栏底部持续走的不确定进度动画，比转圈更克制 */}
