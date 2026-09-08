@@ -178,8 +178,8 @@ export function Workspace() {
         />
       )}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between gap-3 border-b border-[#e8ddca] bg-[#faf6ee] px-4 py-2.5">
-          <div className="flex min-w-0 items-center gap-3">
+        <header className="flex items-center justify-between gap-3 border-b border-[#e8ddca] bg-[#faf6ee] px-3 py-1.5">
+          <div className="flex min-w-0 items-center gap-1.5">
             {/* UX20: 移动端打开历史抽屉 */}
             <button
               onClick={() => setMobileHistory(true)}
@@ -189,7 +189,7 @@ export function Workspace() {
             >
               <Menu className="h-4 w-4" />
             </button>
-            {/* 桌面：对话历史默认隐藏，这里做显隐开关（收起态仅剩 48px 图标条） */}
+            {/* 桌面：对话历史默认完全隐藏（R5 单框），点击在显示/隐藏间切换 */}
             <button
               onClick={toggleHistory}
               title={historyCollapsed ? "显示对话历史" : "隐藏对话历史"}
@@ -203,24 +203,21 @@ export function Workspace() {
               <PanelLeft className="h-4 w-4" />
               <span className="hidden text-xs lg:inline">历史</span>
             </button>
-            <div className="flex items-center gap-2">
-              <span className="text-[15px] font-semibold text-stone-800">智能助手</span>
-              {active && (
-                <button
-                  onClick={() => setRenameOpen(true)}
-                  // D45: 双击标题同样进入重命名，不再只有 hover 铅笔一个隐蔽入口
-                  onDoubleClick={() => setRenameOpen(true)}
-                  title="单击铅笔或双击标题即可重命名"
-                  className="group flex max-w-[220px] items-center gap-1 truncate rounded px-1 text-sm text-stone-400 transition hover:text-brand-600"
-                >
-                  <span className="truncate">· {active.title}</span>
-                  <Pencil className="h-3 w-3 shrink-0 opacity-0 transition group-hover:opacity-100" />
-                </button>
-              )}
-            </div>
+            {active && (
+              <button
+                onClick={() => setRenameOpen(true)}
+                // D45: 双击标题同样进入重命名，不再只有 hover 铅笔一个隐蔽入口
+                onDoubleClick={() => setRenameOpen(true)}
+                title="单击铅笔或双击标题即可重命名"
+                className="group flex max-w-[240px] items-center gap-1 truncate rounded-lg px-1.5 py-1 text-sm text-stone-500 transition hover:bg-stone-100 hover:text-stone-700"
+              >
+                <span className="truncate">{active.title}</span>
+                <Pencil className="h-3 w-3 shrink-0 opacity-0 transition group-hover:opacity-100" />
+              </button>
+            )}
             <button
               onClick={startNew}
-              className="ml-2 flex items-center gap-1.5 rounded-lg border border-orange-200 px-3 py-1.5 text-[12.5px] font-medium text-orange-600 transition hover:border-orange-300 hover:bg-orange-50"
+              className="ml-1 flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs text-stone-500 transition hover:bg-stone-100 hover:text-brand-600"
             >
               <Plus className="h-3.5 w-3.5" /> 新建对话
             </button>

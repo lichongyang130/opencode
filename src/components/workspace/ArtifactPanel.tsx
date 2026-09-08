@@ -469,6 +469,12 @@ export function ArtifactPanel({
     return null;
   }
 
+  // R5：对话模式没有任何产物时（含全新空会话），右侧保持留白——不渲染「AI 生成的
+  // 文档…会呈现在这里」这类占位画布，界面就只是一个对话框
+  if (!hasArtifact && mode === "chat") {
+    return null;
+  }
+
   // d3：文档/研究模式下画布加宽为主角，对话退居左列；其余模式保持适中宽度
   const wideCanvas = mode === "docs" || mode === "research";
 

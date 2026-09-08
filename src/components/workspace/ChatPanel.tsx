@@ -1048,6 +1048,16 @@ export function ChatPanel() {
         </div>
       </div>
 
+      {/* R5：空对话时右下角一行极小的环境说明，不占布局 */}
+      {messages.length === 0 && (
+        <p
+          aria-hidden
+          className="pointer-events-none absolute bottom-3 right-5 hidden select-none text-[11px] text-[#d4c4ac] lg:block"
+        >
+          数据保存在本地 · 30 秒上手 · 不配密钥也能完整体验
+        </p>
+      )}
+
       {/* 回到底部 */}
       {showJump && messages.length > 0 && (
         <button

@@ -412,9 +412,13 @@ export function HistoryPanel({
     }
   }
 
-  // UX1: 收起态只渲染 48px 图标轨（hover 临时展开浮层，不改变布局宽度）
+  // UX1: 非受控（无 railCollapsed prop）时收起态保留 48px 悬停展开条；
+  // R5：Workspace 受控收起＝完全隐藏，主区不出现第二条竖栏
   const railConvos = conversations.filter((c) => !c.archived).slice(0, 12);
   if (railMode && !railHover) {
+    if (railCollapsed !== undefined) {
+      return null;
+    }
     return (
       <aside
         onMouseEnter={() => setRailHover(true)}
