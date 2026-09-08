@@ -1,91 +1,120 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
-  Clapperboard,
+  Bot,
+  Database,
   FileText,
-  Image as ImageIcon,
+  Lightbulb,
   MessageSquare,
-  Presentation,
-  Search,
-  Settings,
+  Sparkles,
+  Wrench,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useChatStore, MODE_LABELS, type WorkspaceMode } from "@/lib/store/chat";
-import { toast } from "@/lib/store/toast";
 import { cn } from "@/lib/utils";
 
-/** 竖栏主图标 = 六种创作能力。点图标新建对应模式的会话（进入该能力对话框）。 */
-const PRIMARY_MODES: { mode: WorkspaceMode; label: string; icon: LucideIcon }[] = [
-  { mode: "chat", label: "AI 对话", icon: MessageSquare },
-  { mode: "docs", label: "文档", icon: FileText },
-  { mode: "slides", label: "PPT", icon: Presentation },
-  { mode: "image", label: "图片", icon: ImageIcon },
-  { mode: "research", label: "深度研究", icon: Search },
-  { mode: "video", label: "视频", icon: Clapperboard },
+/** 左侧产品导航（图标 + 文字）。
+ *  AI 对话 = /chat 工作台；画布 = /docs 文档画布；灵感 = /templates 模板灵感；
+ *  知识库 / 智能体 / 工具 = 各自独立模块页；底部固定会员中心。 */
+const NAV: { key: string; label: string; icon: LucideIcon; href: string }[] = [
+  { key: "chat", label: "AI 对话", icon: MessageSquare, href: "/chat" },
+  { key: "canvas", label: "画布", icon: FileText, href: "/docs" },
+  { key: "ideas", label: "灵感", icon: Lightbulb, href: "/templates" },
+  { key: "knowledge", label: "知识库", icon: Database, href: "/knowledge" },
+  { key: "agents", label: "智能体", icon: Bot, href: "/agents" },
+  { key: "tools", label: "工具", icon: Wrench, href: "/tools" },
 ];
+
+function sectionOf(pathname: string | null): string | null {
+  if (!pathname) return null;
+  if (pathname.startsWith("/chat")) return "chat";
+  if (pathname.startsWith("/docs")) return "canvas";
+  if (pathname.startsWith("/templates")) return "ideas";
+  if (pathname.startsWith("/knowledge")) return "knowledge";
+  if (pathname.startsWith("/agents")) return "agents";
+  if (pathname.startsWith("/tools")) return "tools";
+  if (pathname.startsWith("/membership")) return "membership";
+  return null;
+}
 
 export function Sidebar() {
   const router = useRouter();
-  const { conversations, activeId, newConversation, selectConversation } = useChatStore();
-
-  const activeConvo = conversations.find((c) => c.id === activeId);
-  const activeMode: WorkspaceMode = activeConvo?.mode ?? "chat";
-
-  const startMode = async (mode: WorkspaceMode) => {
-    const id = await newConversation(mode);
-    void selectConversation(id);
-    toast(`已新建「${MODE_LABELS[mode]}」会话`, "success");
-  };
+  const pathname = usePathname();
+  const current = sectionOf(pathname);
 
   return (
-    <aside className="relative z-40 flex w-12 shrink-0 flex-col items-center border-r border-[#e8ddca] bg-[#f5efe4] py-2">
-      {/* 品牌：点击回首页 */}
+    <aside className="relative z-40 flex w-12 shrink-0 flex-col items-stretch border-r border-[#e8ddca] bg-[#f5efe4] py-3 md:w-[196px] md:px-2">
+      {/* 品牌：点击回首页（窄屏只显示图标） */}
       <button
         onClick={() => router.push("/")}
         title="OpenCanvas · 返回首页"
         aria-label="OpenCanvas · 返回首页"
-        className="mb-3 flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-rose-500 text-sm font-bold text-white shadow-sm transition hover:brightness-110"
+        className="mb-3 flex items-center gap-2.5 self-center rounded-lg px-1 py-1 transition hover:opacity-90 md:self-stretch md:px-1.5"
       >
-        O
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-rose-500 text-sm font-bold text-white shadow-sm">
+          O
+        </span>
+        <span className="hidden text-[15px] font-semibold tracking-tight text-stone-800 md:inline">
+          OpenCanvas
+        </span>
       </button>
 
-      {/* 六种创作能力：随当前会话模式高亮 */}
-      <div className="flex flex-col items-center gap-0.5">
-        {PRIMARY_MODES.map(({ mode, label, icon: Icon }) => {
-          const isActive = activeMode === mode;
+      {/* 导航 */}
+      <nav className="flex flex-col items-center gap-1 md:items-stretch" aria-label="主导航">
+        {NAV.map(({ key, label, icon: Icon, href }) => {
+          const isActive = current === key;
           return (
             <button
-              key={mode}
-              title={`${label}（新建${MODE_LABELS[mode]}会话）`}
-              aria-label={`新建${label}会话`}
-              aria-current={isActive ? "true" : undefined}
-              onClick={() => void startMode(mode)}
+              key={key}
+              onClick={() => router.push(href)}
+              title={label}
+              aria-current={isActive ? "page" : undefined}
               className={cn(
-                "group relative flex h-10 w-10 items-center justify-center rounded-xl transition",
-                isActive ? "bg-orange-100 text-orange-600" : "text-stone-400 hover:bg-orange-50 hover:text-orange-600"
+                "flex h-10 items-center justify-center gap-2.5 rounded-xl px-2 text-[13.5px] transition md:justify-start md:px-2.5",
+                isActive
+                  ? "bg-white font-medium text-brand-700 shadow-sm"
+                  : "text-stone-500 hover:bg-white/70 hover:text-stone-800"
               )}
             >
-              <Icon className="h-[18px] w-[18px]" />
+              <Icon
+                className="h-[18px] w-[18px] shrink-0"
+                strokeWidth={isActive ? 2.1 : 1.8}
+              />
+              <span className="hidden truncate md:inline">{label}</span>
               {isActive && (
-                <span className="absolute -left-0.5 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-orange-500" />
+                <span className="ml-auto hidden h-1.5 w-1.5 rounded-full bg-brand-500 md:inline" />
               )}
             </button>
           );
         })}
-      </div>
+      </nav>
 
       {/* 弹性空间 */}
       <div className="flex-1" />
 
-      {/* 设置：与首页统一走 /settings 页面 */}
+      {/* 会员中心：固定底部 */}
       <button
-        title="设置中心"
-        aria-label="设置中心"
-        onClick={() => router.push("/settings")}
-        className="mt-1 flex h-10 w-10 items-center justify-center rounded-xl text-stone-400 transition hover:bg-stone-100 hover:text-brand-600"
+        onClick={() => router.push("/membership")}
+        title="会员中心"
+        aria-current={current === "membership" ? "page" : undefined}
+        className={cn(
+          "flex h-10 items-center justify-center gap-2.5 rounded-xl px-2 text-[13.5px] transition md:justify-start md:px-2.5",
+          current === "membership"
+            ? "bg-white font-medium text-rose-600 shadow-sm"
+            : "text-stone-500 hover:bg-white/70 hover:text-rose-600"
+        )}
       >
-        <Settings className="h-[18px] w-[18px]" />
+        <Sparkles
+          className={cn(
+            "h-[18px] w-[18px] shrink-0",
+            current === "membership" ? "text-rose-500" : "text-amber-500"
+          )}
+          strokeWidth={current === "membership" ? 2.1 : 1.8}
+        />
+        <span className="hidden truncate md:inline">会员中心</span>
+        <span className="ml-auto hidden rounded-full bg-rose-100 px-1.5 py-px text-[10px] font-medium text-rose-600 md:inline">
+          Pro
+        </span>
       </button>
     </aside>
   );
