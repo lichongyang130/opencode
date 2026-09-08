@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Home, LayoutDashboard, Loader2, Menu, Monitor, Moon, Pencil, Plus, Settings, Sun } from "lucide-react";
+import { Check, Home, LayoutDashboard, Loader2, Menu, Monitor, Moon, PanelLeft, Pencil, Plus, Settings, Sun } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { HistoryPanel } from "./HistoryPanel";
 import { ChatPanel } from "./ChatPanel";
@@ -17,6 +17,7 @@ import { useChatStore } from "@/lib/store/chat";
 import { initTheme, readThemeMode, setThemeMode, type ThemeMode } from "@/lib/theme";
 import { toast } from "@/lib/store/toast";
 import { cn } from "@/lib/utils";
+import { readJSON, writeJSON } from "@/lib/safe-storage";
 
 export function Workspace() {
   const router = useRouter();
@@ -36,6 +37,25 @@ export function Workspace() {
   const [renameOpen, setRenameOpen] = useState(false);
   // UX20: 移动端历史抽屉开关（md 以下顶栏菜单按钮触发；桌面端常驻不受影响）
   const [mobileHistory, setMobileHistory] = useState(false);
+  // 对话历史默认隐藏（home-v2 布局收敛）：md+ 只保留 48px 图标条，
+  // 顶栏「历史」按钮在展开面板与收起条之间切换；选择记入本地。
+  const [historyCollapsed, setHistoryCollapsed] = useState(true);
+  useEffect(() => {
+    try {
+      setHistoryCollapsed(readJSON("opencanvas.history.rail", true));
+    } catch {
+      setHistoryCollapsed(true);
+    }
+  }, []);
+  const toggleHistory = () => {
+    setHistoryCollapsed((v) => {
+      const next = !v;
+      try {
+        writeJSON("opencanvas.history.rail", next);
+      } catch {}
+      return next;
+    });
+  };
   // THEME1: 三态主题（浅色 / 深色 / 跟随系统）。从「循环切换」改为三点菜单，
   // 避免连点两次才能到目标主题的困惑（原按钮只有图标，状态含义不直观）
   const [theme, setTheme] = useState<ThemeMode>("system");
@@ -137,7 +157,17 @@ export function Workspace() {
         <Sidebar />
       </ErrorBoundary>
       <ErrorBoundary label="会话列表">
-        <HistoryPanel mobileOpen={mobileHistory} onMobileClose={() => setMobileHistory(false)} />
+        <HistoryPanel
+          mobileOpen={mobileHistory}
+          onMobileClose={() => setMobileHistory(false)}
+          railCollapsed={historyCollapsed}
+          onRailCollapseChange={(v) => {
+            setHistoryCollapsed(v);
+            try {
+              writeJSON("opencanvas.history.rail", v);
+            } catch {}
+          }}
+        />
       </ErrorBoundary>
       {/* UX20: 移动端抽屉打开时的背景遮罩，点按关闭 */}
       {mobileHistory && (
@@ -154,9 +184,24 @@ export function Workspace() {
             <button
               onClick={() => setMobileHistory(true)}
               title="打开会话历史"
+              aria-label="打开会话历史"
               className="rounded-lg p-1.5 text-stone-400 transition hover:bg-stone-100 hover:text-brand-600 md:hidden"
             >
               <Menu className="h-4 w-4" />
+            </button>
+            {/* 桌面：对话历史默认隐藏，这里做显隐开关（收起态仅剩 48px 图标条） */}
+            <button
+              onClick={toggleHistory}
+              title={historyCollapsed ? "显示对话历史" : "隐藏对话历史"}
+              aria-label={historyCollapsed ? "显示对话历史" : "隐藏对话历史"}
+              aria-pressed={!historyCollapsed}
+              className={cn(
+                "hidden items-center gap-1.5 rounded-lg p-1.5 text-stone-400 transition hover:bg-stone-100 hover:text-brand-600 md:flex",
+                !historyCollapsed && "bg-brand-50 text-brand-600"
+              )}
+            >
+              <PanelLeft className="h-4 w-4" />
+              <span className="hidden text-xs lg:inline">历史</span>
             </button>
             <div className="flex items-center gap-2">
               <span className="text-[15px] font-semibold text-stone-800">智能助手</span>

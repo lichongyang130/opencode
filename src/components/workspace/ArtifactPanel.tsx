@@ -30,6 +30,7 @@ import { DocEmpty } from "./DocEmpty";
 import { StoryboardView } from "./StoryboardView";
 import { StoryboardEmpty } from "./StoryboardEmpty";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { cn } from "@/lib/utils";
 
 function ImageGallery({ images, sending }: { images: UIImage[]; sending: boolean }) {
   // IMG8/IMG11 的动作都挂在 store 上，画廊只管编排交互
@@ -328,6 +329,87 @@ function ImageGallery({ images, sending }: { images: UIImage[]; sending: boolean
   );
 }
 
+/** d5：PPT 生成中的阶段可视化。stage 由 deckMessage 关键词推断，
+ *  AI 每推进一步（规划→大纲→排版）UI 自动把对勾往前挪。 */
+const SLIDE_STAGES = ["理解需求", "生成大纲", "排版中", "校对导出"] as const;
+
+function stageIndexOf(message: string): number {
+  if (message.includes("排版") || message.includes("解析")) return 2;
+  if (message.includes("大纲")) return 1;
+  if (message.includes("规划") || message.includes("结构")) return 0;
+  return 1; // 无匹配时把「生成大纲」当作进行中
+}
+
+function SlidesGenerating({ message }: { message: string }) {
+  const cur = stageIndexOf(message);
+  return (
+    <div className="flex flex-1 flex-col overflow-hidden">
+      {/* 阶段条 */}
+      <div className="border-b border-stone-100 px-5 py-4">
+        <div className="flex items-center gap-2 text-sm font-semibold text-stone-800">
+          <Loader2 className="h-4 w-4 animate-spin text-brand-500" />
+          正在生成 PPT
+          <span className="ml-auto text-xs font-normal text-stone-400">约 10~30 秒</span>
+        </div>
+        <p className="mt-1 text-xs text-stone-500">{message}</p>
+        <div className="mt-4 flex items-center gap-1.5">
+          {SLIDE_STAGES.map((s, i) => {
+            const done = i < cur;
+            const active = i === cur;
+            return (
+              <div key={s} className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
+                <span
+                  className={cn(
+                    "flex h-6 w-6 items-center justify-center rounded-full border text-[10px]",
+                    done
+                      ? "border-brand-500 bg-brand-500 text-white"
+                      : active
+                        ? "border-brand-400 bg-white text-brand-500"
+                        : "border-stone-200 bg-white text-stone-300"
+                  )}
+                >
+                  {done ? <Check className="h-3 w-3" /> : active ? <Loader2 className="h-3 w-3 animate-spin" /> : i + 1}
+                </span>
+                <span
+                  className={cn(
+                    "w-full truncate text-center text-[10px]",
+                    done || active ? "font-medium text-stone-700" : "text-stone-300"
+                  )}
+                >
+                  {s}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+        {/* 连接线进度（视觉：前段已走完的部分亮起） */}
+        <div className="mt-2 h-1 overflow-hidden rounded-full bg-stone-100">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-brand-500 to-orange-400 transition-all duration-500"
+            style={{ width: `${((cur + 1) / SLIDE_STAGES.length) * 100}%` }}
+          />
+        </div>
+      </div>
+
+      {/* 缩略图骨架：逐页生成中的视觉占位（对齐 d5 右侧画布感） */}
+      <div className="flex-1 overflow-y-auto p-4">
+        <p className="mb-3 text-[11px] font-medium text-stone-400">成稿预览</p>
+        <div className="space-y-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="overflow-hidden rounded-lg border border-stone-100">
+              <div className="aspect-video w-full bg-gradient-to-br from-orange-50 via-rose-50 to-stone-50 p-3">
+                <div className="h-2 w-1/3 rounded bg-stone-200/80" />
+                <div className="mt-2 h-1.5 w-1/2 rounded bg-stone-200/60" />
+                <div className="mt-1 h-1.5 w-2/3 rounded bg-stone-200/60" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /**
  * 产物画布（Artifact Panel）—— OpenCanvas 式右侧栏。
  * - PPT 模式：完整幻灯片工作台（主题/编辑/导出）
@@ -387,8 +469,16 @@ export function ArtifactPanel({
     return null;
   }
 
+  // d3：文档/研究模式下画布加宽为主角，对话退居左列；其余模式保持适中宽度
+  const wideCanvas = mode === "docs" || mode === "research";
+
   return (
-    <aside className="absolute inset-y-0 right-0 z-30 flex w-full shrink-0 flex-col border-l border-stone-200 bg-white shadow-2xl sm:static sm:w-[26rem] sm:shadow-none lg:w-[30rem]">
+    <aside
+      className={cn(
+        "absolute inset-y-0 right-0 z-30 flex w-full shrink-0 flex-col border-l border-stone-200 bg-white shadow-2xl sm:static sm:shadow-none",
+        wideCanvas ? "sm:w-[42rem] lg:w-[47rem]" : "sm:w-[26rem] lg:w-[30rem]"
+      )}
+    >
       {/* 画布标题栏 */}
       <div className="flex items-center justify-between border-b border-stone-100 px-5 py-3">
         <h2 className="flex items-center gap-2 text-[15px] font-semibold text-stone-800">
@@ -475,11 +565,8 @@ export function ArtifactPanel({
       ) : mode === "slides" && convo?.deck ? (
         <SlideDeckView deck={convo.deck} />
       ) : mode === "slides" && convo?.deckStatus === "loading" ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 text-stone-400">
-          <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
-          <p className="text-sm">{convo.deckMessage ?? "正在生成…"}</p>
-          <p className="text-xs">PPT 生成通常需要 10~30 秒</p>
-        </div>
+        /* d5：PPT 生成过程 —— 顶部阶段条（由 deckMessage 推动）+ 缩略图骨架 */
+        <SlidesGenerating message={convo.deckMessage ?? ""} />
       ) : mode === "slides" ? (
         <div className="flex flex-1 flex-col items-center justify-center text-center text-stone-400">
           <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-stone-100">

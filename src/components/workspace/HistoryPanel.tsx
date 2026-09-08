@@ -76,8 +76,21 @@ function HighlightedSnippet({ snippet }: { snippet: string }) {
   );
 }
 
-/** 会话历史面板：滚动分页 + 全文搜索 + 文件夹分组（DB3/DB10/DB14） */
-export function HistoryPanel({ mobileOpen, onMobileClose }: { mobileOpen?: boolean; onMobileClose?: () => void }) {
+/** 会话历史面板：滚动分页 + 全文搜索 + 文件夹分组（DB3/DB10/DB14）
+ *  collapsed/onCollapsedChange：受控收起（供 Workspace 默认隐藏历史）。
+ *  不传时维持内部自管理（测试与历史行为不变）。
+ */
+export function HistoryPanel({
+  mobileOpen,
+  onMobileClose,
+  railCollapsed,
+  onRailCollapseChange,
+}: {
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+  railCollapsed?: boolean;
+  onRailCollapseChange?: (v: boolean) => void;
+}) {
   const router = useRouter();
   const {
     conversations,
@@ -101,16 +114,22 @@ export function HistoryPanel({ mobileOpen, onMobileClose }: { mobileOpen?: boole
   const dragId = useRef<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   // UX1: 整个历史侧栏的收起态（收起后仅留 48px 悬停展开）；刷新后保留选择
-  const [railMode, setRailMode] = useState(false);
+  const [railModeInner, setRailMode] = useState(false);
   const [railHover, setRailHover] = useState(false);
+  // 受控收起（Workspace 默认隐藏历史时传入）；非受控时回落到内部状态
+  const railMode = railCollapsed !== undefined ? railCollapsed : railModeInner;
 
   useEffect(() => {
-    setRailMode(readJSON<boolean>(RAIL_KEY, false));
+    // 非受控：读本地记忆（历史行为）；受控模式下初始值由外部 state 提供
+    if (railCollapsed === undefined) setRailMode(readJSON<boolean>(RAIL_KEY, false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const toggleRail = () => {
     setRailMode((v) => {
-      writeJSON(RAIL_KEY, !v);
-      return !v;
+      const next = railCollapsed !== undefined ? !railCollapsed : !v;
+      writeJSON(RAIL_KEY, next);
+      onRailCollapseChange?.(next);
+      return next;
     });
   };
 
