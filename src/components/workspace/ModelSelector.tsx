@@ -169,7 +169,7 @@ export function ModelSelector({ value, onChange }: { value: string; onChange: (i
       </button>
 
       {open && (
-        <div className="absolute right-0 z-30 mt-1.5 w-[320px] overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl">
+        <div className="absolute bottom-full right-0 z-40 mb-1.5 w-[320px] overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl">
           {/* 面板头 */}
           <div className="border-b border-stone-100 p-2.5">
             <div className="flex items-center gap-2 px-0.5 pb-2">

@@ -307,112 +307,9 @@ function SplitComposer({
   };
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[#e8ddca] bg-white shadow-sm">
+    <div className="rounded-[22px] border border-[#e5d9c6] bg-white shadow-[0_1px_2px_rgba(74,46,29,0.04),0_10px_28px_-16px_rgba(74,46,29,0.18)] transition-shadow duration-200 focus-within:border-orange-300 focus-within:shadow-[0_1px_2px_rgba(74,46,29,0.04),0_12px_32px_-14px_rgba(234,88,12,0.35)]">
       <div className="relative flex min-w-0 flex-col">
-        {/* ──── 单框输入区：技能选择 ▾ ｜ 润色提示词 · 模型下拉 · 发送，全部收在同一个输入框内 ──── */}
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 border-b border-stone-100 px-2.5 py-2">
-          {/* 技能选择下拉 */}
-          <div ref={skillRef} className="relative">
-            <button
-              onClick={() => setSkillOpen((v) => !v)}
-              aria-haspopup="listbox"
-              aria-expanded={skillOpen}
-              title="技能选择：对话 / 文档 / PPT / 图片 / 研究 / 视频"
-              className="flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-stone-200 bg-stone-50 px-2.5 text-[12px] font-medium text-stone-700 transition hover:border-brand-300 hover:text-brand-600"
-            >
-              {(() => {
-                const Icon = SKILL_META[mode].icon;
-                return <Icon className="h-3.5 w-3.5" />;
-              })()}
-              {MODE_LABELS[mode]}
-              <ChevronDown className={cn("h-3 w-3 text-stone-400 transition-transform", skillOpen && "rotate-180")} />
-            </button>
-            {skillOpen && (
-              <div role="listbox" className="absolute left-0 top-full z-30 mt-1.5 w-44 overflow-hidden rounded-xl border border-stone-200 bg-white p-1 shadow-xl">
-                {SKILLS.map((skill) => {
-                  const Icon = SKILL_META[skill.mode].icon;
-                  const cur = skill.mode === mode;
-                  return (
-                    <button
-                      key={skill.mode}
-                      role="option"
-                      aria-selected={cur}
-                      onClick={() => chooseSkill(skill.mode)}
-                      className={cn(
-                        "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-brand-50",
-                        cur && "bg-brand-50"
-                      )}
-                    >
-                      <Icon className={cn("h-4 w-4", cur ? "text-brand-600" : "text-stone-400")} />
-                      <span className="min-w-0 flex-1">
-                        <span className={cn("block text-xs", cur ? "font-medium text-brand-700" : "text-stone-700")}>
-                          {MODE_LABELS[skill.mode]}
-                        </span>
-                        <span className="block truncate text-[10px] text-stone-400">{SKILL_META[skill.mode].desc}</span>
-                      </span>
-                      {cur && <Check className="h-3.5 w-3.5 text-brand-600" />}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <span className="min-w-0 flex-1" />
-
-          {/* 润色提示词 */}
-          <button
-            onClick={() => void enhancePrompt()}
-            disabled={!input.trim() || enhancing}
-            title={input.trim() ? "优化提示词" : "输入内容后可优化提示词"}
-            className="flex h-8 shrink-0 items-center gap-1 rounded-full border border-stone-200 px-2.5 text-[12px] text-stone-500 transition hover:border-brand-300 hover:text-brand-600 disabled:opacity-30"
-          >
-            {enhancing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
-            <span className="hidden sm:inline">{enhancing ? "润色中…" : "润色提示词"}</span>
-          </button>
-
-          {/* UX12: 实时 token/字数估算（estimateTokens 与计费同口径） */}
-          {input.trim() && (
-            <span className="truncate text-[10px] text-stone-400" title="估算值，实际以模型分词为准">
-              {input.length} 字 · 约 {estimateTokens(input)} tokens
-            </span>
-          )}
-
-          {/* 模型选择下拉 */}
-          <ModelSelector
-            value={model}
-            onChange={(id, provider) => {
-              setModel(id, provider);
-              const label = MODELS.find((m) => m.id === id)?.label ?? id;
-              // UX8: 补上供应商，让「用的是谁家的模型」一眼可辨
-              const pv = provider ? PROVIDER_NAME[provider] : undefined;
-              toast(pv ? `已切换到 ${pv} · ${label}` : `已切换到 ${label}`, "success");
-            }}
-          />
-
-          {sending ? (
-            // C35: 停止改红色圆钮，与「发送」在语义上一眼区分
-            <button
-              onClick={stopGeneration}
-              title="停止生成"
-              aria-label="停止生成"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-600 text-white transition hover:bg-red-700"
-            >
-              <Square className="h-3 w-3 fill-current" />
-            </button>
-          ) : (
-            <button
-              onClick={submit}
-              disabled={!input.trim()}
-              title={input.trim() ? "发送（回车）" : "输入内容后可发送"}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white transition hover:bg-brand-700 disabled:bg-stone-200 disabled:text-stone-400"
-            >
-              <ArrowUp className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-
-          {/* 图片模式参数（IMG1~6）：模型直选 / 尺寸 / 张数 / 风格 / 负向 / 参考图 / 历史 */}
+        {/* 图片模式参数（IMG1~6）：模型直选 / 尺寸 / 张数 / 风格 / 负向 / 参考图 / 历史 */}
           {mode === "image" && (
             <div className="space-y-1.5 border-b border-stone-100 px-3 py-1.5">
               <div className="flex flex-wrap items-center gap-1.5">
@@ -661,9 +558,112 @@ function SplitComposer({
                     ? "想做什么？写下来告诉我…"
                     : `${MODE_LABELS[mode]}：描述你的需求…`
               }
-              className="min-h-[76px] w-full resize-none bg-transparent px-3.5 py-2.5 text-[14px] leading-relaxed outline-none placeholder:text-stone-400"
+              className="min-h-[92px] w-full resize-none bg-transparent px-4 py-3.5 text-[14px] leading-relaxed outline-none placeholder:text-stone-400"
             />
           </div>
+
+          {/* ──── 底部工具栏：技能选择 ▾ ｜ 润色提示词 · 模型下拉 · 发送，全部收在输入框下方 ──── */}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 rounded-b-[22px] border-t border-[#f0e5d3] bg-[#fbf7f0] px-2.5 py-2">
+          {/* 技能选择下拉 */}
+          <div ref={skillRef} className="relative">
+            <button
+              onClick={() => setSkillOpen((v) => !v)}
+              aria-haspopup="listbox"
+              aria-expanded={skillOpen}
+              title="技能选择：对话 / 文档 / PPT / 图片 / 研究 / 视频"
+              className="flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 text-[13px] font-medium text-stone-700 transition hover:border-orange-300 hover:bg-orange-50/50 hover:text-orange-600"
+            >
+              {(() => {
+                const Icon = SKILL_META[mode].icon;
+                return <Icon className="h-3.5 w-3.5" />;
+              })()}
+              {MODE_LABELS[mode]}
+              <ChevronDown className={cn("h-3 w-3 text-stone-400 transition-transform", skillOpen && "rotate-180")} />
+            </button>
+            {skillOpen && (
+              <div role="listbox" className="absolute bottom-full left-0 z-40 mb-2 w-48 overflow-hidden rounded-xl border border-[#e5d9c6] bg-white p-1 shadow-xl">
+                {SKILLS.map((skill) => {
+                  const Icon = SKILL_META[skill.mode].icon;
+                  const cur = skill.mode === mode;
+                  return (
+                    <button
+                      key={skill.mode}
+                      role="option"
+                      aria-selected={cur}
+                      onClick={() => chooseSkill(skill.mode)}
+                      className={cn(
+                        "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-brand-50",
+                        cur && "bg-brand-50"
+                      )}
+                    >
+                      <Icon className={cn("h-4 w-4", cur ? "text-brand-600" : "text-stone-400")} />
+                      <span className="min-w-0 flex-1">
+                        <span className={cn("block text-xs", cur ? "font-medium text-brand-700" : "text-stone-700")}>
+                          {MODE_LABELS[skill.mode]}
+                        </span>
+                        <span className="block truncate text-[10px] text-stone-400">{SKILL_META[skill.mode].desc}</span>
+                      </span>
+                      {cur && <Check className="h-3.5 w-3.5 text-brand-600" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <span className="min-w-0 flex-1" />
+
+          {/* 润色提示词 */}
+          <button
+            onClick={() => void enhancePrompt()}
+            disabled={!input.trim() || enhancing}
+            title={input.trim() ? "优化提示词" : "输入内容后可优化提示词"}
+            className="flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 text-[13px] text-stone-500 transition hover:border-orange-300 hover:bg-orange-50/50 hover:text-orange-600 disabled:opacity-30"
+          >
+            {enhancing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+            <span className="hidden sm:inline">{enhancing ? "润色中…" : "润色提示词"}</span>
+          </button>
+
+          {/* UX12: 实时 token/字数估算（estimateTokens 与计费同口径） */}
+          {input.trim() && (
+            <span className="truncate text-[10px] text-stone-400" title="估算值，实际以模型分词为准">
+              {input.length} 字 · 约 {estimateTokens(input)} tokens
+            </span>
+          )}
+
+          {/* 模型选择下拉 */}
+          <ModelSelector
+            value={model}
+            onChange={(id, provider) => {
+              setModel(id, provider);
+              const label = MODELS.find((m) => m.id === id)?.label ?? id;
+              // UX8: 补上供应商，让「用的是谁家的模型」一眼可辨
+              const pv = provider ? PROVIDER_NAME[provider] : undefined;
+              toast(pv ? `已切换到 ${pv} · ${label}` : `已切换到 ${label}`, "success");
+            }}
+          />
+
+          {sending ? (
+            // C35: 停止改红色圆钮，与「发送」在语义上一眼区分
+            <button
+              onClick={stopGeneration}
+              title="停止生成"
+              aria-label="停止生成"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-600 text-white shadow-sm shadow-red-200 transition hover:bg-red-700"
+            >
+              <Square className="h-3 w-3 fill-current" />
+            </button>
+          ) : (
+            <button
+              onClick={submit}
+              disabled={!input.trim()}
+              title={input.trim() ? "发送（回车）" : "输入内容后可发送"}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white shadow-sm shadow-orange-200 transition hover:bg-brand-700 disabled:bg-stone-100 disabled:text-stone-300 disabled:shadow-none"
+            >
+              <ArrowUp className="h-4 w-4" />
+            </button>
+          )}
+        </div>
 
           {/* 对话态常驻一行快捷键提示（空态的整句提示保留在原处） */}
           {conversing && (
