@@ -72,4 +72,18 @@ export const TPL_ART: Record<string, Record<string, string>> = {
   hyperframes: {
     教程系列: "/canvas-art/hyperframes-4.jpg",
   },
+  // 实时产物：/chat 模板标题与画布案例标题不同，取语义近似映射
+  realtime: {
+    实时数据大屏: "/canvas-art/realtime-1.jpg",
+    实时字幕: "/canvas-art/realtime-2.jpg",
+    实时协作白板: "/canvas-art/realtime-3.jpg",
+    在线头脑风暴: "/canvas-art/realtime-4.jpg",
+  },
+  // WebGL：3D/粒子/全景类映射
+  webgl: {
+    "WebGL 场景": "/canvas-art/webgl-2.jpg",
+    "3D 产品展示": "/canvas-art/webgl-1.jpg",
+    数据可视化: "/canvas-art/webgl-3.jpg",
+    全景看房: "/canvas-art/webgl-4.jpg",
+  },
 };
