@@ -14,7 +14,7 @@ export const TPL_ART: Record<string, Record<string, string>> = {
     营销方案: "/canvas-art/docs-3.jpg",
   },
   slides: {
-    制作PPT: "/canvas-art/ppt-1.jpg",
+    "制作 PPT": "/canvas-art/ppt-1.jpg",
     项目汇报: "/canvas-art/ppt-2.jpg",
     融资路演: "/canvas-art/ppt-3.jpg",
     培训课件: "/canvas-art/ppt-4.jpg",
@@ -33,11 +33,30 @@ export const TPL_ART: Record<string, Record<string, string>> = {
     生成图片: "/cases/d-corgi-2.jpg",
     产品海报: "/cases/m-brand-poster-2.jpg",
     角色概念: "/cases/d-cyber-2.jpg",
-    电商Banner: "/cases/ec-product-img-2.jpg",
+    "电商 Banner": "/cases/ec-product-img-2.jpg",
     水彩插画: "/cases/d-watercolor-2.jpg",
     杂志封面: "/cases/d-cover-2.jpg",
     头像定制: "/cases/d-avatar-2.jpg",
     赛博城市: "/canvas-art/image-3.jpg",
     家居效果图: "/canvas-art/image-4.jpg",
+  },
+  // 视频（分镜/脚本）
+  video: {
+    视频脚本: "/canvas-art/video-1.jpg",
+    产品宣传: "/canvas-art/video-3.jpg",
+    口播干货: "/canvas-art/video-2.jpg",
+    科普动画: "/canvas-art/video-4.jpg",
+  },
+  // 深度研究：真实研究报告
+  research: {
+    深度研究: "/canvas-art/research-1.jpg",
+    出海机会: "/canvas-art/research-2.jpg",
+  },
+  // 网站复刻
+  website: {
+    落地页复刻: "/canvas-art/website-2.jpg",
+    企业官网: "/canvas-art/website-1.jpg",
+    个人作品集: "/canvas-art/website-3.jpg",
+    电商首页: "/canvas-art/website-4.jpg",
   },
 };
