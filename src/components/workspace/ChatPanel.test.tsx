@@ -87,6 +87,13 @@ afterEach(() => {
 /* ─────────────── 空态引导 ─────────────── */
 
 describe("ChatPanel 空态", () => {
+  it("空态顶部显示醒目大字问候（h1）", () => {
+    seed();
+    render(<ChatPanel />);
+    const h = screen.getByRole("heading", { level: 1 });
+    expect(h.textContent).toContain("欢迎回来，今天想做点什么？");
+  });
+
   it("空态技能条收纳：顶部 4 个可见 tab + 更多按钮", () => {
     seed();
     render(<ChatPanel />);

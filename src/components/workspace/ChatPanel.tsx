@@ -1360,12 +1360,14 @@ export function ChatPanel() {
           {deckLoading && <SlidesProgressStrip message={convo?.deckMessage ?? ""} />}
           {messages.length === 0 ? (
             <div className="relative px-2 pb-4 pt-4 text-center">
-              {/* 页面主标题（sr-only：视觉上已由技能条+示例区承担引导，标题供读屏/结构用） */}
-              <h1 className="sr-only">AI 对话</h1>
+              {/* 醒目大字主标题：位于技能条上方（用户选定的问候文案） */}
+              <h1 className="mt-1 text-3xl font-semibold tracking-tight text-stone-900 md:text-4xl dark:text-stone-100">
+                欢迎回来，今天想做点什么？
+              </h1>
               {/* n5 氛围的浅色版：柔紫主光晕 + 一点琥珀偏光；背景仍是现有白底 */}
               <div aria-hidden className="pointer-events-none absolute -top-6 left-1/2 h-64 w-[560px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(139,92,246,0.13),transparent_70%)] blur-2xl" />
               <div aria-hidden className="pointer-events-none absolute right-2 top-24 hidden h-44 w-72 rounded-full bg-[radial-gradient(closest-side,rgba(251,146,60,0.09),transparent_70%)] blur-2xl md:block" />
-              <div className="relative">
+              <div className="relative mt-6">
                 {/* 顶部技能条：可见 4 项 + 「更多」下拉（其余技能收纳） */}
                 <div className="relative inline-flex max-w-full flex-wrap items-center justify-center gap-1">
                   {homeVisible.map((sk) => {
