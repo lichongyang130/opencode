@@ -83,7 +83,6 @@ type HomeSkill = {
 
 const HOME_SKILLS: HomeSkill[] = [
   { key: "all", label: "全部", icon: MessageSquare },
-  { key: "chat", label: "AI对话", icon: MessageSquare, mode: "chat" },
   { key: "docs", label: "文档", icon: FileText, mode: "docs" },
   { key: "ppt", label: "PPT", icon: Presentation, mode: "slides" },
   { key: "prototype", label: "原型", icon: LayoutTemplate, planned: true },
@@ -98,8 +97,8 @@ const HOME_SKILLS: HomeSkill[] = [
   { key: "research", label: "深度研究", icon: Search, mode: "research" },
 ];
 
-/** 顶部可见技能（4 项）；其余进「更多」下拉 */
-const HOME_VISIBLE_KEYS = ["all", "chat", "docs", "ppt"];
+/** 顶部可见技能；其余进「更多」下拉（AI对话即本页默认态，不作为技能展示） */
+const HOME_VISIBLE_KEYS = ["all", "docs", "ppt"];
 
 /** 各技能图标与缩略图 */
 const SKILL_ICON = Object.fromEntries(HOME_SKILLS.map((x) => [x.key, x.icon])) as Record<string, typeof MessageSquare>;
@@ -285,21 +284,21 @@ const SKILL_TEMPLATES: Record<string, TemplateCard[]> = {
   ],
 };
 
-/** 「全部」：六个真生成技能各取 2 条共 12 张，交错排列让首屏先见每个技能代表作。
- *  每卡带所属技能 key，「全部」视图下点击也能正确按该技能生成。 */
+/** 「全部」：文档/PPT/图片/研究/视频 五类各 2 条 + 各补 1 条共 12 张，
+ *  首屏先见每个技能代表作；每卡带所属技能 key，点卡按该技能填充提示词。 */
 const ALL_CURATED: { skill: string; card: TemplateCard }[] = [
-  { skill: "chat", card: SKILL_TEMPLATES["chat"][0] },
   { skill: "docs", card: SKILL_TEMPLATES["docs"][0] },
-  { skill: "slides", card: SKILL_TEMPLATES["slides"][0] },
+  { skill: "ppt", card: SKILL_TEMPLATES["slides"][0] },
   { skill: "image", card: SKILL_TEMPLATES["image"][0] },
   { skill: "research", card: SKILL_TEMPLATES["research"][0] },
   { skill: "video", card: SKILL_TEMPLATES["video"][0] },
-  { skill: "chat", card: SKILL_TEMPLATES["chat"][1] },
   { skill: "docs", card: SKILL_TEMPLATES["docs"][1] },
-  { skill: "slides", card: SKILL_TEMPLATES["slides"][1] },
+  { skill: "ppt", card: SKILL_TEMPLATES["slides"][1] },
   { skill: "image", card: SKILL_TEMPLATES["image"][1] },
   { skill: "research", card: SKILL_TEMPLATES["research"][1] },
   { skill: "video", card: SKILL_TEMPLATES["video"][1] },
+  { skill: "docs", card: SKILL_TEMPLATES["docs"][2] },
+  { skill: "ppt", card: SKILL_TEMPLATES["slides"][2] },
 ];
 
 /** 技能选择（输入框内下拉）：六个创作能力 —— 与竖栏 PRIMARY_MODES 一致 */

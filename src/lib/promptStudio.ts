@@ -547,8 +547,10 @@ function pickFrom<T>(arr: T[], avoid?: T): T {
  * @param skillLabel 技能显示名
  */
 export function buildDetailedPrompt(skillKey: string, title: string, skillLabel: string): string {
-  const pool = POOLS[skillKey];
-  const angles = CARD_ANGLES[skillKey]?.[title];
+  // 界面技能 key（如 PPT 模板用 "ppt"）与生成器内部池统一（slides）
+  const k = skillKey === "ppt" ? "slides" : skillKey;
+  const pool = POOLS[k];
+  const angles = CARD_ANGLES[k]?.[title];
   if (!pool || !angles || angles.length === 0) {
     // 兜底：无池数据时返回标题相关的一句话任务
     return `请帮我完成「${title}」：${skillLabel}相关的任务，请给出专业、完整、可直接使用的输出。`;
