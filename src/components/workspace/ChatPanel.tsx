@@ -1158,40 +1158,8 @@ export function ChatPanel() {
                   })}
                 </div>
 
-                {/* 示例提示词：截图风格的灵感卡（迷你缩略图 + 标题 + 描述），点卡直接生成 */}
-                <div className="mt-5 flex items-baseline justify-between px-1 text-left">
-                  <h2 className="text-sm font-semibold tracking-wide text-stone-500">示例提示词</h2>
-                  <span className="text-xs text-stone-400">点击卡片直接生成 · 也可以在下方向 AI 描述你的需求</span>
-                </div>
-                <div className="mt-2.5 grid grid-cols-2 gap-2.5 text-left lg:grid-cols-3">
-                  {visibleCards.map((q) => {
-                    return (
-                      <button
-                        key={q.title}
-                        aria-label={q.title}
-                        onClick={() => runStarter(q)}
-                        className="group overflow-hidden rounded-2xl border border-stone-200/90 bg-white p-1.5 text-left transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_12px_30px_-16px_rgba(76,29,149,0.4)]"
-                      >
-                        <span className="relative block h-16 w-full overflow-hidden rounded-lg bg-stone-100 sm:h-20 lg:h-[4.5rem]">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={THUMB_IMG[q.mode]}
-                            alt=""
-                            loading="lazy"
-                            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
-                          />
-                        </span>
-                        <span className="block px-1 pt-2">
-                          <span className="block truncate text-[13px] font-semibold text-stone-800">{q.title}</span>
-                          <span className="mt-0.5 block truncate text-xs text-stone-500">{q.desc}</span>
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* E5 分体式输入舱 */}
-                <div className="mx-auto mt-5 max-w-3xl">
+              {/* E5 分体式输入舱 */}
+              <div className="mx-auto mt-6 max-w-3xl">
                 <SplitComposer
                   input={input}
                   setInput={changeInput as typeof setInput}
@@ -1235,6 +1203,39 @@ export function ChatPanel() {
                 />
               </div>
               <p className="mt-2 text-xs text-stone-400">回车发送 · Shift+回车换行 · 点上方「技能」可切换 文档 / PPT / 图片</p>
+
+              {/* 示例提示词：截图风格的灵感卡（迷你缩略图 + 标题 + 描述），点卡直接生成 */}
+                <div className="mt-5 flex items-baseline justify-between px-1 text-left">
+                  <h2 className="text-sm font-semibold tracking-wide text-stone-500">示例提示词</h2>
+                  <span className="text-xs text-stone-400">点击卡片直接生成 · 也可以在上方输入框描述你的需求</span>
+                </div>
+                <div className="mt-2.5 grid grid-cols-2 gap-2.5 text-left lg:grid-cols-3">
+                  {visibleCards.map((q) => {
+                    return (
+                      <button
+                        key={q.title}
+                        aria-label={q.title}
+                        onClick={() => runStarter(q)}
+                        className="group overflow-hidden rounded-2xl border border-stone-200/90 bg-white p-1.5 text-left transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_12px_30px_-16px_rgba(76,29,149,0.4)]"
+                      >
+                        <span className="relative block h-16 w-full overflow-hidden rounded-lg bg-stone-100 sm:h-20 lg:h-[4.5rem]">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={THUMB_IMG[q.mode]}
+                            alt=""
+                            loading="lazy"
+                            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
+                          />
+                        </span>
+                        <span className="block px-1 pt-2">
+                          <span className="block truncate text-[13px] font-semibold text-stone-800">{q.title}</span>
+                          <span className="mt-0.5 block truncate text-xs text-stone-500">{q.desc}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
 
               </div>
             </div>
