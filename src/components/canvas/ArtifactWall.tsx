@@ -3,17 +3,30 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  Activity,
+  Box,
+  BookOpen,
+  Clapperboard,
   FileText,
+  Globe,
   Image as ImageIcon,
   LayoutTemplate,
   MessageSquare,
+  Music,
+  PenTool,
   Play,
   Plus,
+  Presentation,
   Search,
-  Sparkles,
+  Video,
 } from "lucide-react";
 import { useChatStore, type Conversation } from "@/lib/store/chat";
-import { toast } from "@/lib/store/toast";
+import {
+  CANVAS_CATEGORIES,
+  GALLERY_PICKS,
+  type CanvasCategory,
+  type CanvasCase,
+} from "@/lib/canvasCases";
 import { cn } from "@/lib/utils";
 
 /** 画布产物条目：来自各会话的 AI 产物（doc/deck/report/images/video） */
@@ -100,37 +113,6 @@ function collectArtifacts(convos: Conversation[]): ArtifactItem[] {
   return out.sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
-/**
- * 分类与首页技能体系（ChatPanel HOME_SKILLS）保持一致：
- * 已具备的技能按产物类型过滤；planned 技能（原型/HyperFrames/网站复刻/
- * 音频/实时产物/WebGL）暂无产物，点击提示「建设中 · 即将支持」。
- * 注：PPT 与 幻灯片 两种技能产出的都是演示文稿（deck），归同一产物类型。
- */
-interface FilterDef {
-  key: string;
-  label: string;
-  /** 对应产物类型；缺省=全部/建设中 */
-  kind?: ArtifactKind;
-  /** 建设中技能（soon）：不假装有产物，仅提示即将支持 */
-  planned?: boolean;
-}
-
-const FILTERS: FilterDef[] = [
-  { key: "all", label: "全部" },
-  { key: "docs", label: "文档", kind: "文档" },
-  { key: "ppt", label: "PPT", kind: "PPT" },
-  { key: "prototype", label: "原型", planned: true },
-  { key: "slides", label: "幻灯片", kind: "PPT" },
-  { key: "image", label: "图片", kind: "图片" },
-  { key: "hyperframes", label: "HyperFrames", planned: true },
-  { key: "website", label: "网站复刻", planned: true },
-  { key: "video", label: "视频", kind: "视频分镜" },
-  { key: "audio", label: "音频", planned: true },
-  { key: "realtime", label: "实时产物", planned: true },
-  { key: "webgl", label: "WebGL", planned: true },
-  { key: "research", label: "深度研究", kind: "深度研究" },
-];
-
 const KIND_STYLE: Record<ArtifactKind, { badge: string }> = {
   文档: { badge: "bg-sky-50 text-sky-600" },
   PPT: { badge: "bg-violet-50 text-violet-600" },
@@ -138,6 +120,34 @@ const KIND_STYLE: Record<ArtifactKind, { badge: string }> = {
   深度研究: { badge: "bg-emerald-50 text-emerald-600" },
   视频分镜: { badge: "bg-rose-50 text-rose-600" },
 };
+
+/** 栏目视觉：示例卡封面渐变 + 图标（与产物墙暖色体系搭配的柔和色带） */
+const CATEGORY_COVER: Record<string, { grad: string; icon: typeof FileText }> = {
+  docs: { grad: "from-sky-200/90 via-sky-100 to-white", icon: FileText },
+  ppt: { grad: "from-violet-200/90 via-violet-100 to-white", icon: Presentation },
+  prototype: { grad: "from-cyan-200/90 via-cyan-100 to-white", icon: PenTool },
+  slides: { grad: "from-indigo-200/90 via-indigo-100 to-white", icon: Presentation },
+  image: { grad: "from-amber-200/90 via-amber-100 to-white", icon: ImageIcon },
+  hyperframes: { grad: "from-fuchsia-200/90 via-fuchsia-100 to-white", icon: Clapperboard },
+  website: { grad: "from-emerald-200/90 via-emerald-100 to-white", icon: Globe },
+  video: { grad: "from-rose-200/90 via-rose-100 to-white", icon: Video },
+  audio: { grad: "from-orange-200/90 via-orange-100 to-white", icon: Music },
+  realtime: { grad: "from-teal-200/90 via-teal-100 to-white", icon: Activity },
+  webgl: { grad: "from-blue-200/90 via-blue-100 to-white", icon: Box },
+  research: { grad: "from-lime-200/90 via-lime-100 to-white", icon: BookOpen },
+};
+
+function timeAgo(ts: number): string {
+  const diff = Date.now() - ts;
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "刚刚";
+  if (m < 60) return `${m} 分钟前`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} 小时前`;
+  const d = Math.floor(h / 24);
+  if (d < 30) return `${d} 天前`;
+  return new Date(ts).toLocaleDateString("zh-CN");
+}
 
 function Cover({ item }: { item: ArtifactItem }) {
   if (item.kind === "图片" || item.kind === "PPT" || item.kind === "视频分镜") {
@@ -160,16 +170,50 @@ function Cover({ item }: { item: ArtifactItem }) {
   );
 }
 
-function timeAgo(ts: number): string {
-  const diff = Date.now() - ts;
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return "刚刚";
-  if (m < 60) return `${m} 分钟前`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h} 小时前`;
-  const d = Math.floor(h / 24);
-  if (d < 30) return `${d} 天前`;
-  return new Date(ts).toLocaleDateString("zh-CN");
+/** 示例作品卡：栏目案例 = 一键创作入口（点击按栏目模式开新会话并预填提示词） */
+function CaseCard({
+  category,
+  card,
+  onStart,
+}: {
+  category: CanvasCategory;
+  card: CanvasCase;
+  onStart: (category: CanvasCategory, card: CanvasCase) => void;
+}) {
+  const cover =
+    CATEGORY_COVER[category.key] ?? { grad: "from-stone-200/90 via-stone-100 to-white", icon: LayoutTemplate };
+  const CoverIcon = cover.icon;
+  return (
+    <button
+      onClick={() => onStart(category, card)}
+      className="group overflow-hidden rounded-2xl border border-stone-200/90 bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_14px_30px_-18px_rgba(76,29,149,0.35)]"
+    >
+      <span
+        className={cn(
+          "relative flex aspect-[16/9] w-full items-center justify-center overflow-hidden bg-gradient-to-br",
+          cover.grad
+        )}
+      >
+        <CoverIcon className="h-8 w-8 text-stone-500/50 transition group-hover:scale-110" strokeWidth={1.6} />
+        <span className="absolute left-2 top-2 rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-semibold text-stone-600">
+          {category.label}
+        </span>
+        <span className="absolute right-2 top-2 rounded-full bg-stone-900/70 px-1.5 py-0.5 text-[9px] font-medium text-white">
+          示例
+        </span>
+        <span className="absolute inset-0 flex items-center justify-center bg-stone-900/0 opacity-0 transition group-hover:bg-stone-900/15 group-hover:opacity-100">
+          <span className="flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-stone-700">
+            <Plus className="h-3 w-3" />
+            以此创作
+          </span>
+        </span>
+      </span>
+      <span className="block px-3 pb-3 pt-2">
+        <span className="block truncate text-[13px] font-semibold text-stone-800">{card.title}</span>
+        <span className="mt-0.5 block truncate text-[11px] text-stone-400">{card.desc}</span>
+      </span>
+    </button>
+  );
 }
 
 export function ArtifactWall() {
@@ -183,28 +227,93 @@ export function ArtifactWall() {
   useEffect(() => setMounted(true), []);
   const ago = (ts: number) => (mounted ? timeAgo(ts) : "");
 
-  const activeFilter = FILTERS.find((f) => f.key === filterKey) ?? FILTERS[0];
+  const activeCategory = CANVAS_CATEGORIES.find((c) => c.key === filterKey);
 
   const items = useMemo(() => collectArtifacts(conversations), [conversations]);
+  /** 当前栏目对应的真实产物（幻灯片栏目与 PPT 同看演示文稿产物） */
+  const kindItems = useMemo(() => {
+    if (!activeCategory?.kind) return [] as ArtifactItem[];
+    return items.filter((i) => i.kind === activeCategory.kind);
+  }, [items, activeCategory]);
   const visible = useMemo(() => {
-    let list = items;
-    if (activeFilter.kind) list = list.filter((i) => i.kind === activeFilter.kind);
+    let list = filterKey === "all" ? items : kindItems;
     const q = query.trim().toLowerCase();
     if (q) list = list.filter((i) => (i.title + i.convoTitle).toLowerCase().includes(q));
     return list;
-  }, [items, activeFilter, query]);
+  }, [items, kindItems, filterKey, query]);
 
-  const pickFilter = (f: FilterDef) => {
-    if (f.planned) {
-      toast(`「${f.label}」正在建设中，即将支持 —— 先试试文档 / PPT / 图片 / 视频 / 深度研究`, "info");
-    }
-    setFilterKey(f.key);
-    setPreview(null);
+  /** 示例卡 → 按栏目模式新建会话并预填提示词；新形态栏目走 AI 对话先出方案 */
+  const startCase = async (category: CanvasCategory, card: CanvasCase) => {
+    await useChatStore.getState().fillTemplate({
+      mode: category.mode ?? "chat",
+      prompt: card.prompt,
+    });
+    router.push("/chat");
   };
 
   const openConvo = (convoId: string) => router.push(`/chat?c=${convoId}`);
 
   const hasArtifacts = items.length > 0;
+  /** 栏目为空（无真实产物）时展示案例；有产物展示产物墙 */
+  const showCases = filterKey !== "all" && kindItems.length === 0;
+  const showGallery = filterKey === "all" && !hasArtifacts;
+
+  const renderWall = (list: ArtifactItem[]) => (
+    <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      {list.map((item) => {
+        const st = KIND_STYLE[item.kind];
+        return (
+          <button
+            key={item.key}
+            onClick={() => setPreview(item)}
+            className="group overflow-hidden rounded-2xl border border-stone-200/90 bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_14px_30px_-18px_rgba(76,29,149,0.35)]"
+          >
+            <span className="relative block aspect-[16/10] w-full overflow-hidden bg-stone-100">
+              <Cover item={item} />
+              <span
+                className={cn(
+                  "absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                  st.badge
+                )}
+              >
+                {item.kind}
+              </span>
+              <span className="absolute inset-0 flex items-center justify-center bg-stone-900/0 text-white opacity-0 transition group-hover:bg-stone-900/20 group-hover:opacity-100">
+                <span className="flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-stone-700">
+                  继续编辑
+                </span>
+              </span>
+            </span>
+            <span className="block px-3 pb-3 pt-2">
+              <span className="block truncate text-[13px] font-semibold text-stone-800">{item.title}</span>
+              <span className="mt-0.5 flex items-center justify-between gap-2">
+                <span className="truncate text-[11px] text-stone-400">{item.convoTitle}</span>
+                <span className="shrink-0 text-[11px] text-stone-400">{ago(item.updatedAt)}</span>
+              </span>
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const renderCases = (
+    entries: { category: CanvasCategory; card: CanvasCase }[],
+    title: string,
+    subtitle: string
+  ) => (
+    <section className="mt-5">
+      <div className="flex items-baseline gap-2">
+        <h2 className="text-sm font-semibold tracking-wide text-stone-500">{title}</h2>
+        <span className="truncate text-xs text-stone-400">{subtitle}</span>
+      </div>
+      <div className="mt-2.5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        {entries.map(({ category, card }) => (
+          <CaseCard key={category.key + ":" + card.title} category={category} card={card} onStart={startCase} />
+        ))}
+      </div>
+    </section>
+  );
 
   return (
     <div className="mx-auto w-full max-w-6xl px-6 py-6">
@@ -225,37 +334,27 @@ export function ArtifactWall() {
         </button>
       </div>
 
-      {/* 分类 tab（与首页技能体系一致，建设中技能带 soon）+ 搜索 */}
+      {/* 分类 tab：全部栏目平级（无 soon）+ 搜索 */}
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-1">
-          {FILTERS.map((f) => {
-            const isActive = filterKey === f.key;
+          {["all", ...CANVAS_CATEGORIES.map((c) => c.key)].map((key) => {
+            const label =
+              key === "all" ? "全部" : (CANVAS_CATEGORIES.find((c) => c.key === key)?.label ?? key);
+            const isActive = filterKey === key;
             return (
               <button
-                key={f.key}
-                onClick={() => pickFilter(f)}
+                key={key}
+                onClick={() => {
+                  setFilterKey(key);
+                  setPreview(null);
+                }}
                 aria-pressed={isActive}
-                title={f.planned ? `${f.label}（建设中）` : f.label}
                 className={cn(
-                  "flex items-center gap-1 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition",
-                  isActive
-                    ? "bg-stone-900 text-white"
-                    : f.planned
-                      ? "border border-dashed border-stone-300 text-stone-400 hover:border-stone-400 hover:text-stone-500"
-                      : "text-stone-600 hover:bg-stone-100"
+                  "rounded-full px-3.5 py-1.5 text-[13px] font-medium transition",
+                  isActive ? "bg-stone-900 text-white" : "text-stone-600 hover:bg-stone-100"
                 )}
               >
-                {f.label}
-                {f.planned && (
-                  <span
-                    className={cn(
-                      "rounded-full bg-stone-200/80 px-1 text-[9px] leading-4 text-stone-500",
-                      isActive && "bg-white/25 text-white"
-                    )}
-                  >
-                    soon
-                  </span>
-                )}
+                {label}
               </button>
             );
           })}
@@ -271,26 +370,13 @@ export function ArtifactWall() {
         </label>
       </div>
 
-      {/* 建设中分类提示（planned 技能尚无产物） */}
-      {activeFilter.planned ? (
-        <div className="mt-16 flex flex-col items-center rounded-3xl border border-dashed border-stone-200 bg-white/60 px-6 py-14 text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-100 text-stone-400">
-            <Sparkles className="h-6 w-6" />
-          </span>
-          <h2 className="mt-4 text-lg font-semibold text-stone-800">「{activeFilter.label}」正在建设中</h2>
-          <p className="mt-1 max-w-sm text-sm text-stone-500">
-            即将支持该能力。现在可以先试试文档、PPT、图片、视频或深度研究，产物会自动出现在这里
-          </p>
-          <button
-            onClick={() => router.push("/chat")}
-            className="mt-5 flex items-center gap-2 rounded-full bg-violet-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-violet-700"
-          >
-            <MessageSquare className="h-4 w-4" />
-            去 AI 对话试试
-          </button>
-        </div>
-      ) : !hasArtifacts ? (
-        <div className="mt-16 flex flex-col items-center rounded-3xl border border-dashed border-stone-200 bg-white/60 px-6 py-14 text-center">
+      {/* 全部有产物 / 栏目有产物 → 产物墙 */}
+      {((filterKey === "all" && visible.length > 0) || (showCases === false && visible.length > 0)) &&
+        renderWall(visible)}
+
+      {/* 全部为空：空态引导 */}
+      {showGallery && (
+        <div className="mt-16 flex flex-col items-center rounded-3xl border border-dashed border-stone-200 bg-white/60 px-6 py-12 text-center">
           <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50 text-violet-500">
             <LayoutTemplate className="h-6 w-6" />
           </span>
@@ -306,48 +392,23 @@ export function ArtifactWall() {
             去生成第一个产物
           </button>
         </div>
-      ) : visible.length === 0 ? (
-        <div className="mt-16 text-center text-sm text-stone-400">
-          没有符合筛选的产物，换个分类或清空搜索试试
-        </div>
-      ) : (
-        <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {visible.map((item) => {
-            const st = KIND_STYLE[item.kind];
-            return (
-              <button
-                key={item.key}
-                onClick={() => setPreview(item)}
-                className="group overflow-hidden rounded-2xl border border-stone-200/90 bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_14px_30px_-18px_rgba(76,29,149,0.35)]"
-              >
-                <span className="relative block aspect-[16/10] w-full overflow-hidden bg-stone-100">
-                  <Cover item={item} />
-                  <span
-                    className={cn(
-                      "absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                      st.badge
-                    )}
-                  >
-                    {item.kind}
-                  </span>
-                  <span className="absolute inset-0 flex items-center justify-center bg-stone-900/0 text-white opacity-0 transition group-hover:bg-stone-900/20 group-hover:opacity-100">
-                    <span className="flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-stone-700">
-                      继续编辑
-                    </span>
-                  </span>
-                </span>
-                <span className="block px-3 pb-3 pt-2">
-                  <span className="block truncate text-[13px] font-semibold text-stone-800">{item.title}</span>
-                  <span className="mt-0.5 flex items-center justify-between gap-2">
-                    <span className="truncate text-[11px] text-stone-400">{item.convoTitle}</span>
-                    <span className="shrink-0 text-[11px] text-stone-400">{ago(item.updatedAt)}</span>
-                  </span>
-                </span>
-              </button>
-            );
-          })}
-        </div>
       )}
+
+      {/* 全部为空：跨栏目案例速览（点卡片即开始创作） */}
+      {showGallery &&
+        renderCases(
+          GALLERY_PICKS,
+          "各栏目案例速览",
+          "示例灵感 · 点击卡片在 AI 对话里开始创作，产物会自动回到画布"
+        )}
+
+      {/* 选中栏目无真实产物：该栏目案例 */}
+      {showCases &&
+        renderCases(
+          activeCategory?.cases.map((card) => ({ category: activeCategory, card })) ?? [],
+          `「${activeCategory?.label}」案例`,
+          "栏目示例 · 点击卡片在 AI 对话里开始创作"
+        )}
 
       {/* 产物预览抽屉：目前回跳会话编辑；图片产物支持在新窗打开原图 */}
       {preview && (

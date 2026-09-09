@@ -73,33 +73,31 @@ const IMAGE_COUNTS = [
 ];
 
 /** ── 首页技能体系与模板库 ───────────────────────────────
- * 顶部技能条收纳：可见 4 项 + 「更多」下拉；每技能展示 12 张模板卡
- * （每行 3 个，先显示 9 张，箭头展开隐藏 3 张）。真生成技能带 prompt，
- * 建设中技能（planned）点击提示即将上线。
+ * 顶部技能条收纳：可见 5 项 + 「更多」下拉；每技能展示 12 张模板卡
+ * （每行 3 个，先显示 9 张，箭头展开隐藏 3 张）。点击模板卡会把该卡主题
+ * 组合成详细提示词填入输入框。
  */
 type TemplateCard = { title: string; desc: string; prompt?: string };
 type HomeSkill = {
   key: string;
   label: string;
   icon: typeof MessageSquare;
-  /** 真生成技能对应的工作模式（planned 技能无 mode） */
+  /** 对应的工作模式；新形态技能暂无专有模式时走 AI 对话（chat） */
   mode?: WorkspaceMode;
-  /** 建设中技能：卡片点击仅提示即将上线 */
-  planned?: boolean;
 };
 
 const HOME_SKILLS: HomeSkill[] = [
   { key: "docs", label: "文档", icon: FileText, mode: "docs" },
   { key: "ppt", label: "PPT", icon: Presentation, mode: "slides" },
-  { key: "prototype", label: "原型", icon: LayoutTemplate, planned: true },
+  { key: "prototype", label: "原型", icon: LayoutTemplate },
   { key: "slides", label: "幻灯片", icon: Presentation, mode: "slides" },
   { key: "image", label: "图片", icon: ImageIcon, mode: "image" },
-  { key: "hyperframes", label: "HyperFrames", icon: Layers, planned: true },
-  { key: "website", label: "网站复刻", icon: Globe, planned: true },
+  { key: "hyperframes", label: "HyperFrames", icon: Layers },
+  { key: "website", label: "网站复刻", icon: Globe },
   { key: "video", label: "视频", icon: Video, mode: "video" },
-  { key: "audio", label: "音频", icon: Music, planned: true },
-  { key: "realtime", label: "实时产物", icon: Zap, planned: true },
-  { key: "webgl", label: "WebGL", icon: Box, planned: true },
+  { key: "audio", label: "音频", icon: Music },
+  { key: "realtime", label: "实时产物", icon: Zap },
+  { key: "webgl", label: "WebGL", icon: Box },
   { key: "research", label: "深度研究", icon: Search, mode: "research" },
 ];
 
@@ -118,7 +116,7 @@ const THUMB_IMG: Record<string, string> = {
   "video": "/prompt-thumbs/thumb-video.jpg",
 };
 
-/** 每技能的 12 个模板：真生成技能（带 prompt）/ 建设中技能（仅标题） */
+/** 每技能的 12 个模板：已上线技能带完整 prompt；新形态技能由标题组合详细提示词 */
 const SKILL_TEMPLATES: Record<string, TemplateCard[]> = {
   "chat": [
     { title: "撰写邮件", desc: "起草清晰、有说服力的商务邮件", prompt: "帮我写一封商务合作邮件" },
@@ -1218,12 +1216,10 @@ export function ChatPanel() {
   // 空态模板卡：点击不自动发送，而是生成一条「详细提示词」（同卡多次点击组合
   // 出不同变体）填入输入框，供用户查看 / 修改后回车发送。
   const fillStarter = (skill: HomeSkill, q: TemplateCard) => {
-    if (skill.planned || !skill.mode) {
-      toast(`「${skill.label}」正在建设中，先用 AI 对话 / 文档 / PPT / 图片 / 视频试试`, "info");
-      return;
-    }
-    // 切换技能（输入框 placeholder 与后续发送通道跟随）；与当前相同则不动
-    if (skill.mode !== mode) useChatStore.getState().setMode(skill.mode);
+    // 切换技能（输入框 placeholder 与后续发送通道跟随）；新形态技能无专有
+    // 模式，落到 AI 对话先出方案；与当前相同则不动
+    const targetMode = skill.mode ?? "chat";
+    if (targetMode !== mode) useChatStore.getState().setMode(targetMode);
     // 同卡多次点击 → promptStudio 组合出内容不同的详细提示词，并防连续重复
     const text = buildDetailedPrompt(skill.key, q.title, skill.label);
     if (text !== input) setInput(text);
@@ -1356,7 +1352,7 @@ export function ChatPanel() {
                         role="tab"
                         aria-selected={active}
                         onClick={() => pickSkill(sk.key)}
-                        title={sk.planned ? `${sk.label}（建设中）` : sk.label}
+                        title={sk.label}
                         className={cn(
                           "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition",
                           active
@@ -1366,9 +1362,6 @@ export function ChatPanel() {
                       >
                         <Icon className="h-3.5 w-3.5" />
                         {sk.label}
-                        {sk.planned && (
-                          <span className="rounded-full bg-stone-200/80 px-1 text-[9px] leading-4 text-stone-500">soon</span>
-                        )}
                       </button>
                     );
                   })}
@@ -1422,9 +1415,6 @@ export function ChatPanel() {
                               >
                                 <Icon className="h-4 w-4 shrink-0" />
                                 <span className="min-w-0 flex-1 truncate">{sk.label}</span>
-                                {sk.planned && (
-                                  <span className="rounded bg-stone-100 px-1 text-[9px] text-stone-400">soon</span>
-                                )}
                               </button>
                             );
                           })}
@@ -1487,9 +1477,7 @@ export function ChatPanel() {
                       {activeSkill.label} · 示例模板
                     </h2>
                     <span className="truncate text-xs text-stone-400">
-                      {activeSkill.planned
-                        ? "建设中 · 点击卡片可用其它技能生成"
-                        : `共 ${templates.length} 个 · 点卡片填入详细提示词`}
+                      {`共 ${templates.length} 个 · 点卡片填入详细提示词`}
                     </span>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
@@ -1520,7 +1508,6 @@ export function ChatPanel() {
                   {shownTemplates.map((item) => {
                     const curSkill = HOME_SKILLS.find((x) => x.key === item.skill) ?? activeSkill;
                     const q = item.card;
-                    const planned = curSkill.planned;
                     return (
                       <button
                         key={item.skill + ":" + q.title}
@@ -1528,27 +1515,15 @@ export function ChatPanel() {
                         onClick={() => fillStarter(curSkill, q)}
                         className="group overflow-hidden rounded-2xl border border-stone-200/90 bg-white p-1.5 text-left transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_12px_30px_-16px_rgba(76,29,149,0.4)]"
                       >
-                        {planned ? (
-                          <span className="relative flex h-16 w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-stone-100 to-stone-200 sm:h-20 lg:h-[4.5rem]">
-                            {(() => {
-                              const Icon = curSkill.icon;
-                              return <Icon className="h-6 w-6 text-stone-400" />;
-                            })()}
-                            <span className="absolute right-1.5 top-1.5 rounded-full bg-stone-200/90 px-1.5 py-0.5 text-[9px] font-medium text-stone-500">
-                              建设中
-                            </span>
-                          </span>
-                        ) : (
-                          <span className="relative block h-16 w-full overflow-hidden rounded-lg bg-stone-100 sm:h-20 lg:h-[4.5rem]">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={THUMB_IMG[curSkill.mode ?? "chat"]}
-                              alt=""
-                              loading="lazy"
-                              className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
-                            />
-                          </span>
-                        )}
+                        <span className="relative block h-16 w-full overflow-hidden rounded-lg bg-stone-100 sm:h-20 lg:h-[4.5rem]">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={THUMB_IMG[curSkill.mode ?? "chat"]}
+                            alt=""
+                            loading="lazy"
+                            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
+                          />
+                        </span>
                         <span className="block px-1 pt-2">
                           <span className="block truncate text-[13px] font-semibold text-stone-800">{q.title}</span>
                           {q.desc && <span className="mt-0.5 block truncate text-xs text-stone-500">{q.desc}</span>}

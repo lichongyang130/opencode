@@ -115,10 +115,14 @@ describe("ChatPanel 空态", () => {
     expect(screen.getByRole("option", { name: /视频/ })).toBeDefined();
     expect(screen.getByRole("option", { name: /原型/ })).toBeDefined();
     expect(screen.getByRole("option", { name: /HyperFrames/ })).toBeDefined();
-    // 选中建设中技能：卡片标题出现、带「建设中」角标
+    // 选中收纳技能：技能全部平级（不再有「建设中」占位）；点示例卡填入提示词
     fireEvent.click(screen.getByRole("option", { name: /音频/ }));
     expect(screen.getByText("音频 · 示例模板")).toBeDefined();
-    expect(screen.getAllByText("建设中").length).toBeGreaterThan(0);
+    expect(screen.queryByText(/建设中/)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "语音配音" }));
+    const box = screen.getByRole("textbox") as HTMLInputElement;
+    expect(box.value.length).toBeGreaterThan(0);
+    expect(box.value).toContain("语音配音");
     // 顶部更多入口显示当前选中技能名
     expect(screen.getByRole("tab", { name: /音频/ })).toBeDefined();
   });
