@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ChatPanel } from "./ChatPanel";
@@ -87,11 +87,54 @@ afterEach(() => {
 /* ─────────────── 空态引导 ─────────────── */
 
 describe("ChatPanel 空态", () => {
-  it("显示欢迎标题与副标题", () => {
+  it("空态顶部显示醒目大字问候（h1）", () => {
     seed();
     render(<ChatPanel />);
-    expect(screen.getByRole("heading", { name: /欢迎回来，今天想做点什么/ })).toBeDefined();
-    expect(screen.getByText("用 AI 把想法变成现实。")).toBeDefined();
+    const h = screen.getByRole("heading", { level: 1 });
+    expect(h.textContent).toContain("欢迎回来，今天想做点什么？");
+  });
+
+  it("顶部技能条：文档/PPT/图片/幻灯片/网站复刻 + 更多（无全部）", () => {
+    seed();
+    const { container } = render(<ChatPanel />);
+    for (const name of ["文档", "PPT", "图片", "幻灯片", "网站复刻"]) {
+      expect(screen.getByRole("tab", { name: new RegExp(name) })).toBeDefined();
+    }
+    expect(screen.queryByRole("tab", { name: /全部/ })).toBeNull();
+    expect(screen.getByTitle("更多技能")).toBeDefined();
+    expect(screen.getByText("文档 · 示例模板")).toBeDefined();
+    expect(screen.getByText(/点卡片填入详细提示词/)).toBeDefined();
+    // 模板卡用真实预览图（首屏文档卡「生成文档」映射 canvas-art/docs-2）
+    expect(container.querySelector('img[src="/canvas-art/docs-2.jpg"]')).not.toBeNull();
+  });
+
+  it("图片技能模板卡显示真实 AI 成品图（d-* 图库）", () => {
+    seed();
+    const { container } = render(<ChatPanel />);
+    fireEvent.click(screen.getByRole("tab", { name: /图片/ }));
+    expect(screen.getByText("图片 · 示例模板")).toBeDefined();
+    expect(container.querySelector('img[src="/cases/d-corgi-2.jpg"]')).not.toBeNull();
+  });
+
+  it("更多下拉包含收纳技能（图片已在顶部，不再进更多），选中即切换模板", () => {
+    seed();
+    render(<ChatPanel />);
+    fireEvent.click(screen.getByTitle("更多技能"));
+    expect(screen.queryByRole("option", { name: /图片/ })).toBeNull();
+    expect(screen.getByRole("option", { name: /深度研究/ })).toBeDefined();
+    expect(screen.getByRole("option", { name: /视频/ })).toBeDefined();
+    expect(screen.getByRole("option", { name: /原型/ })).toBeDefined();
+    expect(screen.getByRole("option", { name: /HyperFrames/ })).toBeDefined();
+    // 选中收纳技能：技能全部平级（不再有「建设中」占位）；点示例卡填入提示词
+    fireEvent.click(screen.getByRole("option", { name: /音频/ }));
+    expect(screen.getByText("音频 · 示例模板")).toBeDefined();
+    expect(screen.queryByText(/建设中/)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "语音配音" }));
+    const box = screen.getByRole("textbox") as HTMLInputElement;
+    expect(box.value.length).toBeGreaterThan(0);
+    expect(box.value).toContain("语音配音");
+    // 顶部更多入口显示当前选中技能名
+    expect(screen.getByRole("tab", { name: /音频/ })).toBeDefined();
   });
 
   it("给出回车/换行的操作提示", () => {
@@ -109,7 +152,8 @@ describe("ChatPanel 空态", () => {
   it("chat 模式下 placeholder 为通用文案", () => {
     seed();
     render(<ChatPanel />);
-    expect(ta().placeholder).toBe("分配任务，或问我任何事…");
+    // C30: 文案由「分配任务…」改成了小白友好的说法
+    expect(ta().placeholder).toBe("想做什么？写下来告诉我…");
   });
 
   it("非 chat 模式下 placeholder 带模式名", () => {
@@ -136,19 +180,29 @@ describe("ChatPanel 空态", () => {
     expect((screen.getByTitle("输入内容后可优化提示词") as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it("渲染 4 个首页快捷按钮", () => {
+  it("默认技能（文档）第 1 页渲染 3 张示例卡", () => {
     seed();
     render(<ChatPanel />);
-    for (const name of ["撰写邮件", "生成文档", "制作 PPT", "生成图片"]) {
+    for (const name of ["生成文档", "公司介绍", "PRD 文档"]) {
       expect(screen.getByRole("button", { name })).toBeDefined();
     }
+    expect(screen.queryByRole("button", { name: "制作 PPT" })).toBeNull();
   });
 
-  it("首页快捷按钮只取前 4 张卡片", () => {
+  it("选中技能后 12 个模板轮播展示，箭头可翻到最后一页", () => {
     seed();
     render(<ChatPanel />);
-    expect(screen.queryByRole("button", { name: "深度研究" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "视频脚本" })).toBeNull();
+    fireEvent.click(screen.getByRole("tab", { name: "文档" }));
+    expect(screen.getByText("文档 · 示例模板")).toBeDefined();
+    // 第 1 页：文档模板前 3 张
+    for (const name of ["生成文档", "公司介绍", "PRD 文档"]) {
+      expect(screen.getByRole("button", { name })).toBeDefined();
+    }
+    expect(screen.queryByRole("button", { name: "制作 PPT" })).toBeNull();
+    // 翻 3 次到最后一页（12/3=4 页）
+    for (let i = 0; i < 3; i++) fireEvent.click(screen.getByTitle("下一个示例"));
+    expect(screen.getByRole("button", { name: "新闻稿" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "白皮书" })).toBeDefined();
   });
 
   it("空消息态不渲染角色选择器", () => {
@@ -158,45 +212,49 @@ describe("ChatPanel 空态", () => {
   });
 });
 
-/* ─────────────── 能力区 ─────────────── */
+/* ─────────────── 输入框「+」添加菜单 ─────────────── */
 
-describe("ChatPanel 能力区", () => {
-  it("渲染全部能力分类", () => {
+describe("ChatPanel 添加菜单", () => {
+  it("输入框不再显示 AI 对话技能下拉，改为「+」十字按钮", () => {
     seed();
     render(<ChatPanel />);
-    for (const cat of ["品牌与传播", "内容与视频", "产品与体验", "数据与运营", "咨询与策划"]) {
-      expect(screen.getByRole("button", { name: new RegExp(cat) })).toBeDefined();
+    // 旧技能下拉入口已移除（不再有“AI 对话”文本）
+    expect(screen.queryByTitle(/技能选择/)).toBeNull();
+    expect(screen.queryByRole("button", { name: /AI 对话/ })).toBeNull();
+    // 新增「+」按钮
+    expect(screen.getByTitle(/添加：/)).toBeDefined();
+  });
+
+  it("点击 + 弹出添加菜单（含参考截图各项）", () => {
+    seed();
+    render(<ChatPanel />);
+    fireEvent.click(screen.getByTitle(/添加：/));
+    const items: RegExp[] = [/附加文件/, /引用其它项目/, /关联本地代码/, /插件/, /Figma/, /连接器/, /MCP/, /看板/];
+    for (const re of items) {
+      expect(screen.getByRole("menuitem", { name: re })).toBeDefined();
     }
   });
 
-  it("默认展示第一个分类的子能力", () => {
-    seed();
+  it("点击菜单项收起菜单且不发送消息（演示态提示即将支持）", () => {
+    const spies = seed();
     render(<ChatPanel />);
-    expect(screen.getByRole("button", { name: /产品官网/ })).toBeDefined();
-    expect(screen.queryByRole("button", { name: /产品宣传片/ })).toBeNull();
+    fireEvent.click(screen.getByTitle(/添加：/));
+    fireEvent.click(screen.getByRole("menuitem", { name: /附加文件/ }));
+    // 菜单已收起
+    expect(screen.queryByRole("menuitem")).toBeNull();
+    // 不触发对话
+    expect(spies.send).not.toHaveBeenCalled();
+    expect(spies.generateImage).not.toHaveBeenCalled();
   });
 
-  it("切换分类后展示对应子能力", () => {
+  it("再次点击 + 可收起菜单", () => {
     seed();
     render(<ChatPanel />);
-    fireEvent.click(screen.getByRole("button", { name: /内容与视频/ }));
-    expect(screen.getByRole("button", { name: /产品宣传片/ })).toBeDefined();
-    expect(screen.queryByRole("button", { name: /产品官网/ })).toBeNull();
-  });
-
-  it("点击子能力切到它声明的工作模式", () => {
-    seed();
-    render(<ChatPanel />);
-    fireEvent.click(screen.getByRole("button", { name: /活动海报/ }));
-    expect(useChatStore.getState().conversations[0].mode).toBe("image");
-  });
-
-  it("点击子能力会清空已输入内容", () => {
-    seed();
-    render(<ChatPanel />);
-    type("写点什么");
-    fireEvent.click(screen.getByRole("button", { name: /活动海报/ }));
-    expect(ta().value).toBe("");
+    const btn = screen.getByTitle(/添加：/);
+    fireEvent.click(btn);
+    expect(screen.getByRole("menu")).toBeDefined();
+    fireEvent.click(btn);
+    expect(screen.queryByRole("menu")).toBeNull();
   });
 });
 
@@ -506,18 +564,42 @@ describe("ChatPanel 消息列表", () => {
 /* ─────────────── 快捷卡片与预填 ─────────────── */
 
 describe("ChatPanel 预填", () => {
-  it("点击快捷卡片填入提示词", () => {
-    seed();
+  it("点击示例卡：把详细提示词填入输入框并切到对应技能，但不自动发送", () => {
+    const spies = seed();
     render(<ChatPanel />);
+    fireEvent.click(screen.getByRole("tab", { name: "PPT" }));
     fireEvent.click(screen.getByRole("button", { name: "制作 PPT" }));
-    expect(ta().value).toBe("为产品发布会生成一套 10 页 PPT");
+    // 填入的是详细变体提示词（长于原始一句），内容属于该卡主题
+    expect(ta().value.length).toBeGreaterThan(30);
+    expect(ta().value).toContain("幻灯片");
+    // 不触发发送 / 绘图
+    expect(spies.send).not.toHaveBeenCalled();
+    expect(spies.generateImage).not.toHaveBeenCalled();
+    expect(useChatStore.getState().conversations[0].mode).toBe("slides");
   });
 
-  it("点击快捷卡片同时切换工作模式", () => {
+  it("点击图片示例卡：切到图片技能并填入绘图详细提示词", () => {
+    const spies = seed();
+    render(<ChatPanel />);
+    fireEvent.click(screen.getByRole("tab", { name: "图片" }));
+    fireEvent.click(screen.getByRole("button", { name: "生成图片" }));
+    expect(ta().value.length).toBeGreaterThan(30);
+    expect(spies.generateImage).not.toHaveBeenCalled();
+    expect(spies.send).not.toHaveBeenCalled();
+    expect(useChatStore.getState().conversations[0].mode).toBe("image");
+  });
+
+  it("同一张模板卡点击两次：填入的详细提示词内容不同", () => {
     seed();
     render(<ChatPanel />);
-    fireEvent.click(screen.getByRole("button", { name: "生成图片" }));
-    expect(useChatStore.getState().conversations[0].mode).toBe("image");
+    fireEvent.click(screen.getByRole("tab", { name: "PPT" }));
+    fireEvent.click(screen.getByRole("button", { name: "制作 PPT" }));
+    const first = ta().value;
+    // 清空后再次点击同一卡
+    act(() => { type(""); });
+    fireEvent.click(screen.getByRole("button", { name: "制作 PPT" }));
+    expect(ta().value).not.toBe(first);
+    expect(ta().value.length).toBeGreaterThan(30);
   });
 
   it("store 的 pendingInput 会填入输入框", () => {
@@ -551,7 +633,7 @@ describe("ChatPanel 预填", () => {
 
 describe("ChatPanel 提示词参数", () => {
   it("渲染语气/长度/受众三组参数", () => {
-    seed();
+    seed({ mode: "docs" });
     render(<ChatPanel />);
     expect(screen.getByRole("button", { name: "专业" })).toBeDefined();
     expect(screen.getByRole("button", { name: "简短" })).toBeDefined();
@@ -559,7 +641,7 @@ describe("ChatPanel 提示词参数", () => {
   });
 
   it("点击参数把约束追加到输入", () => {
-    seed();
+    seed({ mode: "docs" });
     render(<ChatPanel />);
     type("写一篇稿子");
     fireEvent.click(screen.getByRole("button", { name: "专业" }));
@@ -567,7 +649,7 @@ describe("ChatPanel 提示词参数", () => {
   });
 
   it("再次点击同一参数取消约束", () => {
-    seed();
+    seed({ mode: "docs" });
     render(<ChatPanel />);
     type("写一篇稿子");
     fireEvent.click(screen.getByRole("button", { name: "专业" }));
@@ -576,7 +658,7 @@ describe("ChatPanel 提示词参数", () => {
   });
 
   it("多组参数可以叠加", () => {
-    seed();
+    seed({ mode: "docs" });
     render(<ChatPanel />);
     type("写一篇稿子");
     fireEvent.click(screen.getByRole("button", { name: "专业" }));
@@ -586,14 +668,14 @@ describe("ChatPanel 提示词参数", () => {
   });
 
   it("空输入时点击参数直接把约束作为正文", () => {
-    seed();
+    seed({ mode: "docs" });
     render(<ChatPanel />);
     fireEvent.click(screen.getByRole("button", { name: "给老板" }));
     expect(ta().value).toBe("受众：决策者/管理层，结论先行、突出重点与建议。");
   });
 
   it("提交时带上叠加的约束", () => {
-    const spies = seed();
+    const spies = seed({ mode: "docs" });
     render(<ChatPanel />);
     type("写一篇稿子");
     fireEvent.click(screen.getByRole("button", { name: "简短" }));
@@ -623,8 +705,13 @@ describe("ChatPanel 斜杠命令", () => {
     seed();
     render(<ChatPanel />);
     type("/tr");
-    expect(screen.getByRole("button", { name: /翻译/ })).toBeDefined();
-    expect(screen.queryByRole("button", { name: /润色/ })).toBeNull();
+    // C34: 底栏按钮改叫「润色提示词」后与命令名「润色」撞词，
+    // 断言范围收敛到斜杠菜单内（菜单标题「快捷命令」所在容器），
+    // 只验证菜单自己的过滤逻辑
+    const header = screen.getByText(/快捷命令/).closest("div") as HTMLElement;
+    const menu = header.parentElement as HTMLElement;
+    expect(within(menu).getByRole("button", { name: /翻译/ })).toBeDefined();
+    expect(within(menu).queryByRole("button", { name: /润色/ })).toBeNull();
   });
 
   it("无匹配时给出空态提示", () => {
@@ -696,7 +783,7 @@ describe("ChatPanel 斜杠命令", () => {
   });
 
   it("斜杠开头的输入不被参数按钮改写", () => {
-    seed();
+    seed({ mode: "docs" });
     render(<ChatPanel />);
     // 带空格后命令面板收起、参数区重新出现，但 applyChip 仍要保护命令输入
     type("/write 年度总结");

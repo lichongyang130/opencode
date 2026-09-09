@@ -18,12 +18,16 @@ export function Toaster() {
         <div
           key={t.id}
           className={cn(
-            "pointer-events-auto flex items-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm shadow-lg",
-            "animate-[fadeUp_.2s_ease-out]"
+            "pointer-events-auto flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm shadow-lg",
+            "animate-[fadeUp_.2s_ease-out]",
+            // G80: 错误提示整条带红色底，成功/普通保持白底
+            t.kind === "error"
+              ? "border-red-200 bg-red-50"
+              : "border-stone-200 bg-white"
           )}
         >
           {ICON[t.kind]}
-          <span className="text-stone-700">{t.message}</span>
+          <span className={cn("text-stone-700", t.kind === "error" && "text-red-700")}>{t.message}</span>
         </div>
       ))}
       <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>

@@ -183,6 +183,7 @@ export function NotificationBell() {
       <button
         onClick={() => setOpen((v) => !v)}
         title="通知中心"
+        aria-label="通知中心"
         className={
           open
             ? "flex h-9 w-9 items-center justify-center rounded-lg bg-orange-50 text-orange-600 transition hover:bg-orange-100"
@@ -320,6 +321,7 @@ export function AppLauncherMenu() {
       <button
         onClick={() => setOpen((v) => !v)}
         title="更多应用"
+        aria-label="更多应用"
         className={
           open
             ? "flex h-9 w-9 items-center justify-center rounded-lg bg-orange-50 text-orange-600 transition hover:bg-orange-100"

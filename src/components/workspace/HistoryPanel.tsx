@@ -76,8 +76,21 @@ function HighlightedSnippet({ snippet }: { snippet: string }) {
   );
 }
 
-/** 会话历史面板：滚动分页 + 全文搜索 + 文件夹分组（DB3/DB10/DB14） */
-export function HistoryPanel({ mobileOpen, onMobileClose }: { mobileOpen?: boolean; onMobileClose?: () => void }) {
+/** 会话历史面板：滚动分页 + 全文搜索 + 文件夹分组（DB3/DB10/DB14）
+ *  collapsed/onCollapsedChange：受控收起（供 Workspace 默认隐藏历史）。
+ *  不传时维持内部自管理（测试与历史行为不变）。
+ */
+export function HistoryPanel({
+  mobileOpen,
+  onMobileClose,
+  railCollapsed,
+  onRailCollapseChange,
+}: {
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+  railCollapsed?: boolean;
+  onRailCollapseChange?: (v: boolean) => void;
+}) {
   const router = useRouter();
   const {
     conversations,
@@ -101,16 +114,22 @@ export function HistoryPanel({ mobileOpen, onMobileClose }: { mobileOpen?: boole
   const dragId = useRef<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   // UX1: 整个历史侧栏的收起态（收起后仅留 48px 悬停展开）；刷新后保留选择
-  const [railMode, setRailMode] = useState(false);
+  const [railModeInner, setRailMode] = useState(false);
   const [railHover, setRailHover] = useState(false);
+  // 受控收起（Workspace 默认隐藏历史时传入）；非受控时回落到内部状态
+  const railMode = railCollapsed !== undefined ? railCollapsed : railModeInner;
 
   useEffect(() => {
-    setRailMode(readJSON<boolean>(RAIL_KEY, false));
+    // 非受控：读本地记忆（历史行为）；受控模式下初始值由外部 state 提供
+    if (railCollapsed === undefined) setRailMode(readJSON<boolean>(RAIL_KEY, false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const toggleRail = () => {
     setRailMode((v) => {
-      writeJSON(RAIL_KEY, !v);
-      return !v;
+      const next = railCollapsed !== undefined ? !railCollapsed : !v;
+      writeJSON(RAIL_KEY, next);
+      onRailCollapseChange?.(next);
+      return next;
     });
   };
 
@@ -290,8 +309,21 @@ export function HistoryPanel({ mobileOpen, onMobileClose }: { mobileOpen?: boole
             恢复
           </button>
         ) : (
-          <span className="shrink-0 text-[11px] text-stone-400">
-            {formatTime(c.createdAt)}
+          <span className="flex shrink-0 items-center gap-1">
+            {/* D44: 行内快捷操作（归档）—— 桌面 hover 显示，避免误触 */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                void toggleArchive(c.id);
+                toast("已归档到归档会话", "success");
+              }}
+              title="归档此会话"
+              aria-label="归档此会话"
+              className="hidden rounded-md border border-stone-200 px-1.5 py-0.5 text-[10px] text-stone-500 transition group-hover/row:block hover:border-brand-300 hover:text-brand-600"
+            >
+              归档
+            </button>
+            <span className="text-[11px] text-stone-400">{formatTime(c.createdAt)}</span>
           </span>
         )}
       </div>
@@ -380,10 +412,16 @@ export function HistoryPanel({ mobileOpen, onMobileClose }: { mobileOpen?: boole
     }
   }
 
-  // UX1: 收起态只渲染 48px 图标轨（hover 临时展开浮层，不改变布局宽度）
+  // UX1: 非受控（无 railCollapsed prop）时收起态保留 48px 悬停展开条；
+  // R5：Workspace 受控收起＝桌面完全隐藏（主区不出现第二条竖栏）；
+  // 移动端抽屉（mobileOpen）不受“桌面收起偏好”影响，走到下方全量面板分支
   const railConvos = conversations.filter((c) => !c.archived).slice(0, 12);
   if (railMode && !railHover) {
-    return (
+    if (railCollapsed !== undefined && !mobileOpen) {
+      return null;
+    }
+    if (railCollapsed === undefined) {
+      return (
       <aside
         onMouseEnter={() => setRailHover(true)}
         className="hidden w-12 shrink-0 flex-col items-center gap-1 border-r border-[#e8ddca] bg-[#fbf7ef] py-3 md:flex"
@@ -423,7 +461,8 @@ export function HistoryPanel({ mobileOpen, onMobileClose }: { mobileOpen?: boole
           })}
         </div>
       </aside>
-    );
+      );
+    }
   }
 
   return (
@@ -447,6 +486,7 @@ export function HistoryPanel({ mobileOpen, onMobileClose }: { mobileOpen?: boole
           <button
             onClick={toggleRail}
             title={railMode ? "展开历史面板" : "收起历史面板"}
+            aria-label={railMode ? "展开历史面板" : "收起历史面板"}
             className="flex h-7 w-7 items-center justify-center rounded-lg text-stone-400 transition hover:bg-stone-100 hover:text-brand-600"
           >
             <PanelLeftClose className="h-4 w-4" />
@@ -454,6 +494,7 @@ export function HistoryPanel({ mobileOpen, onMobileClose }: { mobileOpen?: boole
           <button
             onClick={() => setFolderDialog(true)}
             title="新建文件夹"
+            aria-label="新建文件夹"
             className="flex h-7 w-7 items-center justify-center rounded-lg text-stone-400 transition hover:bg-stone-100 hover:text-brand-600"
           >
             <FolderPlus className="h-4 w-4" />
@@ -461,6 +502,7 @@ export function HistoryPanel({ mobileOpen, onMobileClose }: { mobileOpen?: boole
           <button
             onClick={() => setShowArchived((v) => !v)}
             title={showArchived ? "返回对话历史" : "查看归档会话"}
+            aria-label={showArchived ? "返回对话历史" : "查看归档会话"}
             className={cn(
               "flex h-7 w-7 items-center justify-center rounded-lg transition hover:bg-stone-100",
               showArchived ? "text-brand-600" : "text-stone-400 hover:text-brand-600"
@@ -471,6 +513,7 @@ export function HistoryPanel({ mobileOpen, onMobileClose }: { mobileOpen?: boole
           <button
             onClick={startNew}
             title="新建对话"
+            aria-label="新建对话"
             className="flex h-7 w-7 items-center justify-center rounded-lg text-stone-400 transition hover:bg-stone-100 hover:text-brand-600"
           >
             <Sparkles className="h-4 w-4" />

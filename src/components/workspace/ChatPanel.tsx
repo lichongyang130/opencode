@@ -1,21 +1,41 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { useSseStream } from "@/hooks/useSseStream";
 import {
   ArrowUp,
+  Box,
   Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  Code,
   Copy,
+  Cpu,
   FileText,
+  FolderGit2,
+  Frame,
+  Globe,
   ImageIcon,
+  Layers,
+  Kanban,
+  LayoutTemplate,
   Loader2,
-  Mail,
+  MessageSquare,
+  Music,
+  Paperclip,
   Pencil,
+  Plug,
+  Plus,
+  Puzzle,
   Presentation,
+  RotateCcw,
   Search,
   Square,
   Video,
   Wand2,
+  Zap,
 } from "lucide-react";
 import { useChatStore, MODE_LABELS, type WorkspaceMode, type UIMessage } from "@/lib/store/chat";
 import { Markdown } from "./Markdown";
@@ -27,7 +47,6 @@ import { IMAGE_MODELS } from "@/lib/gateway/image";
 import { IMAGE_STYLES } from "@/lib/image/presets";
 import { loadPromptHistory, type ImagePromptRecord } from "@/lib/image/history";
 import { toast } from "@/lib/store/toast";
-import { CAPABILITIES, type SubCapability } from "@/lib/capabilities";
 import { getOverrides } from "@/lib/settings";
 import { readJSON, writeJSON, removeKey } from "@/lib/safe-storage";
 import {
@@ -39,6 +58,9 @@ import {
   type PromptChip,
 } from "@/lib/slash";
 import { cn } from "@/lib/utils";
+import { buildDetailedPrompt } from "@/lib/promptStudio";
+import { PreviewPopover, type AnchorRect } from "@/components/canvas/PreviewPopover";
+import { TPL_ART } from "@/lib/tplArt";
 
 const IMAGE_SIZES = [
   { id: "1024x1024", label: "方形 1:1" },
@@ -52,27 +74,251 @@ const IMAGE_COUNTS = [
   { n: 4, label: "4 张" },
 ];
 
-/** 首页功能卡片 */
-const HOME_CARDS: {
-  icon: typeof Mail;
-  title: string;
-  desc: string;
-  mode: WorkspaceMode;
-  prompt: string;
-}[] = [
-  { icon: Mail, title: "撰写邮件", desc: "起草清晰、有说服力的商务邮件", mode: "chat", prompt: "帮我写一封商务合作邮件" },
-  { icon: FileText, title: "生成文档", desc: "商业计划书 / 制度 / 报告一键成稿", mode: "docs", prompt: "写一份 SaaS 产品商业计划书" },
-  { icon: Presentation, title: "制作 PPT", desc: "输入主题，生成整套幻灯片", mode: "slides", prompt: "为产品发布会生成一套 10 页 PPT" },
-  { icon: ImageIcon, title: "生成图片", desc: "描述画面，AI 立即出图", mode: "image", prompt: "一只戴宇航头盔的柯基在月球上，电影感海报" },
-  { icon: Search, title: "深度研究", desc: "市场 / 竞品 / 行业调研报告", mode: "research", prompt: "研究 2025 年 AI 搜索赛道的竞争格局" },
-  { icon: Video, title: "视频脚本", desc: "带货 / 分镜 / 口播脚本", mode: "video", prompt: "为新款降噪耳机写一条 15 秒带货短视频脚本" },
+/** ── 首页技能体系与模板库 ───────────────────────────────
+ * 顶部技能条收纳：可见 5 项 + 「更多」下拉；每技能展示 12 张模板卡
+ * （每行 3 个，先显示 9 张，箭头展开隐藏 3 张）。点击模板卡会把该卡主题
+ * 组合成详细提示词填入输入框。
+ */
+type TemplateCard = { title: string; desc: string; prompt?: string };
+type HomeSkill = {
+  key: string;
+  label: string;
+  icon: typeof MessageSquare;
+  /** 对应的工作模式；新形态技能暂无专有模式时走 AI 对话（chat） */
+  mode?: WorkspaceMode;
+};
+
+const HOME_SKILLS: HomeSkill[] = [
+  { key: "docs", label: "文档", icon: FileText, mode: "docs" },
+  { key: "ppt", label: "PPT", icon: Presentation, mode: "slides" },
+  { key: "prototype", label: "原型", icon: LayoutTemplate },
+  { key: "slides", label: "幻灯片", icon: Presentation, mode: "slides" },
+  { key: "image", label: "图片", icon: ImageIcon, mode: "image" },
+  { key: "hyperframes", label: "HyperFrames", icon: Layers },
+  { key: "website", label: "网站复刻", icon: Globe },
+  { key: "video", label: "视频", icon: Video, mode: "video" },
+  { key: "audio", label: "音频", icon: Music },
+  { key: "realtime", label: "实时产物", icon: Zap },
+  { key: "webgl", label: "WebGL", icon: Box },
+  { key: "research", label: "深度研究", icon: Search, mode: "research" },
+];
+
+/** 顶部可见技能；其余进「更多」下拉 */
+const HOME_VISIBLE_KEYS = ["docs", "ppt", "image", "slides", "website"];
+
+/** 各技能图标 */
+const SKILL_ICON = Object.fromEntries(HOME_SKILLS.map((x) => [x.key, x.icon])) as Record<string, typeof MessageSquare>;
+
+/** 每技能的 12 个模板：已上线技能带完整 prompt；新形态技能由标题组合详细提示词 */
+const SKILL_TEMPLATES: Record<string, TemplateCard[]> = {
+  "chat": [
+    { title: "撰写邮件", desc: "起草清晰、有说服力的商务邮件", prompt: "帮我写一封商务合作邮件" },
+    { title: "周报汇总", desc: "把零散进展整理成结构化周报", prompt: "帮我把这周的工作整理成一份周报，突出成果与风险" },
+    { title: "客户回复", desc: "礼貌专业的客户来信回复", prompt: "帮我起草一封给客户的回复，语气专业友好" },
+    { title: "会议纪要", desc: "把讨论要点整理成待办清单", prompt: "根据下面会议记录整理纪要：结论、负责人、时间点" },
+    { title: "文案改写", desc: "让一段话更有感染力", prompt: "帮我改写这段文案，让它更生动有说服力" },
+    { title: "岗位 JD", desc: "清晰有吸引力的职位描述", prompt: "为「AI 产品经理」写一份职位描述" },
+    { title: "请假邮件", desc: "得体的请假申请", prompt: "帮我写一封请假邮件，理由合理、语气得体" },
+    { title: "英文润色", desc: "中英互译与表达优化", prompt: "把这段话翻译成地道的商务英语并润色" },
+    { title: "产品命名", desc: "有记忆点的品牌/产品名", prompt: "给我的智能水杯产品起 10 个中文名并附寓意" },
+    { title: "头脑风暴", desc: "围绕一个主题发散点子", prompt: "就「办公室下午茶福利」做一轮头脑风暴，给出 10 个创意" },
+    { title: "演讲稿", desc: "条理清晰的发言稿", prompt: "帮我写一篇 3 分钟的新人自我介绍演讲稿" },
+    { title: "合同要点", desc: "把合同讲成人话", prompt: "用大白话解释这份合同里我需要重点关注的条款" },
+  ],
+  "docs": [
+    { title: "生成文档", desc: "商业计划书 / 报告一键成稿", prompt: "写一份 SaaS 产品商业计划书" },
+    { title: "公司介绍", desc: "企业简介与亮点提炼", prompt: "写一份 800 字公司介绍，突出技术壁垒" },
+    { title: "PRD 文档", desc: "需求背景到验收标准", prompt: "为新功能「团队周报」写一份 PRD" },
+    { title: "竞品分析", desc: "优劣势与差异化建议", prompt: "对比 Notion 与飞书文档，输出竞品分析" },
+    { title: "SOP 手册", desc: "可执行的标准作业流程", prompt: "写一份「内容审核」标准作业流程 SOP" },
+    { title: "年终总结", desc: "成果量化、规划来年", prompt: "帮我写年终总结：业绩、成长、明年计划" },
+    { title: "营销方案", desc: "目标人群到落地节奏", prompt: "为新品耳机写一份营销推广方案" },
+    { title: "制度手册", desc: "清晰简洁的团队制度", prompt: "制定一份远程办公管理制度手册" },
+    { title: "立项提案", desc: "背景目标与资源预算", prompt: "写一份「数据中台」立项提案" },
+    { title: "FAQ 文档", desc: "常见问题标准化回答", prompt: "整理产品常见问题 FAQ 二十条" },
+    { title: "新闻稿", desc: "正式有新闻感的企业稿", prompt: "写一篇融资成功的企业新闻稿" },
+    { title: "白皮书", desc: "行业洞察型深度长文", prompt: "写一份《2026 企业 AI 应用白皮书》框架" },
+  ],
+  "slides": [
+    { title: "制作 PPT", desc: "输入主题生成整套幻灯片", prompt: "为产品发布会生成一套 10 页 PPT" },
+    { title: "项目汇报", desc: "进度结果问题一步到位", prompt: "为季度项目汇报做一份 8 页 PPT" },
+    { title: "融资路演", desc: "讲清商业模式与空间", prompt: "做一份种子轮融资路演 PPT" },
+    { title: "营销提案", desc: "策略到创意的提案", prompt: "做一份品牌联名营销提案 PPT" },
+    { title: "培训课件", desc: "知识要点清晰拆解", prompt: "做一套新人入职培训课件 PPT" },
+    { title: "周会同步", desc: "快速对齐本周进展", prompt: "做一份 5 页周会同步 PPT" },
+    { title: "竞品对比", desc: "关键维度并排呈现", prompt: "做一份我们与竞品对比的 PPT" },
+    { title: "读书分享", desc: "观点提炼与启发", prompt: "为《纳瓦尔宝典》做读书分享 PPT" },
+    { title: "行业趋势", desc: "数据支撑的趋势分析", prompt: "做一份 AI 行业 2026 趋势分析 PPT" },
+    { title: "数据复盘", desc: "指标变化一目了然", prompt: "做一份上季度数据复盘 PPT" },
+    { title: "方案汇报", desc: "需求理解到实施计划", prompt: "为客户做一份数字化改造方案 PPT" },
+    { title: "年度回顾", desc: "大事记与来年展望", prompt: "做一份团队年度回顾 PPT" },
+  ],
+  "image": [
+    { title: "生成图片", desc: "一句话生成 / 编辑图片", prompt: "一只戴宇航头盔的柯基在月球上，电影感海报" },
+    { title: "产品海报", desc: "促销卖点视觉化", prompt: "为夏日冰饮做一张促销海报，明亮清爽" },
+    { title: "赛博城市", desc: "霓虹与未来的街景", prompt: "赛博朋克风格雨夜城市街景，霓虹灯反射" },
+    { title: "水彩插画", desc: "温柔手绘质感", prompt: "水彩风春日花园插画，柔和光线" },
+    { title: "3D 渲染", desc: "产品质感展示", prompt: "白色耳机 3D 渲染，柔和影棚光" },
+    { title: "角色概念", desc: "原创角色设计", prompt: "蒸汽朋克风格女机械师角色概念图" },
+    { title: "电商 Banner", desc: "促销横幅画面", prompt: "618 大促科技产品 banner，简洁高质感" },
+    { title: "壁纸系列", desc: "手机/桌面壁纸", prompt: "极简渐变山景手机壁纸，莫兰迪色" },
+    { title: "绘本插图", desc: "童趣叙事画面", prompt: "儿童绘本插图：小狐狸第一次露营" },
+    { title: "杂志封面", desc: "版式感封面图", prompt: "高端生活方式杂志封面风格，负空间构图" },
+    { title: "头像定制", desc: "个性化头像", prompt: "宇航员风格的猫咪头像，Q 版" },
+    { title: "家居效果图", desc: "空间氛围预览", prompt: "原木风客厅日间效果图，阳光洒入" },
+  ],
+  "research": [
+    { title: "深度研究", desc: "竞品 / 行业调研报告", prompt: "研究 2025 年 AI 搜索赛道的竞争格局" },
+    { title: "市场容量", desc: "规模增速与机会判断", prompt: "调研中国智能家居市场规模与增长逻辑" },
+    { title: "技术趋势", desc: "前沿方向技术拆解", prompt: "研究多模态大模型的技术趋势与落地瓶颈" },
+    { title: "用户画像", desc: "人群特征与需求洞察", prompt: "为「在线教育」用户做画像研究" },
+    { title: "政策解读", desc: "新规影响与应对", prompt: "解读《生成式 AI 服务管理办法》对创业公司的影响" },
+    { title: "出海机会", desc: "目标市场进入策略", prompt: "研究国产 SaaS 出海东南亚的机会与风险" },
+    { title: "供应链", desc: "链路风险与优化", prompt: "研究消费电子供应链的东南亚转移现状" },
+    { title: "消费者洞察", desc: "行为偏好数据化", prompt: "调研 Z 世代美妆消费偏好" },
+    { title: "SaaS 指标", desc: "北极星指标拆解", prompt: "研究 B2B SaaS 的增长指标体系" },
+    { title: "AI 应用层", desc: "应用机会与格局", prompt: "研究 AI 应用层 2026 年创业机会图谱" },
+    { title: "新能源", desc: "产业格局深度研究", prompt: "研究固态电池产业化时间线" },
+    { title: "物流科技", desc: "降本增效新技术", prompt: "研究仓储机器人的技术路线与落地成本" },
+  ],
+  "video": [
+    { title: "视频脚本", desc: "带货 / 分镜 / 口播脚本", prompt: "为新款降噪耳机写一条 15 秒带货短视频脚本" },
+    { title: "产品宣传", desc: "品牌感产品影片", prompt: "为智能手表写 60 秒产品宣传片脚本" },
+    { title: "口播干货", desc: "知识类口播稿", prompt: "写一期 3 分钟「普通人如何学 AI」口播稿" },
+    { title: "Vlog 脚本", desc: "生活感叙事线", prompt: "写一条周末城市漫步 Vlog 脚本" },
+    { title: "教程分镜", desc: "步骤清晰教学视频", prompt: "为「用 AI 做 PPT」写教程视频分镜" },
+    { title: "品牌故事", desc: "创始人叙事", prompt: "为咖啡品牌写一支 90 秒品牌故事片" },
+    { title: "活动回顾", desc: "高光集锦旁白", prompt: "写活动回顾视频旁白：开场、节奏、收尾" },
+    { title: "开箱测评", desc: "真实体验向脚本", prompt: "写数码产品开箱测评脚本，突出真实体验" },
+    { title: "城市宣传", desc: "文旅气质影像", prompt: "写一条 3 分钟城市文旅宣传片创意脚本" },
+    { title: "科普动画", desc: "知识可视化", prompt: "把「什么是大模型」做成 2 分钟科普动画脚本" },
+    { title: "采访提纲", desc: "有深度的提问线", prompt: "设计一期创始人访谈的采访提纲与分镜" },
+    { title: "音乐短片", desc: "情绪叙事 MV", prompt: "为轻音乐写一支情绪向 MV 概念脚本" },
+  ],
+  "prototype": [
+    { title: "高保真原型", desc: "", prompt: undefined },
+    { title: "可点击线框", desc: "", prompt: undefined },
+    { title: "移动端原型", desc: "", prompt: undefined },
+    { title: "登录注册流程", desc: "", prompt: undefined },
+    { title: "仪表盘界面", desc: "", prompt: undefined },
+    { title: "电商商品页", desc: "", prompt: undefined },
+    { title: "多步表单流程", desc: "", prompt: undefined },
+    { title: "桌面端工具", desc: "", prompt: undefined },
+    { title: "个人中心", desc: "", prompt: undefined },
+    { title: "支付流程", desc: "", prompt: undefined },
+    { title: "设置页", desc: "", prompt: undefined },
+    { title: "空状态页面", desc: "", prompt: undefined },
+  ],
+  "hyperframes": [
+    { title: "灵感浏览", desc: "", prompt: undefined },
+    { title: "社区热门", desc: "", prompt: undefined },
+    { title: "作品趋势", desc: "", prompt: undefined },
+    { title: "设计师榜", desc: "", prompt: undefined },
+    { title: "每日精选", desc: "", prompt: undefined },
+    { title: "风格实验室", desc: "", prompt: undefined },
+    { title: "案例拆解", desc: "", prompt: undefined },
+    { title: "模板商店", desc: "", prompt: undefined },
+    { title: "教程系列", desc: "", prompt: undefined },
+    { title: "开源项目", desc: "", prompt: undefined },
+    { title: "收藏夹", desc: "", prompt: undefined },
+    { title: "新锐作者", desc: "", prompt: undefined },
+  ],
+  "website": [
+    { title: "落地页复刻", desc: "", prompt: undefined },
+    { title: "企业官网", desc: "", prompt: undefined },
+    { title: "个人作品集", desc: "", prompt: undefined },
+    { title: "博客站点", desc: "", prompt: undefined },
+    { title: "电商首页", desc: "", prompt: undefined },
+    { title: "文档中心", desc: "", prompt: undefined },
+    { title: "SaaS 官网", desc: "", prompt: undefined },
+    { title: "活动专题页", desc: "", prompt: undefined },
+    { title: "着陆页", desc: "", prompt: undefined },
+    { title: "暗色风格站", desc: "", prompt: undefined },
+    { title: "多语言站点", desc: "", prompt: undefined },
+    { title: "信息架构梳理", desc: "", prompt: undefined },
+  ],
+  "audio": [
+    { title: "语音配音", desc: "", prompt: undefined },
+    { title: "背景音乐", desc: "", prompt: undefined },
+    { title: "音效设计", desc: "", prompt: undefined },
+    { title: "播客片头", desc: "", prompt: undefined },
+    { title: "AI 歌曲", desc: "", prompt: undefined },
+    { title: "环境白噪音", desc: "", prompt: undefined },
+    { title: "有声书旁白", desc: "", prompt: undefined },
+    { title: "音乐混音", desc: "", prompt: undefined },
+    { title: "乐器分轨", desc: "", prompt: undefined },
+    { title: "语音提示音", desc: "", prompt: undefined },
+    { title: "广播广告", desc: "", prompt: undefined },
+    { title: "冥想引导", desc: "", prompt: undefined },
+  ],
+  "realtime": [
+    { title: "实时协作白板", desc: "", prompt: undefined },
+    { title: "实时数据大屏", desc: "", prompt: undefined },
+    { title: "在线演示", desc: "", prompt: undefined },
+    { title: "协同标注", desc: "", prompt: undefined },
+    { title: "多人会议画布", desc: "", prompt: undefined },
+    { title: "实时投票", desc: "", prompt: undefined },
+    { title: "直播提词", desc: "", prompt: undefined },
+    { title: "实时字幕", desc: "", prompt: undefined },
+    { title: "远程遥控演示", desc: "", prompt: undefined },
+    { title: "协作流程图", desc: "", prompt: undefined },
+    { title: "实时批注", desc: "", prompt: undefined },
+    { title: "在线头脑风暴", desc: "", prompt: undefined },
+  ],
+  "webgl": [
+    { title: "WebGL 场景", desc: "", prompt: undefined },
+    { title: "3D 产品展示", desc: "", prompt: undefined },
+    { title: "数据可视化", desc: "", prompt: undefined },
+    { title: "互动首页", desc: "", prompt: undefined },
+    { title: "粒子效果", desc: "", prompt: undefined },
+    { title: "3D 展厅", desc: "", prompt: undefined },
+    { title: "Shader 艺术", desc: "", prompt: undefined },
+    { title: "3D 图标", desc: "", prompt: undefined },
+    { title: "产品配置器", desc: "", prompt: undefined },
+    { title: "城市漫游", desc: "", prompt: undefined },
+    { title: "物理沙盒", desc: "", prompt: undefined },
+    { title: "全景看房", desc: "", prompt: undefined },
+  ],
+};
+
+/** 输入框「+」添加菜单：按参考截图（234.png）整理的入口列表。
+ *  这些能力在演示版中多为占位，点击提示即将支持；后续逐个接入真功能。 */
+const ADD_MENU_GROUPS: { label: string; icon: typeof Paperclip; hint: string }[][] = [
+  [
+    { label: "附加文件", icon: Paperclip, hint: "上传图片 / 文档作为上下文" },
+    { label: "引用其它项目", icon: FolderGit2, hint: "关联仓库 / 项目里的内容" },
+  ],
+  [
+    { label: "关联本地代码", icon: Code, hint: "把本地代码目录带进对话" },
+    { label: "插件", icon: Puzzle, hint: "安装扩展能力" },
+    { label: "从 Figma 导入", icon: Frame, hint: "把设计稿转成可对话内容" },
+  ],
+  [
+    { label: "连接器", icon: Plug, hint: "接入第三方服务" },
+    { label: "MCP", icon: Cpu, hint: "模型上下文协议工具" },
+    { label: "看板", icon: Kanban, hint: "打开任务看板" },
+  ],
 ];
 
 /* ═══════════════════════════════════════════
  *  消息气泡
  * ═══════════════════════════════════════════ */
 
-function MessageBubble({ m, isLastUser, onEdit }: { m: UIMessage; isLastUser?: boolean; onEdit?: () => void }) {
+function MessageBubble({
+  m,
+  isLastUser,
+  onEdit,
+  onRetry,
+  agentLabel,
+}: {
+  m: UIMessage;
+  isLastUser?: boolean;
+  onEdit?: () => void;
+  /** G74: 出错回复的「重新生成」：撤回该轮并原样重发 */
+  onRetry?: () => void;
+  /** 助手身份行右侧的小标签（当前模型名），仿 Codex 每条消息的模型头 */
+  agentLabel?: string;
+}) {
   const [copied, setCopied] = useState(false);
   const copy = () => {
     navigator.clipboard?.writeText(m.content).then(
@@ -87,59 +333,104 @@ function MessageBubble({ m, isLastUser, onEdit }: { m: UIMessage; isLastUser?: b
   const isUser = m.role === "user";
 
   return (
-    <div className={cn("group/msg flex", isUser ? "justify-end" : "justify-start")}>
-      <div
-        className={cn(
-          "max-w-[88%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
-          isUser
-            ? "bg-brand-600 text-white"
-            : m.error
-              ? "border border-red-200 bg-red-50 text-red-700"
-              : "border border-stone-200 bg-white text-stone-800",
-          m.streaming && !m.content && "text-stone-400"
-        )}
-      >
-        {m.streaming && !m.content ? (
-          "正在思考…"
-        ) : isUser ? (
-          <div className="whitespace-pre-wrap">{m.content}</div>
-        ) : (
-          <div className="markdown-body">
-            <Markdown content={m.content} />
-            {m.streaming && <span className="streaming-cursor" />}
-          </div>
-        )}
-        {!m.streaming && m.content && (
+    <div className={cn("group/msg w-full", isUser ? "flex justify-end" : "flex justify-start")}>
+      {isUser ? (
+        /* ChatGPT 风格：用户消息 = 右侧浅灰圆角块 */
+        <div className="max-w-[85%]">
           <div
             className={cn(
-              "mt-1.5 flex justify-end gap-0.5 opacity-0 transition group-hover/msg:opacity-100",
-              isUser && "justify-start"
+              "whitespace-pre-wrap rounded-3xl bg-stone-200/70 px-4 py-2 text-[15px] leading-7 text-stone-800",
+              m.error && "border border-red-200 bg-red-50 text-red-700"
             )}
           >
-            {isUser && isLastUser && onEdit && (
-              <button
-                onClick={onEdit}
-                title="编辑并重新发送"
-                className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-white/70 transition hover:bg-white/10"
-              >
-                <Pencil className="h-3 w-3" />
-                编辑
-              </button>
-            )}
-            <button
-              onClick={copy}
-              title="复制"
-              className={cn(
-                "flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] transition",
-                isUser ? "text-white/70 hover:bg-white/10" : "text-stone-400 hover:bg-stone-100"
-              )}
-            >
-              {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-              {copied ? "已复制" : "复制"}
-            </button>
+            {m.content}
           </div>
-        )}
-      </div>
+          {!m.streaming && m.content && (
+            <div className="mt-1 flex justify-end gap-0.5 opacity-60 transition hover:opacity-100 group-hover/msg:opacity-100">
+              {isLastUser && onEdit && (
+                <button
+                  onClick={onEdit}
+                  title="编辑并重新发送"
+                  className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
+                >
+                  <Pencil className="h-3 w-3" />
+                  编辑
+                </button>
+              )}
+              <button
+                onClick={copy}
+                title="复制"
+                className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
+              >
+                {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                {copied ? "已复制" : "复制"}
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* ChatGPT / Codex 风格：助手消息 = 黑色小方块头像 + 无边框纯文字 */
+        <div className="flex w-full max-w-full gap-3">
+          <span
+            aria-hidden
+            className="mt-0.5 flex h-7 w-7 shrink-0 select-none items-center justify-center rounded-lg bg-violet-600 text-[12px] font-bold text-white shadow-sm dark:bg-violet-500"
+          >
+            O
+          </span>
+          <div className="min-w-0 flex-1">
+            {/* Codex 风格：助手消息开头一行身份 —— 产品名 + 当前模型小标签 */}
+            <div className="mb-1 flex items-center gap-2">
+              <span className="text-[13px] font-semibold text-stone-900">OpenCanvas</span>
+              {agentLabel && (
+                <span className="rounded-md bg-stone-100 px-1.5 py-0.5 text-[10px] font-normal text-stone-500">
+                  {agentLabel}
+                </span>
+              )}
+            </div>
+            {m.streaming && !m.content ? (
+              <span className="inline-flex animate-pulse items-center gap-1.5 text-sm text-stone-400">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                正在思考…
+              </span>
+            ) : (
+              <div className={cn("text-[15px] leading-7", m.error && "rounded-2xl border border-red-200 bg-red-50 px-3 py-2 text-red-700")}>
+                <div className="markdown-body">
+                  <Markdown content={m.content} />
+                  {m.streaming && <span className="streaming-cursor" />}
+                </div>
+              </div>
+            )}
+            {!m.streaming && m.content && (
+              <div className="mt-1.5 flex items-center gap-0.5 opacity-60 transition hover:opacity-100 group-hover/msg:opacity-100">
+                <button
+                  onClick={copy}
+                  title="复制"
+                  className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
+                >
+                  {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                  {copied ? "已复制" : "复制"}
+                </button>
+                {onRetry && (
+                  <button
+                    onClick={onRetry}
+                    title="重新生成（撤回本轮错误并重发）"
+                    className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-red-500 transition hover:bg-red-50"
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    重试
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+ *  分体式输入舱组件 (E5)
     </div>
   );
 }
@@ -187,6 +478,7 @@ function SplitComposer({
   chipOn,
   onRecallUp,
   canRecall,
+  conversing,
 }: {
   input: string;
   setInput: (v: string | ((prev: string) => string)) => void;
@@ -228,71 +520,40 @@ function SplitComposer({
   onRecallUp: () => boolean;
   /** UX10: 当前是否处于召回态（可继续前翻） */
   canRecall: boolean;
+  /**
+   * C24: 是否处于「已有消息」的对话态。对话态下左侧 38% 能力网格默认折叠成
+   * 窄图标栏，把输入空间还给打字；空态（没消息）才展示完整能力区。
+   */
+  conversing?: boolean;
 }) {
-  const [activeCat, setActiveCat] = useState<string>("brand");
-  const activeCategory = CAPABILITIES.find((c) => c.id === activeCat) ?? CAPABILITIES[0];
-
-  const handleCapabilityClick = (item: SubCapability) => {
-    setInput("");
-    useChatStore.getState().setMode(item.mode);
-    toast(`已选择：${item.label}`, "info");
+  // 「+」添加菜单（点击其它处 / Esc 关闭）
+  const [addOpen, setAddOpen] = useState(false);
+  const addRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!addOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (addRef.current && !addRef.current.contains(e.target as Node)) setAddOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setAddOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [addOpen]);
+  const runAddItem = (label: string) => {
+    setAddOpen(false);
+    // 演示版暂无对应后端能力：统一提示，避免假装已支持
+    toast(`「${label}」即将支持，先把想法写下来试试 AI 生成`, "info");
   };
 
   return (
-    <div className="rounded-2xl border border-[#e8ddca] bg-white shadow-sm overflow-hidden">
-      <div className="flex min-h-[160px]">
-        {/* ──── 左侧能力区 (约 38%) ──── */}
-        <div className="flex w-[38%] shrink-0 flex-col border-r border-[#e8ddca] bg-[#faf6ee]">
-          {/* 分类标签栏 */}
-          <div className="flex items-center gap-0 border-b border-[#e8ddca] px-2 py-1.5">
-            {CAPABILITIES.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCat(cat.id)}
-                className={cn(
-                  "flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] transition",
-                  activeCat === cat.id
-                    ? "bg-brand-600 font-medium text-white"
-                    : "text-stone-500 hover:bg-stone-100"
-                )}
-              >
-                <span className="text-xs">{cat.emoji}</span>
-                <span className="hidden sm:inline">{cat.label}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* 子能力网格 */}
-          <div className="flex-1 overflow-y-auto p-2">
-            <div className="grid grid-cols-2 gap-1.5">
-              {activeCategory.items.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => handleCapabilityClick(item)}
-                  className={cn(
-                    "group flex items-start gap-1.5 rounded-lg border border-transparent px-2 py-2 text-left transition",
-                    "hover:border-stone-200 hover:bg-white hover:shadow-sm"
-                  )}
-                >
-                  <span className="mt-0.5 text-sm leading-none">{item.emoji}</span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-[11px] font-medium text-stone-700 group-hover:text-stone-900">
-                      {item.label}
-                    </span>
-                    <span className="block text-[9px] text-stone-400">
-                      {MODE_LABELS[item.mode]}
-                    </span>
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ──── 右侧输入区 (约 62%) ──── */}
-        {/* relative：斜杠命令菜单 absolute 定位的参照物 */}
-        <div className="relative flex min-w-0 flex-1 flex-col">
-          {/* 图片模式参数（IMG1~6）：模型直选 / 尺寸 / 张数 / 风格 / 负向 / 参考图 / 历史 */}
+    <div className="rounded-[28px] border border-white/70 bg-white/80 shadow-[0_2px_6px_rgba(0,0,0,0.03),0_16px_44px_-18px_rgba(76,29,149,0.22),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-2xl transition-shadow duration-200 focus-within:border-violet-200/80 focus-within:shadow-[0_2px_6px_rgba(0,0,0,0.03),0_20px_52px_-18px_rgba(124,58,237,0.34),inset_0_1px_0_rgba(255,255,255,0.95)]">
+      <div className="relative flex min-w-0 flex-col">
+        {/* 图片模式参数（IMG1~6）：模型直选 / 尺寸 / 张数 / 风格 / 负向 / 参考图 / 历史 */}
           {mode === "image" && (
             <div className="space-y-1.5 border-b border-stone-100 px-3 py-1.5">
               <div className="flex flex-wrap items-center gap-1.5">
@@ -303,7 +564,7 @@ function SplitComposer({
                     onClick={() => setImgModel(m.id)}
                     title={m.region === "builtin" ? "免费演示模型" : `${m.providerLabel} · ${m.creditsPerImage} 积分/张`}
                     className={cn(
-                      "rounded-full border px-2 py-0.5 text-[10px] transition",
+                      "rounded-full border px-2.5 py-1 text-[11px] transition",
                       imgModel === m.id
                         ? "border-brand-500 bg-brand-50 font-medium text-brand-700"
                         : "border-stone-200 text-stone-500 hover:border-brand-300"
@@ -327,7 +588,7 @@ function SplitComposer({
                     key={s.id}
                     onClick={() => setImgSize(s.id)}
                     className={cn(
-                      "rounded-full border px-2 py-0.5 text-[10px] transition",
+                      "rounded-full border px-2.5 py-1 text-[11px] transition",
                       imgSize === s.id
                         ? "border-brand-500 bg-brand-50 font-medium text-brand-700"
                         : "border-stone-200 text-stone-500 hover:border-brand-300"
@@ -342,7 +603,7 @@ function SplitComposer({
                     key={c.n}
                     onClick={() => setImgCount(c.n)}
                     className={cn(
-                      "rounded-full border px-2 py-0.5 text-[10px] transition",
+                      "rounded-full border px-2.5 py-1 text-[11px] transition",
                       imgCount === c.n
                         ? "border-brand-500 bg-brand-50 font-medium text-brand-700"
                         : "border-stone-200 text-stone-500 hover:border-brand-300"
@@ -359,7 +620,7 @@ function SplitComposer({
                     key={st.id}
                     onClick={() => setImgStyle((v) => (v === st.id ? "" : st.id))}
                     className={cn(
-                      "rounded-full border px-2 py-0.5 text-[10px] transition",
+                      "rounded-full border px-2.5 py-1 text-[11px] transition",
                       imgStyle === st.id
                         ? "border-brand-500 bg-brand-50 font-medium text-brand-700"
                         : "border-stone-200 text-stone-500 hover:border-brand-300"
@@ -453,10 +714,11 @@ function SplitComposer({
             </div>
           )}
 
-          {/* 文字类模式参数：语气 / 长度 / 受众（点击即追加约束，再点取消） */}
-          {mode !== "image" && !slashMatches && (
+          {/* 文字类模式参数：语气 / 长度 / 受众（点击即追加约束，再点取消）——
+          仅文档/PPT/研究/视频显示，chat 保持单框极简 */}
+          {mode !== "image" && mode !== "chat" && !slashMatches && (
             <div className="flex flex-wrap items-center gap-1 border-b border-stone-100 px-3 py-1.5">
-              <span className="text-[10px] text-stone-400">语气</span>
+              <span className="text-[11px] text-stone-500" title="把语气要求拼到输入末尾，再点一次取消">语气</span>
               {TONE_CHIPS.map((c) => (
                 <button
                   key={c.id}
@@ -464,7 +726,7 @@ function SplitComposer({
                   title={c.suffix}
                   onClick={() => applyChip(c)}
                   className={cn(
-                    "rounded-full border px-2 py-0.5 text-[10px] transition",
+                    "rounded-full border px-2.5 py-1 text-[11px] transition",
                     chipOn(c)
                       ? "border-brand-500 bg-brand-50 font-medium text-brand-700"
                       : "border-stone-200 text-stone-500 hover:border-brand-300"
@@ -473,7 +735,7 @@ function SplitComposer({
                   {c.label}
                 </button>
               ))}
-              <span className="ml-1 text-[10px] text-stone-400">长度</span>
+              <span className="ml-1 text-[11px] text-stone-500" title="控制篇幅，点击拼到输入末尾，再点一次取消">长度</span>
               {LENGTH_CHIPS.map((c) => (
                 <button
                   key={c.id}
@@ -481,7 +743,7 @@ function SplitComposer({
                   title={c.suffix}
                   onClick={() => applyChip(c)}
                   className={cn(
-                    "rounded-full border px-2 py-0.5 text-[10px] transition",
+                    "rounded-full border px-2.5 py-1 text-[11px] transition",
                     chipOn(c)
                       ? "border-brand-500 bg-brand-50 font-medium text-brand-700"
                       : "border-stone-200 text-stone-500 hover:border-brand-300"
@@ -490,7 +752,7 @@ function SplitComposer({
                   {c.label}
                 </button>
               ))}
-              <span className="ml-1 text-[10px] text-stone-400">受众</span>
+              <span className="ml-1 text-[11px] text-stone-500" title="指定读者对象，点击拼到输入末尾，再点一次取消">受众</span>
               {AUDIENCE_CHIPS.map((c) => (
                 <button
                   key={c.id}
@@ -498,7 +760,7 @@ function SplitComposer({
                   title={c.suffix}
                   onClick={() => applyChip(c)}
                   className={cn(
-                    "rounded-full border px-2 py-0.5 text-[10px] transition",
+                    "rounded-full border px-2.5 py-1 text-[11px] transition",
                     chipOn(c)
                       ? "border-brand-500 bg-brand-50 font-medium text-brand-700"
                       : "border-stone-200 text-stone-500 hover:border-brand-300"
@@ -532,69 +794,193 @@ function SplitComposer({
                 }
                 if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); }
               }}
-              rows={3}
+              rows={2}
               placeholder={
                 mode === "image"
                   ? "描述你想要的画面…"
                   : mode === "chat"
-                    ? "分配任务，或问我任何事…"
+                    ? "想做什么？写下来告诉我…"
                     : `${MODE_LABELS[mode]}：描述你的需求…`
               }
-              className="flex-1 min-h-[80px] w-full resize-none bg-transparent px-4 py-3 text-[14px] leading-relaxed outline-none placeholder:text-stone-400"
+              className="chat-composer-input min-h-[92px] w-full resize-none bg-transparent px-4 py-3.5 text-[14px] leading-relaxed outline-none placeholder:text-stone-400"
             />
           </div>
 
-          {/* 底部工具栏 */}
-          <div className="flex items-center justify-between border-t border-stone-100 px-3 py-2">
-            <div className="flex min-w-0 items-center gap-2">
-              <button
-                onClick={() => void enhancePrompt()}
-                disabled={!input.trim() || enhancing}
-                title={input.trim() ? "优化提示词" : "输入内容后可优化提示词"}
-                className="flex h-7 shrink-0 items-center gap-1 rounded-full border border-stone-200 px-2.5 text-[11px] text-stone-500 transition hover:border-brand-300 hover:text-brand-600 disabled:opacity-30"
+          {/* ──── 底部工具栏：技能选择 ▾ ｜ 润色提示词 · 模型下拉 · 发送，全部收在输入框下方 ──── */}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 border-t border-stone-100 px-2.5 py-2.5">
+          {/* 「+」十字按钮：弹出添加菜单（附加文件 / 引用项目 / 连接器 … 按参考截图） */}
+          <div ref={addRef} className="relative">
+            <button
+              onClick={() => setAddOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={addOpen}
+              title="添加：附加文件 / 引用其它项目 / 连接器等"
+              aria-label="添加"
+              className={cn(
+                "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition",
+                addOpen
+                  ? "border-violet-300 bg-violet-50 text-violet-600"
+                  : "border-stone-200 bg-white text-stone-500 hover:border-stone-300 hover:text-stone-700"
+              )}
+            >
+              <Plus className={cn("h-4 w-4 transition-transform duration-200", addOpen && "rotate-45")} />
+            </button>
+            {addOpen && (
+              <div
+                role="menu"
+                aria-label="添加菜单"
+                className="absolute bottom-full left-0 z-40 mb-2 w-72 overflow-hidden rounded-2xl border border-stone-200 bg-white py-1.5 shadow-xl"
               >
-                {enhancing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
-                优化
-              </button>
-              {/* UX12: 实时 token/字数估算（estimateTokens 与计费同口径） */}
-              {input.trim() && (
-                <span className="truncate text-[10px] text-stone-400" title="估算值，实际以模型分词为准">
-                  {input.length} 字 · 约 {estimateTokens(input)} tokens
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <ModelSelector
-                value={model}
-                onChange={(id, provider) => {
-                  setModel(id, provider);
-                  const label = MODELS.find((m) => m.id === id)?.label ?? id;
-                  // UX8: 补上供应商，让「用的是谁家的模型」一眼可辨
-                  const pv = provider ? PROVIDER_NAME[provider] : undefined;
-                  toast(pv ? `已切换到 ${pv} · ${label}` : `已切换到 ${label}`, "success");
-                }}
-              />
-              {sending ? (
-                <button
-                  onClick={stopGeneration}
-                  title="停止生成"
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-700 text-white transition hover:bg-stone-800"
-                >
-                  <Square className="h-3 w-3 fill-current" />
-                </button>
-              ) : (
-                <button
-                  onClick={submit}
-                  disabled={!input.trim()}
-                  title={input.trim() ? "发送（回车）" : "输入内容后可发送"}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 text-white transition hover:bg-brand-700 disabled:bg-stone-200 disabled:text-stone-400"
-                >
-                  <ArrowUp className="h-3.5 w-3.5" />
-                </button>
-              )}
-            </div>
+                {ADD_MENU_GROUPS.map((group, gi) => (
+                  <div key={gi} className={gi > 0 ? "mt-1 border-t border-stone-100 pt-1" : ""}>
+                    {group.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <button
+                          key={item.label}
+                          role="menuitem"
+                          onClick={() => runAddItem(item.label)}
+                          className="flex w-full items-center gap-2.5 px-3 py-2 text-left transition hover:bg-stone-50"
+                        >
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-stone-500">
+                            <Icon className="h-4 w-4" />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-[13px] text-stone-700">{item.label}</span>
+                            <span className="block truncate text-[11px] text-stone-400">{item.hint}</span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
+
+          <span className="min-w-0 flex-1" />
+
+          {/* 润色提示词 */}
+          <button
+            onClick={() => void enhancePrompt()}
+            disabled={!input.trim() || enhancing}
+            title={input.trim() ? "优化提示词" : "输入内容后可优化提示词"}
+            className="flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 text-[13px] text-stone-500 transition hover:border-orange-300 hover:bg-orange-50/50 hover:text-orange-600 disabled:opacity-30"
+          >
+            {enhancing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+            <span className="hidden sm:inline">{enhancing ? "润色中…" : "润色提示词"}</span>
+          </button>
+
+          {/* UX12: 实时 token/字数估算（estimateTokens 与计费同口径） */}
+          {input.trim() && (
+            <span className="truncate text-[10px] text-stone-400" title="估算值，实际以模型分词为准">
+              {input.length} 字 · 约 {estimateTokens(input)} tokens
+            </span>
+          )}
+
+          {/* 模型选择下拉 */}
+          <ModelSelector
+            value={model}
+            onChange={(id, provider) => {
+              setModel(id, provider);
+              const label = MODELS.find((m) => m.id === id)?.label ?? id;
+              // UX8: 补上供应商，让「用的是谁家的模型」一眼可辨
+              const pv = provider ? PROVIDER_NAME[provider] : undefined;
+              toast(pv ? `已切换到 ${pv} · ${label}` : `已切换到 ${label}`, "success");
+            }}
+          />
+
+          {sending ? (
+            // C35: 停止改红色圆钮，与「发送」在语义上一眼区分
+            <button
+              onClick={stopGeneration}
+              title="停止生成"
+              aria-label="停止生成"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-600 text-white shadow-sm shadow-red-200 transition hover:bg-red-700"
+            >
+              <Square className="h-3 w-3 fill-current" />
+            </button>
+          ) : (
+            <button
+              onClick={submit}
+              disabled={!input.trim()}
+              title={input.trim() ? "发送（回车）" : "输入内容后可发送"}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-600 text-white shadow-[0_2px_10px_rgba(124,58,237,0.35)] transition hover:bg-violet-700 hover:shadow-[0_2px_14px_rgba(124,58,237,0.50)] disabled:bg-stone-100 disabled:text-stone-300 disabled:shadow-none dark:bg-violet-500 dark:hover:bg-violet-400"
+            >
+              <ArrowUp className="h-4 w-4" />
+            </button>
+          )}
         </div>
+
+          {/* 对话态常驻一行快捷键提示（空态的整句提示保留在原处） */}
+          {conversing && (
+            <p className="px-3 pb-1.5 text-right text-[10px] text-stone-300">
+              Shift+回车换行 · ↑ 召回上一条 · / 快捷命令
+            </p>
+          )}
+      </div>
+    </div>
+  );
+}
+
+/** d5：PPT 生成时的对话内阶段条。stage 由 deckMessage 关键词推断，
+ *  与右侧产物画布的 SlidesGenerating 同口径（理解→大纲→排版→校对）。 */
+const PPT_STAGES = ["理解需求", "生成大纲", "排版中", "校对导出"] as const;
+
+function pptStageOf(message: string): number {
+  if (message.includes("排版") || message.includes("解析")) return 2;
+  if (message.includes("大纲")) return 1;
+  if (message.includes("规划") || message.includes("结构")) return 0;
+  return 1;
+}
+
+function SlidesProgressStrip({ message }: { message: string }) {
+  const cur = pptStageOf(message);
+  return (
+    <div className="mb-5 overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
+      <div className="flex items-center gap-2 border-b border-stone-100 px-4 py-2.5">
+        <Loader2 className="h-4 w-4 animate-spin text-violet-500" />
+        <span className="text-[13px] font-semibold text-stone-800">正在生成 PPT</span>
+        <span className="ml-auto shrink-0 text-[11px] text-stone-400">约 10~30 秒</span>
+      </div>
+      {message && (
+        <p className="border-b border-stone-100 px-4 py-1.5 text-xs text-stone-500">{message}</p>
+      )}
+      <div className="flex items-center px-4 py-3">
+        {PPT_STAGES.map((label, i) => {
+          const done = i < cur;
+          const active = i === cur;
+          return (
+            <div key={label} className="flex flex-1 flex-col items-center gap-1.5">
+              <span
+                className={cn(
+                  "flex h-6 w-6 items-center justify-center rounded-full border text-[11px]",
+                  done
+                    ? "border-violet-600 bg-violet-600 text-white"
+                    : active
+                      ? "border-violet-400 bg-white text-violet-500"
+                      : "border-stone-200 bg-white text-stone-300"
+                )}
+              >
+                {done ? <Check className="h-3.5 w-3.5" /> : active ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : i + 1}
+              </span>
+              <span
+                className={cn(
+                  "text-[11px]",
+                  done || active ? "font-medium text-stone-700" : "text-stone-300"
+                )}
+              >
+                {label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <div className="h-1 w-full bg-stone-100">
+        <div
+          className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-400 transition-all duration-500"
+          style={{ width: `${((cur + 1) / PPT_STAGES.length) * 100}%` }}
+        />
       </div>
     </div>
   );
@@ -603,6 +989,70 @@ function SplitComposer({
 /* ═══════════════════════════════════════════
  *  主 ChatPanel
  * ═══════════════════════════════════════════ */
+
+/** 模板卡：真实预览图 + hover 大图浮层；无图卡片用技能色渐变兜底（不再破图） */
+function TemplateCard({
+  card,
+  skillLabel,
+  skillIcon: SkillIcon,
+  art,
+  onFill,
+}: {
+  card: TemplateCard;
+  skillLabel: string;
+  skillIcon: typeof MessageSquare;
+  art?: string;
+  onFill: () => void;
+}) {
+  const [anchor, setAnchor] = useState<AnchorRect | null>(null);
+  const enter = (e: ReactMouseEvent<HTMLElement>) => {
+    if (!art) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    setAnchor({ left: r.left, top: r.top, width: r.width, height: r.height });
+  };
+  return (
+    <button
+      type="button"
+      aria-label={card.title}
+      onClick={onFill}
+      onMouseEnter={enter}
+      onMouseLeave={() => setAnchor(null)}
+      className="group overflow-hidden rounded-2xl border border-stone-200/90 bg-white p-1.5 text-left transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_12px_30px_-16px_rgba(76,29,149,0.4)]"
+    >
+      <span className="relative block h-16 w-full overflow-hidden rounded-lg bg-stone-100 sm:h-20 lg:h-[4.5rem]">
+        {art ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={art}
+            alt=""
+            loading="lazy"
+            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
+          />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center bg-gradient-to-br from-stone-50 to-stone-100">
+            <SkillIcon className="h-5 w-5 text-stone-400/70 sm:h-6 sm:w-6" strokeWidth={1.6} />
+          </span>
+        )}
+      </span>
+      <span className="block px-1 pt-2">
+        <span className="block truncate text-[13px] font-semibold text-stone-800">{card.title}</span>
+        {card.desc && <span className="mt-0.5 block truncate text-xs text-stone-500">{card.desc}</span>}
+      </span>
+      {art && anchor && (
+        <PreviewPopover anchor={anchor}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={art} alt="" className="aspect-[16/9] w-full object-cover" />
+          <span className="block border-t border-stone-100 px-3 py-2.5 text-left">
+            <span className="block truncate text-[13px] font-semibold text-stone-800">
+              {skillLabel} · {card.title}
+            </span>
+            {card.desc && <span className="mt-0.5 block truncate text-xs text-stone-400">{card.desc}</span>}
+          </span>
+        </PreviewPopover>
+      )}
+    </button>
+  );
+}
 
 export function ChatPanel() {
   const { conversations, activeId, send, sending, stopGeneration, model, setModel } = useChatStore();
@@ -631,6 +1081,12 @@ export function ChatPanel() {
   const recallIdx = useRef(-1);
   // UX10: 召回态（继续按 ↑ 可再往前翻）；用户手动编辑即退出
   const [recallActive, setRecallActive] = useState(false);
+  // 空态技能条：当前选中技能 key（all=全部 / 具体技能）
+  const [homeFilter, setHomeFilter] = useState("docs");
+  // 「更多」下拉开关
+  const [moreOpen, setMoreOpen] = useState(false);
+  // 示例模板轮播：当前页（每页 3 张、共 12 张 4 页，左右箭头循环翻页）
+  const [tplPage, setTplPage] = useState(0);
 
   const slashMatches = matchSlash(input);
   useEffect(() => setSlashIdx(0), [input]);
@@ -643,6 +1099,8 @@ export function ChatPanel() {
     if (saved) {
       setInput(saved);
       inputRef.current?.focus();
+      // D50: 恢复草稿时明说一句，避免用户以为内容是自己刚打上去的
+      toast("已恢复这个会话上次未发送的草稿", "info");
     }
     // 仅在切换会话（activeId 变化）时恢复；输入过程不重放
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -699,6 +1157,27 @@ export function ChatPanel() {
 
   const messages = convo?.messages ?? [];
   const mode: WorkspaceMode = convo?.mode ?? "chat";
+  // 空态技能条收纳：顶部可见 4 项，其余在「更多」下拉
+  const homeVisible = HOME_SKILLS.filter((sk) => HOME_VISIBLE_KEYS.includes(sk.key));
+  const homeMore = HOME_SKILLS.filter((sk) => !HOME_VISIBLE_KEYS.includes(sk.key));
+  const activeSkill = HOME_SKILLS.find((sk) => sk.key === homeFilter) ?? HOME_SKILLS[0];
+  // 当前技能模板卡：该技能 12 张（PPT 与幻灯片共用一套 slides）。
+  // 统一成 { skill, card } 视图模型，点击时按卡所属技能生成。
+  const templateKey = homeFilter === "ppt" ? "slides" : homeFilter;
+  const templateSkill = homeFilter === "ppt" ? "ppt" : templateKey;
+  const templates: { skill: string; card: TemplateCard }[] =
+    (SKILL_TEMPLATES[templateKey] ?? []).map((card) => ({ skill: templateSkill, card }));
+  // 轮播：一行 3 张 / 页，左右箭头翻页（首尾循环）
+  const PER_PAGE = 3;
+  const totalPages = Math.max(1, Math.ceil(templates.length / PER_PAGE));
+  const curPage = Math.min(tplPage, totalPages - 1);
+  const shownTemplates = templates.slice(curPage * PER_PAGE, curPage * PER_PAGE + PER_PAGE);
+  const goTplPrev = () => setTplPage((p) => (p - 1 + totalPages) % totalPages);
+  const goTplNext = () => setTplPage((p) => (p + 1) % totalPages);
+  // d5：PPT 生成中（对话内顶部阶段条）
+  const deckLoading = mode === "slides" && convo?.deckStatus === "loading";
+  // 助手身份行小标签：当前模型名（Codex 每条消息头部同款）
+  const modelLabel = MODELS.find((m) => m.id === model)?.label ?? model;
 
   const scrollToBottom = (smooth = true) =>
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: smooth ? "smooth" : "auto" });
@@ -775,7 +1254,43 @@ export function ChatPanel() {
     return true;
   };
 
+  /** G74: 出错回复上的「重试」：撤掉本轮（含错误气泡）再原样重发用户原问 */
+  const retryLast = () => {
+    const st = useChatStore.getState();
+    const convo = st.conversations.find((c) => c.id === st.activeId);
+    if (!convo || convo.messages.length === 0) return;
+    const text = [...convo.messages].reverse().find((mm) => mm.role === "user")?.content;
+    if (!text || !text.trim()) return;
+    st.editLastUserMessage();
+    // 等 editLastUserMessage 把尾部截掉后，把同一句话重发给模型
+    setTimeout(() => {
+      const s2 = useChatStore.getState();
+      if (s2.activeId && text.trim()) void s2.send(text);
+    }, 0);
+  };
+
   /** 输入变更统一入口：手动编辑即退出 UX10 召回态（召回态下 ↑ 可继续前翻） */
+  // 空态模板卡：点击不自动发送，而是生成一条「详细提示词」（同卡多次点击组合
+  // 出不同变体）填入输入框，供用户查看 / 修改后回车发送。
+  const fillStarter = (skill: HomeSkill, q: TemplateCard) => {
+    // 切换技能（输入框 placeholder 与后续发送通道跟随）；新形态技能无专有
+    // 模式，落到 AI 对话先出方案；与当前相同则不动
+    const targetMode = skill.mode ?? "chat";
+    if (targetMode !== mode) useChatStore.getState().setMode(targetMode);
+    // 同卡多次点击 → promptStudio 组合出内容不同的详细提示词，并防连续重复
+    const text = buildDetailedPrompt(skill.key, q.title, skill.label);
+    if (text !== input) setInput(text);
+    setTimeout(() => inputRef.current?.focus(), 0);
+    toast(`已填入「${q.title}」的详细提示词，可编辑后回车发送`, "success");
+  };
+
+  /** 切换技能：回到模板第 1 页并收起更多下拉 */
+  const pickSkill = (key: string) => {
+    setHomeFilter(key);
+    setTplPage(0);
+    setMoreOpen(false);
+  };
+
   const changeInput = (v: string | ((prev: string) => string)) => {
     setRecallActive(false);
     setInput(v);
@@ -865,21 +1380,109 @@ export function ChatPanel() {
   }, [input]);
 
   return (
-    <div className="relative flex min-w-0 flex-1 flex-col bg-[#f9f5ec]">
+    <div className="relative flex min-w-0 flex-1 flex-col bg-white text-stone-800">
       <div
         ref={scrollRef}
-        className={cn("flex-1 overflow-y-auto px-6", messages.length === 0 ? "bg-[#f6f1e9] py-10" : "py-8")}
+        className={cn("flex-1 overflow-y-auto px-6", messages.length === 0 ? "bg-white py-12" : "bg-white py-10")}
       >
-        <div className={cn("mx-auto w-full", messages.length === 0 ? "max-w-4xl" : "max-w-2xl")}>
+        <div className="mx-auto w-full max-w-[760px]">
+          {/* d5：PPT 生成时，阶段条显示在对话流顶部 */}
+          {deckLoading && <SlidesProgressStrip message={convo?.deckMessage ?? ""} />}
           {messages.length === 0 ? (
-            <div className="pt-4 text-center">
-              <h1 className="font-serif text-3xl font-semibold tracking-tight text-[#4a2e1d] md:text-4xl">
+            <div className="relative px-2 pb-4 pt-4 text-center">
+              {/* 醒目大字主标题：位于技能条上方（用户选定的问候文案） */}
+              <h1 className="mt-1 text-3xl font-semibold tracking-tight text-stone-900 md:text-4xl dark:text-stone-100">
                 欢迎回来，今天想做点什么？
               </h1>
-              <p className="mt-2 text-sm text-[#8a7a66]">用 AI 把想法变成现实。</p>
+              {/* n5 氛围的浅色版：柔紫主光晕 + 一点琥珀偏光；背景仍是现有白底 */}
+              <div aria-hidden className="pointer-events-none absolute -top-6 left-1/2 h-64 w-[560px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(139,92,246,0.13),transparent_70%)] blur-2xl" />
+              <div aria-hidden className="pointer-events-none absolute right-2 top-24 hidden h-44 w-72 rounded-full bg-[radial-gradient(closest-side,rgba(251,146,60,0.09),transparent_70%)] blur-2xl md:block" />
+              <div className="relative mt-6">
+                {/* 顶部技能条：可见 4 项 + 「更多」下拉（其余技能收纳） */}
+                <div className="relative inline-flex max-w-full flex-wrap items-center justify-center gap-1">
+                  {homeVisible.map((sk) => {
+                    const active = homeFilter === sk.key;
+                    const Icon = sk.icon;
+                    return (
+                      <button
+                        key={sk.key}
+                        role="tab"
+                        aria-selected={active}
+                        onClick={() => pickSkill(sk.key)}
+                        title={sk.label}
+                        className={cn(
+                          "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition",
+                          active
+                            ? "border-violet-600 bg-violet-600 text-white shadow-sm shadow-violet-200"
+                            : "border-stone-200/80 bg-white/80 text-stone-600 hover:bg-stone-50 hover:text-stone-900"
+                        )}
+                      >
+                        <Icon className="h-3.5 w-3.5" />
+                        {sk.label}
+                      </button>
+                    );
+                  })}
+
+                  {/* 更多：当前选中的是隐藏技能时，按钮显示该技能名 */}
+                  <div className="relative">
+                    <button
+                      role="tab"
+                      aria-selected={homeMore.some((sk) => sk.key === homeFilter)}
+                      aria-haspopup="listbox"
+                      aria-expanded={moreOpen}
+                      onClick={() => setMoreOpen((v) => !v)}
+                      title="更多技能"
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition",
+                        homeMore.some((sk) => sk.key === homeFilter)
+                          ? "border-violet-600 bg-violet-600 text-white shadow-sm shadow-violet-200"
+                          : "border-stone-200/80 bg-white/80 text-stone-600 hover:bg-stone-50 hover:text-stone-900"
+                      )}
+                    >
+                      {(() => {
+                        const sel = homeMore.find((sk) => sk.key === homeFilter);
+                        const Icon = (sel ?? homeMore[0]).icon;
+                        return <Icon className="h-3.5 w-3.5" />;
+                      })()}
+                      {homeMore.find((sk) => sk.key === homeFilter)?.label ?? "更多"}
+                      {moreOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    </button>
+                    {moreOpen && (
+                      <div
+                        role="listbox"
+                        aria-label="更多技能"
+                        className="absolute left-1/2 top-full z-40 mt-2 w-64 -translate-x-1/2 overflow-hidden rounded-2xl border border-stone-200 bg-white p-1.5 shadow-xl"
+                      >
+                        <div className="grid grid-cols-2 gap-0.5">
+                          {homeMore.map((sk) => {
+                            const Icon = sk.icon;
+                            const sel = homeFilter === sk.key;
+                            return (
+                              <button
+                                key={sk.key}
+                                role="option"
+                                aria-selected={sel}
+                                onClick={() => pickSkill(sk.key)}
+                                className={cn(
+                                  "flex items-center gap-2 rounded-xl px-2.5 py-2 text-left text-[13px] transition",
+                                  sel
+                                    ? "bg-violet-50 font-medium text-violet-700"
+                                    : "text-stone-600 hover:bg-stone-100"
+                                )}
+                              >
+                                <Icon className="h-4 w-4 shrink-0" />
+                                <span className="min-w-0 flex-1 truncate">{sk.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
               {/* E5 分体式输入舱 */}
-              <div className="mx-auto mt-8 max-w-3xl">
+              <div className="mx-auto mt-6 max-w-3xl">
                 <SplitComposer
                   input={input}
                   setInput={changeInput as typeof setInput}
@@ -919,25 +1522,65 @@ export function ChatPanel() {
                   chipOn={chipOn}
                   onRecallUp={recallUp}
                   canRecall={recallActive}
+                  conversing={messages.length > 0}
                 />
               </div>
-              <p className="mt-2 text-xs text-[#a8977f]">回车发送 · Shift+回车换行 · 点击左侧能力卡片快速开始</p>
+              <p className="mt-2 text-xs text-stone-400">回车发送 · Shift+回车换行 · 上方技能条选择文档 / PPT / 图片 / 更多</p>
 
-              <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-                <span className="text-sm text-[#8a7a66]">试试：</span>
-                {HOME_CARDS.slice(0, 4).map((q) => (
-                  <button
-                    key={q.title}
-                    onClick={() => {
-                      useChatStore.getState().setMode(q.mode);
-                      setInput(q.prompt);
-                      setTimeout(() => inputRef.current?.focus(), 0);
-                    }}
-                    className="rounded-full border border-[#e3d8c6] bg-white px-3.5 py-1.5 text-sm text-[#6b5b48] transition hover:border-[#c05f3c] hover:text-[#c05f3c]"
-                  >
-                    {q.title}
-                  </button>
-                ))}
+              {/* 示例模板：一行轮播（每页 3 张，右上角左右箭头循环翻页） */}
+                <div className="mt-5 flex items-center justify-between gap-3 px-1 text-left">
+                  <div className="flex min-w-0 items-baseline gap-2">
+                    <h2 className="text-sm font-semibold tracking-wide text-stone-500">
+                      {activeSkill.label} · 示例模板
+                    </h2>
+                    <span className="truncate text-xs text-stone-400">
+                      {`共 ${templates.length} 个 · 点卡片填入详细提示词`}
+                    </span>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={goTplPrev}
+                      title="上一个示例"
+                      aria-label="上一个示例"
+                      className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-500 transition hover:border-stone-300 hover:text-violet-600"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <span className="min-w-[2.5rem] text-center text-xs tabular-nums text-stone-400">
+                      {curPage + 1} / {totalPages}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={goTplNext}
+                      title="下一个示例"
+                      aria-label="下一个示例"
+                      className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-500 transition hover:border-stone-300 hover:text-violet-600"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+                <div className="mt-2.5 grid grid-cols-3 gap-2.5 text-left">
+                  {shownTemplates.map((item) => {
+                    const curSkill = HOME_SKILLS.find((x) => x.key === item.skill) ?? activeSkill;
+                    const q = item.card;
+                    // 每张卡的真实预览图：优先按模板集合+标题命中；未命中用技能色渐变占位
+                    const art = TPL_ART[templateKey]?.[q.title];
+                    return (
+                      <TemplateCard
+                        key={item.skill + ":" + q.title}
+                        card={q}
+                        skillLabel={curSkill.label}
+                        skillIcon={curSkill.icon}
+                        art={art}
+                        onFill={() => fillStarter(curSkill, q)}
+                      />
+                    );
+                  })}
+                </div>
+
+
               </div>
             </div>
           ) : (
@@ -953,12 +1596,15 @@ export function ChatPanel() {
               {messages.map((m, i) => {
                 const nextUser = messages.findIndex((x, j) => j > i && x.role === "user");
                 const isLastUser = m.role === "user" && nextUser === -1;
+                const isLastMsg = i === messages.length - 1;
                 return (
                   <MessageBubble
                     key={m.id}
                     m={m}
                     isLastUser={isLastUser}
                     onEdit={isLastUser ? () => useChatStore.getState().editLastUserMessage() : undefined}
+                    onRetry={m.error && isLastMsg ? retryLast : undefined}
+                    agentLabel={modelLabel}
                   />
                 );
               })}
@@ -966,6 +1612,16 @@ export function ChatPanel() {
           )}
         </div>
       </div>
+
+      {/* R5：空对话时右下角一行极小的环境说明，不占布局 */}
+      {messages.length === 0 && (
+        <p
+          aria-hidden
+          className="pointer-events-none absolute bottom-3 right-5 hidden select-none text-[11px] text-stone-300 lg:block"
+        >
+          数据保存在本地 · 30 秒上手 · 不配密钥也能完整体验
+        </p>
+      )}
 
       {/* 回到底部 */}
       {showJump && messages.length > 0 && (
@@ -979,8 +1635,9 @@ export function ChatPanel() {
 
       {/* 对话中底部的分体式输入舱 */}
       {messages.length > 0 && (
-        <div className="border-t border-[#e8ddca] bg-[#fdfaf3] px-6 py-3">
-          <div className="mx-auto w-full max-w-3xl">
+        <div className="relative px-6 pb-4 pt-1">
+          <div aria-hidden className="pointer-events-none absolute inset-x-8 -top-14 bottom-0 rounded-[44px] bg-[radial-gradient(closest-side,rgba(139,92,246,0.10),transparent_75%)] blur-xl" />
+          <div className="relative mx-auto w-full max-w-3xl">
             <SplitComposer
               input={input}
               setInput={changeInput as typeof setInput}
@@ -1020,6 +1677,7 @@ export function ChatPanel() {
               chipOn={chipOn}
               onRecallUp={recallUp}
               canRecall={recallActive}
+              conversing={messages.length > 0}
             />
           </div>
         </div>
