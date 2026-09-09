@@ -4,14 +4,21 @@ import { useEffect, useRef, useState } from "react";
 import { useSseStream } from "@/hooks/useSseStream";
 import {
   ArrowUp,
+  Box,
   Check,
   ChevronDown,
+  ChevronUp,
   Copy,
   FileText,
+  Globe,
   ImageIcon,
+  Layers,
+  LayoutGrid,
+  LayoutTemplate,
   Loader2,
   Mail,
   MessageSquare,
+  Music,
   Pencil,
   Presentation,
   RotateCcw,
@@ -19,6 +26,7 @@ import {
   Square,
   Video,
   Wand2,
+  Zap,
 } from "lucide-react";
 import { useChatStore, MODE_LABELS, type WorkspaceMode, type UIMessage } from "@/lib/store/chat";
 import { Markdown } from "./Markdown";
@@ -54,42 +62,242 @@ const IMAGE_COUNTS = [
   { n: 4, label: "4 张" },
 ];
 
-/** 首页功能卡片 */
-const HOME_CARDS: {
-  icon: typeof Mail;
-  title: string;
-  desc: string;
-  mode: WorkspaceMode;
-  prompt: string;
-}[] = [
-  { icon: Mail, title: "撰写邮件", desc: "起草清晰、有说服力的商务邮件", mode: "chat", prompt: "帮我写一封商务合作邮件" },
-  { icon: FileText, title: "生成文档", desc: "商业计划书 / 制度 / 报告一键成稿", mode: "docs", prompt: "写一份 SaaS 产品商业计划书" },
-  { icon: Presentation, title: "制作 PPT", desc: "输入主题，生成整套幻灯片", mode: "slides", prompt: "为产品发布会生成一套 10 页 PPT" },
-  { icon: ImageIcon, title: "生成图片", desc: "描述画面，AI 立即出图", mode: "image", prompt: "一只戴宇航头盔的柯基在月球上，电影感海报" },
-  { icon: Search, title: "深度研究", desc: "市场 / 竞品 / 行业调研报告", mode: "research", prompt: "研究 2025 年 AI 搜索赛道的竞争格局" },
-  { icon: Video, title: "视频脚本", desc: "带货 / 分镜 / 口播脚本", mode: "video", prompt: "为新款降噪耳机写一条 15 秒带货短视频脚本" },
-];
-
-/** 空态顶部「技能选择条」（对应截图里的能力 chips）：点选即切换技能并过滤示例 */
-const HOME_SKILL_TABS: { mode: WorkspaceMode | "all"; label: string; icon: typeof MessageSquare }[] = [
-  { mode: "all", label: "全部", icon: MessageSquare },
-  { mode: "chat", label: "AI 对话", icon: MessageSquare },
-  { mode: "docs", label: "文档", icon: FileText },
-  { mode: "slides", label: "PPT", icon: Presentation },
-  { mode: "image", label: "图片", icon: ImageIcon },
-  { mode: "research", label: "深度研究", icon: Search },
-  { mode: "video", label: "视频", icon: Video },
-];
-
-/** 每个技能的示例卡缩略图：/prompt-thumbs 下的真实 UI 预览小图（对应截图卡片的画面） */
-const THUMB_IMG: Record<WorkspaceMode, string> = {
-  chat: "/prompt-thumbs/thumb-email.jpg",
-  docs: "/prompt-thumbs/thumb-doc.jpg",
-  slides: "/prompt-thumbs/thumb-ppt.jpg",
-  image: "/prompt-thumbs/thumb-img.jpg",
-  research: "/prompt-thumbs/thumb-report.jpg",
-  video: "/prompt-thumbs/thumb-video.jpg",
+/** ── 首页技能体系与模板库 ───────────────────────────────
+ * 顶部技能条收纳：可见 4 项 + 「更多」下拉；每技能展示 12 张模板卡
+ * （每行 3 个，先显示 9 张，箭头展开隐藏 3 张）。真生成技能带 prompt，
+ * 建设中技能（planned）点击提示即将上线。
+ */
+type TemplateCard = { title: string; desc: string; prompt?: string };
+type HomeSkill = {
+  key: string;
+  label: string;
+  icon: typeof MessageSquare;
+  /** 真生成技能对应的工作模式（planned 技能无 mode） */
+  mode?: WorkspaceMode;
+  /** 建设中技能：卡片点击仅提示即将上线 */
+  planned?: boolean;
 };
+
+const HOME_SKILLS: HomeSkill[] = [
+  { key: "all", label: "全部", icon: MessageSquare },
+  { key: "chat", label: "AI对话", icon: MessageSquare, mode: "chat" },
+  { key: "docs", label: "文档", icon: FileText, mode: "docs" },
+  { key: "ppt", label: "PPT", icon: Presentation, mode: "slides" },
+  { key: "prototype", label: "原型", icon: LayoutTemplate, planned: true },
+  { key: "slides", label: "幻灯片", icon: Presentation, mode: "slides" },
+  { key: "image", label: "图片", icon: ImageIcon, mode: "image" },
+  { key: "hyperframes", label: "HyperFrames", icon: Layers, planned: true },
+  { key: "website", label: "网站复刻", icon: Globe, planned: true },
+  { key: "video", label: "视频", icon: Video, mode: "video" },
+  { key: "audio", label: "音频", icon: Music, planned: true },
+  { key: "realtime", label: "实时产物", icon: Zap, planned: true },
+  { key: "webgl", label: "WebGL", icon: Box, planned: true },
+  { key: "research", label: "深度研究", icon: Search, mode: "research" },
+];
+
+/** 顶部可见技能（4 项）；其余进「更多」下拉 */
+const HOME_VISIBLE_KEYS = ["all", "chat", "docs", "ppt"];
+
+/** 各技能图标与缩略图 */
+const SKILL_ICON = Object.fromEntries(HOME_SKILLS.map((x) => [x.key, x.icon])) as Record<string, typeof MessageSquare>;
+const THUMB_IMG: Record<string, string> = {
+  "chat": "/prompt-thumbs/thumb-email.jpg",
+  "docs": "/prompt-thumbs/thumb-doc.jpg",
+  "slides": "/prompt-thumbs/thumb-ppt.jpg",
+  "ppt": "/prompt-thumbs/thumb-ppt.jpg",
+  "image": "/prompt-thumbs/thumb-img.jpg",
+  "research": "/prompt-thumbs/thumb-report.jpg",
+  "video": "/prompt-thumbs/thumb-video.jpg",
+};
+
+/** 每技能的 12 个模板：真生成技能（带 prompt）/ 建设中技能（仅标题） */
+const SKILL_TEMPLATES: Record<string, TemplateCard[]> = {
+  "chat": [
+    { title: "撰写邮件", desc: "起草清晰、有说服力的商务邮件", prompt: "帮我写一封商务合作邮件" },
+    { title: "周报汇总", desc: "把零散进展整理成结构化周报", prompt: "帮我把这周的工作整理成一份周报，突出成果与风险" },
+    { title: "客户回复", desc: "礼貌专业的客户来信回复", prompt: "帮我起草一封给客户的回复，语气专业友好" },
+    { title: "会议纪要", desc: "把讨论要点整理成待办清单", prompt: "根据下面会议记录整理纪要：结论、负责人、时间点" },
+    { title: "文案改写", desc: "让一段话更有感染力", prompt: "帮我改写这段文案，让它更生动有说服力" },
+    { title: "岗位 JD", desc: "清晰有吸引力的职位描述", prompt: "为「AI 产品经理」写一份职位描述" },
+    { title: "请假邮件", desc: "得体的请假申请", prompt: "帮我写一封请假邮件，理由合理、语气得体" },
+    { title: "英文润色", desc: "中英互译与表达优化", prompt: "把这段话翻译成地道的商务英语并润色" },
+    { title: "产品命名", desc: "有记忆点的品牌/产品名", prompt: "给我的智能水杯产品起 10 个中文名并附寓意" },
+    { title: "头脑风暴", desc: "围绕一个主题发散点子", prompt: "就「办公室下午茶福利」做一轮头脑风暴，给出 10 个创意" },
+    { title: "演讲稿", desc: "条理清晰的发言稿", prompt: "帮我写一篇 3 分钟的新人自我介绍演讲稿" },
+    { title: "合同要点", desc: "把合同讲成人话", prompt: "用大白话解释这份合同里我需要重点关注的条款" },
+  ],
+  "docs": [
+    { title: "生成文档", desc: "商业计划书 / 报告一键成稿", prompt: "写一份 SaaS 产品商业计划书" },
+    { title: "公司介绍", desc: "企业简介与亮点提炼", prompt: "写一份 800 字公司介绍，突出技术壁垒" },
+    { title: "PRD 文档", desc: "需求背景到验收标准", prompt: "为新功能「团队周报」写一份 PRD" },
+    { title: "竞品分析", desc: "优劣势与差异化建议", prompt: "对比 Notion 与飞书文档，输出竞品分析" },
+    { title: "SOP 手册", desc: "可执行的标准作业流程", prompt: "写一份「内容审核」标准作业流程 SOP" },
+    { title: "年终总结", desc: "成果量化、规划来年", prompt: "帮我写年终总结：业绩、成长、明年计划" },
+    { title: "营销方案", desc: "目标人群到落地节奏", prompt: "为新品耳机写一份营销推广方案" },
+    { title: "制度手册", desc: "清晰简洁的团队制度", prompt: "制定一份远程办公管理制度手册" },
+    { title: "立项提案", desc: "背景目标与资源预算", prompt: "写一份「数据中台」立项提案" },
+    { title: "FAQ 文档", desc: "常见问题标准化回答", prompt: "整理产品常见问题 FAQ 二十条" },
+    { title: "新闻稿", desc: "正式有新闻感的企业稿", prompt: "写一篇融资成功的企业新闻稿" },
+    { title: "白皮书", desc: "行业洞察型深度长文", prompt: "写一份《2026 企业 AI 应用白皮书》框架" },
+  ],
+  "slides": [
+    { title: "制作 PPT", desc: "输入主题生成整套幻灯片", prompt: "为产品发布会生成一套 10 页 PPT" },
+    { title: "项目汇报", desc: "进度结果问题一步到位", prompt: "为季度项目汇报做一份 8 页 PPT" },
+    { title: "融资路演", desc: "讲清商业模式与空间", prompt: "做一份种子轮融资路演 PPT" },
+    { title: "营销提案", desc: "策略到创意的提案", prompt: "做一份品牌联名营销提案 PPT" },
+    { title: "培训课件", desc: "知识要点清晰拆解", prompt: "做一套新人入职培训课件 PPT" },
+    { title: "周会同步", desc: "快速对齐本周进展", prompt: "做一份 5 页周会同步 PPT" },
+    { title: "竞品对比", desc: "关键维度并排呈现", prompt: "做一份我们与竞品对比的 PPT" },
+    { title: "读书分享", desc: "观点提炼与启发", prompt: "为《纳瓦尔宝典》做读书分享 PPT" },
+    { title: "行业趋势", desc: "数据支撑的趋势分析", prompt: "做一份 AI 行业 2026 趋势分析 PPT" },
+    { title: "数据复盘", desc: "指标变化一目了然", prompt: "做一份上季度数据复盘 PPT" },
+    { title: "方案汇报", desc: "需求理解到实施计划", prompt: "为客户做一份数字化改造方案 PPT" },
+    { title: "年度回顾", desc: "大事记与来年展望", prompt: "做一份团队年度回顾 PPT" },
+  ],
+  "image": [
+    { title: "生成图片", desc: "一句话生成 / 编辑图片", prompt: "一只戴宇航头盔的柯基在月球上，电影感海报" },
+    { title: "产品海报", desc: "促销卖点视觉化", prompt: "为夏日冰饮做一张促销海报，明亮清爽" },
+    { title: "赛博城市", desc: "霓虹与未来的街景", prompt: "赛博朋克风格雨夜城市街景，霓虹灯反射" },
+    { title: "水彩插画", desc: "温柔手绘质感", prompt: "水彩风春日花园插画，柔和光线" },
+    { title: "3D 渲染", desc: "产品质感展示", prompt: "白色耳机 3D 渲染，柔和影棚光" },
+    { title: "角色概念", desc: "原创角色设计", prompt: "蒸汽朋克风格女机械师角色概念图" },
+    { title: "电商 Banner", desc: "促销横幅画面", prompt: "618 大促科技产品 banner，简洁高质感" },
+    { title: "壁纸系列", desc: "手机/桌面壁纸", prompt: "极简渐变山景手机壁纸，莫兰迪色" },
+    { title: "绘本插图", desc: "童趣叙事画面", prompt: "儿童绘本插图：小狐狸第一次露营" },
+    { title: "杂志封面", desc: "版式感封面图", prompt: "高端生活方式杂志封面风格，负空间构图" },
+    { title: "头像定制", desc: "个性化头像", prompt: "宇航员风格的猫咪头像，Q 版" },
+    { title: "家居效果图", desc: "空间氛围预览", prompt: "原木风客厅日间效果图，阳光洒入" },
+  ],
+  "research": [
+    { title: "深度研究", desc: "竞品 / 行业调研报告", prompt: "研究 2025 年 AI 搜索赛道的竞争格局" },
+    { title: "市场容量", desc: "规模增速与机会判断", prompt: "调研中国智能家居市场规模与增长逻辑" },
+    { title: "技术趋势", desc: "前沿方向技术拆解", prompt: "研究多模态大模型的技术趋势与落地瓶颈" },
+    { title: "用户画像", desc: "人群特征与需求洞察", prompt: "为「在线教育」用户做画像研究" },
+    { title: "政策解读", desc: "新规影响与应对", prompt: "解读《生成式 AI 服务管理办法》对创业公司的影响" },
+    { title: "出海机会", desc: "目标市场进入策略", prompt: "研究国产 SaaS 出海东南亚的机会与风险" },
+    { title: "供应链", desc: "链路风险与优化", prompt: "研究消费电子供应链的东南亚转移现状" },
+    { title: "消费者洞察", desc: "行为偏好数据化", prompt: "调研 Z 世代美妆消费偏好" },
+    { title: "SaaS 指标", desc: "北极星指标拆解", prompt: "研究 B2B SaaS 的增长指标体系" },
+    { title: "AI 应用层", desc: "应用机会与格局", prompt: "研究 AI 应用层 2026 年创业机会图谱" },
+    { title: "新能源", desc: "产业格局深度研究", prompt: "研究固态电池产业化时间线" },
+    { title: "物流科技", desc: "降本增效新技术", prompt: "研究仓储机器人的技术路线与落地成本" },
+  ],
+  "video": [
+    { title: "视频脚本", desc: "带货 / 分镜 / 口播脚本", prompt: "为新款降噪耳机写一条 15 秒带货短视频脚本" },
+    { title: "产品宣传", desc: "品牌感产品影片", prompt: "为智能手表写 60 秒产品宣传片脚本" },
+    { title: "口播干货", desc: "知识类口播稿", prompt: "写一期 3 分钟「普通人如何学 AI」口播稿" },
+    { title: "Vlog 脚本", desc: "生活感叙事线", prompt: "写一条周末城市漫步 Vlog 脚本" },
+    { title: "教程分镜", desc: "步骤清晰教学视频", prompt: "为「用 AI 做 PPT」写教程视频分镜" },
+    { title: "品牌故事", desc: "创始人叙事", prompt: "为咖啡品牌写一支 90 秒品牌故事片" },
+    { title: "活动回顾", desc: "高光集锦旁白", prompt: "写活动回顾视频旁白：开场、节奏、收尾" },
+    { title: "开箱测评", desc: "真实体验向脚本", prompt: "写数码产品开箱测评脚本，突出真实体验" },
+    { title: "城市宣传", desc: "文旅气质影像", prompt: "写一条 3 分钟城市文旅宣传片创意脚本" },
+    { title: "科普动画", desc: "知识可视化", prompt: "把「什么是大模型」做成 2 分钟科普动画脚本" },
+    { title: "采访提纲", desc: "有深度的提问线", prompt: "设计一期创始人访谈的采访提纲与分镜" },
+    { title: "音乐短片", desc: "情绪叙事 MV", prompt: "为轻音乐写一支情绪向 MV 概念脚本" },
+  ],
+  "prototype": [
+    { title: "高保真原型", desc: "", prompt: undefined },
+    { title: "可点击线框", desc: "", prompt: undefined },
+    { title: "移动端原型", desc: "", prompt: undefined },
+    { title: "登录注册流程", desc: "", prompt: undefined },
+    { title: "仪表盘界面", desc: "", prompt: undefined },
+    { title: "电商商品页", desc: "", prompt: undefined },
+    { title: "多步表单流程", desc: "", prompt: undefined },
+    { title: "桌面端工具", desc: "", prompt: undefined },
+    { title: "个人中心", desc: "", prompt: undefined },
+    { title: "支付流程", desc: "", prompt: undefined },
+    { title: "设置页", desc: "", prompt: undefined },
+    { title: "空状态页面", desc: "", prompt: undefined },
+  ],
+  "hyperframes": [
+    { title: "灵感浏览", desc: "", prompt: undefined },
+    { title: "社区热门", desc: "", prompt: undefined },
+    { title: "作品趋势", desc: "", prompt: undefined },
+    { title: "设计师榜", desc: "", prompt: undefined },
+    { title: "每日精选", desc: "", prompt: undefined },
+    { title: "风格实验室", desc: "", prompt: undefined },
+    { title: "案例拆解", desc: "", prompt: undefined },
+    { title: "模板商店", desc: "", prompt: undefined },
+    { title: "教程系列", desc: "", prompt: undefined },
+    { title: "开源项目", desc: "", prompt: undefined },
+    { title: "收藏夹", desc: "", prompt: undefined },
+    { title: "新锐作者", desc: "", prompt: undefined },
+  ],
+  "website": [
+    { title: "落地页复刻", desc: "", prompt: undefined },
+    { title: "企业官网", desc: "", prompt: undefined },
+    { title: "个人作品集", desc: "", prompt: undefined },
+    { title: "博客站点", desc: "", prompt: undefined },
+    { title: "电商首页", desc: "", prompt: undefined },
+    { title: "文档中心", desc: "", prompt: undefined },
+    { title: "SaaS 官网", desc: "", prompt: undefined },
+    { title: "活动专题页", desc: "", prompt: undefined },
+    { title: "着陆页", desc: "", prompt: undefined },
+    { title: "暗色风格站", desc: "", prompt: undefined },
+    { title: "多语言站点", desc: "", prompt: undefined },
+    { title: "信息架构梳理", desc: "", prompt: undefined },
+  ],
+  "audio": [
+    { title: "语音配音", desc: "", prompt: undefined },
+    { title: "背景音乐", desc: "", prompt: undefined },
+    { title: "音效设计", desc: "", prompt: undefined },
+    { title: "播客片头", desc: "", prompt: undefined },
+    { title: "AI 歌曲", desc: "", prompt: undefined },
+    { title: "环境白噪音", desc: "", prompt: undefined },
+    { title: "有声书旁白", desc: "", prompt: undefined },
+    { title: "音乐混音", desc: "", prompt: undefined },
+    { title: "乐器分轨", desc: "", prompt: undefined },
+    { title: "语音提示音", desc: "", prompt: undefined },
+    { title: "广播广告", desc: "", prompt: undefined },
+    { title: "冥想引导", desc: "", prompt: undefined },
+  ],
+  "realtime": [
+    { title: "实时协作白板", desc: "", prompt: undefined },
+    { title: "实时数据大屏", desc: "", prompt: undefined },
+    { title: "在线演示", desc: "", prompt: undefined },
+    { title: "协同标注", desc: "", prompt: undefined },
+    { title: "多人会议画布", desc: "", prompt: undefined },
+    { title: "实时投票", desc: "", prompt: undefined },
+    { title: "直播提词", desc: "", prompt: undefined },
+    { title: "实时字幕", desc: "", prompt: undefined },
+    { title: "远程遥控演示", desc: "", prompt: undefined },
+    { title: "协作流程图", desc: "", prompt: undefined },
+    { title: "实时批注", desc: "", prompt: undefined },
+    { title: "在线头脑风暴", desc: "", prompt: undefined },
+  ],
+  "webgl": [
+    { title: "WebGL 场景", desc: "", prompt: undefined },
+    { title: "3D 产品展示", desc: "", prompt: undefined },
+    { title: "数据可视化", desc: "", prompt: undefined },
+    { title: "互动首页", desc: "", prompt: undefined },
+    { title: "粒子效果", desc: "", prompt: undefined },
+    { title: "3D 展厅", desc: "", prompt: undefined },
+    { title: "Shader 艺术", desc: "", prompt: undefined },
+    { title: "3D 图标", desc: "", prompt: undefined },
+    { title: "产品配置器", desc: "", prompt: undefined },
+    { title: "城市漫游", desc: "", prompt: undefined },
+    { title: "物理沙盒", desc: "", prompt: undefined },
+    { title: "全景看房", desc: "", prompt: undefined },
+  ],
+};
+
+/** 「全部」：六个真生成技能各取 2 条共 12 张，交错排列让首屏先见每个技能代表作。
+ *  每卡带所属技能 key，「全部」视图下点击也能正确按该技能生成。 */
+const ALL_CURATED: { skill: string; card: TemplateCard }[] = [
+  { skill: "chat", card: SKILL_TEMPLATES["chat"][0] },
+  { skill: "docs", card: SKILL_TEMPLATES["docs"][0] },
+  { skill: "slides", card: SKILL_TEMPLATES["slides"][0] },
+  { skill: "image", card: SKILL_TEMPLATES["image"][0] },
+  { skill: "research", card: SKILL_TEMPLATES["research"][0] },
+  { skill: "video", card: SKILL_TEMPLATES["video"][0] },
+  { skill: "chat", card: SKILL_TEMPLATES["chat"][1] },
+  { skill: "docs", card: SKILL_TEMPLATES["docs"][1] },
+  { skill: "slides", card: SKILL_TEMPLATES["slides"][1] },
+  { skill: "image", card: SKILL_TEMPLATES["image"][1] },
+  { skill: "research", card: SKILL_TEMPLATES["research"][1] },
+  { skill: "video", card: SKILL_TEMPLATES["video"][1] },
+];
 
 /** 技能选择（输入框内下拉）：六个创作能力 —— 与竖栏 PRIMARY_MODES 一致 */
 const SKILLS: { mode: WorkspaceMode; icon: typeof MessageSquare }[] = [
@@ -824,8 +1032,12 @@ export function ChatPanel() {
   const recallIdx = useRef(-1);
   // UX10: 召回态（继续按 ↑ 可再往前翻）；用户手动编辑即退出
   const [recallActive, setRecallActive] = useState(false);
-  // 空态「技能条」当前选中：all=全部，或具体技能（同步过滤示例卡）
-  const [homeFilter, setHomeFilter] = useState<WorkspaceMode | "all">("all");
+  // 空态技能条：当前选中技能 key（all=全部 / 具体技能）
+  const [homeFilter, setHomeFilter] = useState("all");
+  // 「更多」下拉开关
+  const [moreOpen, setMoreOpen] = useState(false);
+  // 模板卡展开（每技能 12 张：先显 9，展开到 12）
+  const [tplExpanded, setTplExpanded] = useState(false);
 
   const slashMatches = matchSlash(input);
   useEffect(() => setSlashIdx(0), [input]);
@@ -896,9 +1108,20 @@ export function ChatPanel() {
 
   const messages = convo?.messages ?? [];
   const mode: WorkspaceMode = convo?.mode ?? "chat";
-  // 空态示例卡：按技能条过滤（全部 或 单技能）
-  const visibleCards =
-    homeFilter === "all" ? HOME_CARDS : HOME_CARDS.filter((c) => c.mode === homeFilter);
+  // 空态技能条收纳：顶部可见 4 项，其余在「更多」下拉
+  const homeVisible = HOME_SKILLS.filter((sk) => HOME_VISIBLE_KEYS.includes(sk.key));
+  const homeMore = HOME_SKILLS.filter((sk) => !HOME_VISIBLE_KEYS.includes(sk.key));
+  const activeSkill = HOME_SKILLS.find((sk) => sk.key === homeFilter) ?? HOME_SKILLS[0];
+  // 当前模板卡视图：全部=精选 12（各带源技能）；具体技能=该技能 12 张（PPT 与幻灯片共用一套）。
+  // 统一成 { skill, card } 视图模型，点击时按卡所属技能生成，不受「全部」聚合影响。
+  const templateKey = homeFilter === "ppt" ? "slides" : homeFilter;
+  const templateSkill = homeFilter === "ppt" ? "ppt" : templateKey;
+  const templates: { skill: string; card: TemplateCard }[] =
+    homeFilter === "all"
+      ? ALL_CURATED
+      : (SKILL_TEMPLATES[templateKey] ?? []).map((card) => ({ skill: templateSkill, card }));
+  const shownTemplates = tplExpanded ? templates : templates.slice(0, 9);
+  const hasMoreTemplates = templates.length > 9;
   // d5：PPT 生成中（对话内顶部阶段条）
   const deckLoading = mode === "slides" && convo?.deckStatus === "loading";
   // 助手身份行小标签：当前模型名（Codex 每条消息头部同款）
@@ -995,17 +1218,21 @@ export function ChatPanel() {
   };
 
   /** 输入变更统一入口：手动编辑即退出 UX10 召回态（召回态下 ↑ 可继续前翻） */
-  // 空态示例卡：点击直接按卡片技能+提示词开始生成（对应截图「点卡即出」）
-  const runStarter = (q: (typeof HOME_CARDS)[number]) => {
+  // 空态模板卡：点击直接按技能+提示词开始生成（对应截图「点卡即出」）；
+  // planned（建设中）技能仅提示，不假装能生成
+  const runStarter = (skill: HomeSkill, q: TemplateCard) => {
     if (sending) return;
+    if (skill.planned || !skill.mode || !q.prompt) {
+      toast(`「${skill.label}」正在建设中，先用 AI 对话 / 文档 / PPT / 图片 / 视频试试`, "info");
+      return;
+    }
     const text = q.prompt;
-    if (q.mode !== mode) useChatStore.getState().setMode(q.mode);
+    if (skill.mode !== mode) useChatStore.getState().setMode(skill.mode);
     setInput("");
-    // 与手输发送同规则入栈，↑ 可召回
     if (sentStack.current[sentStack.current.length - 1] !== text) sentStack.current.push(text);
     if (sentStack.current.length > 20) sentStack.current.shift();
     recallIdx.current = -1;
-    if (q.mode === "image") {
+    if (skill.mode === "image") {
       void useChatStore.getState().generateImage(text, {
         size: imgSize,
         model: imgModel,
@@ -1018,6 +1245,13 @@ export function ChatPanel() {
       return;
     }
     void useChatStore.getState().send(text);
+  };
+
+  /** 切换技能：重置模板展开态并收起更多下拉 */
+  const pickSkill = (key: string) => {
+    setHomeFilter(key);
+    setTplExpanded(false);
+    setMoreOpen(false);
   };
 
   const changeInput = (v: string | ((prev: string) => string)) => {
@@ -1125,37 +1359,96 @@ export function ChatPanel() {
               <div aria-hidden className="pointer-events-none absolute -top-6 left-1/2 h-64 w-[560px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(139,92,246,0.13),transparent_70%)] blur-2xl" />
               <div aria-hidden className="pointer-events-none absolute right-2 top-24 hidden h-44 w-72 rounded-full bg-[radial-gradient(closest-side,rgba(251,146,60,0.09),transparent_70%)] blur-2xl md:block" />
               <div className="relative">
-                {/* 顶部技能条：对应截图的能力 chips；点选即切技能并过滤下方示例 */}
-                <div
-                  role="tablist"
-                  aria-label="按技能浏览示例"
-                  className="mx-auto flex w-fit max-w-full flex-wrap items-center justify-center gap-1 rounded-full border border-stone-200/80 bg-white/70 p-1 shadow-[0_1px_6px_rgba(0,0,0,0.04)] backdrop-blur"
-                >
-                  {HOME_SKILL_TABS.map((t) => {
-                    const active = homeFilter === t.mode;
-                    const TabIcon = t.icon;
+                {/* 顶部技能条：可见 4 项 + 「更多」下拉（其余技能收纳） */}
+                <div className="relative inline-flex max-w-full flex-wrap items-center justify-center gap-1">
+                  {homeVisible.map((sk) => {
+                    const active = homeFilter === sk.key;
+                    const Icon = sk.icon;
                     return (
                       <button
-                        key={t.mode}
+                        key={sk.key}
                         role="tab"
                         aria-selected={active}
-                        onClick={() => {
-                          // 仅过滤示例；不改会话技能，避免“看看示例”把输入框带进
-                          // PPT/图片等模式（卡片点击发送时才由 runStarter 切技能）
-                          setHomeFilter(t.mode);
-                        }}
+                        onClick={() => pickSkill(sk.key)}
+                        title={sk.planned ? `${sk.label}（建设中）` : sk.label}
                         className={cn(
-                          "flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition",
+                          "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition",
                           active
-                            ? "bg-violet-600 text-white shadow-sm shadow-violet-200"
-                            : "text-stone-600 hover:bg-stone-100 hover:text-stone-900"
+                            ? "border-violet-600 bg-violet-600 text-white shadow-sm shadow-violet-200"
+                            : "border-stone-200/80 bg-white/80 text-stone-600 hover:bg-stone-50 hover:text-stone-900"
                         )}
                       >
-                        {t.mode !== "all" && <TabIcon className="h-3.5 w-3.5" />}
-                        {t.label}
+                        <Icon className="h-3.5 w-3.5" />
+                        {sk.label}
+                        {sk.planned && (
+                          <span className="rounded-full bg-stone-200/80 px-1 text-[9px] leading-4 text-stone-500">soon</span>
+                        )}
                       </button>
                     );
                   })}
+
+                  {/* 更多：当前选中的是隐藏技能时，按钮显示该技能名 */}
+                  <div className="relative">
+                    <button
+                      role="tab"
+                      aria-selected={homeMore.some((sk) => sk.key === homeFilter)}
+                      aria-haspopup="listbox"
+                      aria-expanded={moreOpen}
+                      onClick={() => {
+                        setMoreOpen((v) => !v);
+                        setTplExpanded(false);
+                      }}
+                      title="更多技能"
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition",
+                        homeMore.some((sk) => sk.key === homeFilter)
+                          ? "border-violet-600 bg-violet-600 text-white shadow-sm shadow-violet-200"
+                          : "border-stone-200/80 bg-white/80 text-stone-600 hover:bg-stone-50 hover:text-stone-900"
+                      )}
+                    >
+                      {(() => {
+                        const sel = homeMore.find((sk) => sk.key === homeFilter);
+                        const Icon = (sel ?? homeMore[0]).icon;
+                        return <Icon className="h-3.5 w-3.5" />;
+                      })()}
+                      {homeMore.find((sk) => sk.key === homeFilter)?.label ?? "更多"}
+                      {moreOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    </button>
+                    {moreOpen && (
+                      <div
+                        role="listbox"
+                        aria-label="更多技能"
+                        className="absolute left-1/2 top-full z-40 mt-2 w-64 -translate-x-1/2 overflow-hidden rounded-2xl border border-stone-200 bg-white p-1.5 shadow-xl"
+                      >
+                        <div className="grid grid-cols-2 gap-0.5">
+                          {homeMore.map((sk) => {
+                            const Icon = sk.icon;
+                            const sel = homeFilter === sk.key;
+                            return (
+                              <button
+                                key={sk.key}
+                                role="option"
+                                aria-selected={sel}
+                                onClick={() => pickSkill(sk.key)}
+                                className={cn(
+                                  "flex items-center gap-2 rounded-xl px-2.5 py-2 text-left text-[13px] transition",
+                                  sel
+                                    ? "bg-violet-50 font-medium text-violet-700"
+                                    : "text-stone-600 hover:bg-stone-100"
+                                )}
+                              >
+                                <Icon className="h-4 w-4 shrink-0" />
+                                <span className="min-w-0 flex-1 truncate">{sk.label}</span>
+                                {sk.planned && (
+                                  <span className="rounded bg-stone-100 px-1 text-[9px] text-stone-400">soon</span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
               {/* E5 分体式输入舱 */}
@@ -1202,39 +1495,79 @@ export function ChatPanel() {
                   conversing={messages.length > 0}
                 />
               </div>
-              <p className="mt-2 text-xs text-stone-400">回车发送 · Shift+回车换行 · 点上方「技能」可切换 文档 / PPT / 图片</p>
+              <p className="mt-2 text-xs text-stone-400">回车发送 · Shift+回车换行 · 上方技能条选择文档 / PPT / 图片 / 更多</p>
 
-              {/* 示例提示词：截图风格的灵感卡（迷你缩略图 + 标题 + 描述），点卡直接生成 */}
+              {/* 示例模板：每个技能 12 张（每行 3 个，先显 9，箭头展开隐藏 3） */}
                 <div className="mt-5 flex items-baseline justify-between px-1 text-left">
-                  <h2 className="text-sm font-semibold tracking-wide text-stone-500">示例提示词</h2>
-                  <span className="text-xs text-stone-400">点击卡片直接生成 · 也可以在上方输入框描述你的需求</span>
+                  <h2 className="text-sm font-semibold tracking-wide text-stone-500">
+                    {activeSkill.key === "all" ? "示例提示词" : `${activeSkill.label} · 示例模板`}
+                  </h2>
+                  <span className="text-xs text-stone-400">
+                    {activeSkill.planned
+                      ? "该能力正在建设中 · 其它技能点击卡片即可直接生成"
+                      : `共 ${templates.length} 个 · 点击卡片直接生成`}
+                  </span>
                 </div>
-                <div className="mt-2.5 grid grid-cols-2 gap-2.5 text-left lg:grid-cols-3">
-                  {visibleCards.map((q) => {
+                <div className="mt-2.5 grid grid-cols-2 gap-2.5 text-left sm:grid-cols-3">
+                  {shownTemplates.map((item) => {
+                    const curSkill = HOME_SKILLS.find((x) => x.key === item.skill) ?? activeSkill;
+                    const q = item.card;
+                    const planned = curSkill.planned;
                     return (
                       <button
-                        key={q.title}
+                        key={item.skill + ":" + q.title}
                         aria-label={q.title}
-                        onClick={() => runStarter(q)}
+                        onClick={() => runStarter(curSkill, q)}
                         className="group overflow-hidden rounded-2xl border border-stone-200/90 bg-white p-1.5 text-left transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_12px_30px_-16px_rgba(76,29,149,0.4)]"
                       >
-                        <span className="relative block h-16 w-full overflow-hidden rounded-lg bg-stone-100 sm:h-20 lg:h-[4.5rem]">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={THUMB_IMG[q.mode]}
-                            alt=""
-                            loading="lazy"
-                            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
-                          />
-                        </span>
+                        {planned ? (
+                          <span className="relative flex h-16 w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-stone-100 to-stone-200 sm:h-20 lg:h-[4.5rem]">
+                            {(() => {
+                              const Icon = curSkill.icon;
+                              return <Icon className="h-6 w-6 text-stone-400" />;
+                            })()}
+                            <span className="absolute right-1.5 top-1.5 rounded-full bg-stone-200/90 px-1.5 py-0.5 text-[9px] font-medium text-stone-500">
+                              建设中
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="relative block h-16 w-full overflow-hidden rounded-lg bg-stone-100 sm:h-20 lg:h-[4.5rem]">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={THUMB_IMG[curSkill.mode ?? "chat"]}
+                              alt=""
+                              loading="lazy"
+                              className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
+                            />
+                          </span>
+                        )}
                         <span className="block px-1 pt-2">
                           <span className="block truncate text-[13px] font-semibold text-stone-800">{q.title}</span>
-                          <span className="mt-0.5 block truncate text-xs text-stone-500">{q.desc}</span>
+                          {q.desc && <span className="mt-0.5 block truncate text-xs text-stone-500">{q.desc}</span>}
                         </span>
                       </button>
                     );
                   })}
                 </div>
+                {hasMoreTemplates && (
+                  <div className="mt-3 flex justify-center">
+                    <button
+                      onClick={() => setTplExpanded((v) => !v)}
+                      aria-expanded={tplExpanded}
+                      className="flex items-center gap-1 rounded-full border border-stone-200 bg-white px-3.5 py-1.5 text-xs font-medium text-stone-500 transition hover:border-stone-300 hover:text-violet-600"
+                    >
+                      {tplExpanded ? (
+                        <>
+                          <ChevronUp className="h-3.5 w-3.5" /> 收起
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="h-3.5 w-3.5" /> 还有 {templates.length - 9} 个，展开看看
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
 
 
               </div>

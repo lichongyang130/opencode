@@ -87,12 +87,30 @@ afterEach(() => {
 /* ─────────────── 空态引导 ─────────────── */
 
 describe("ChatPanel 空态", () => {
-  it("空态渲染技能条与示例提示词引导", () => {
+  it("空态技能条收纳：顶部 4 个可见 tab + 更多按钮", () => {
     seed();
     render(<ChatPanel />);
-    expect(screen.getByRole("tablist", { name: /按技能浏览示例/ })).toBeDefined();
+    for (const name of ["全部", "AI对话", "文档", "PPT"]) {
+      expect(screen.getByRole("tab", { name: new RegExp(name) })).toBeDefined();
+    }
+    expect(screen.getByTitle("更多技能")).toBeDefined();
     expect(screen.getByText("示例提示词")).toBeDefined();
     expect(screen.getByText(/点击卡片直接生成/)).toBeDefined();
+  });
+
+  it("更多下拉展开后包含收纳的技能，选中即切换模板", () => {
+    seed();
+    render(<ChatPanel />);
+    fireEvent.click(screen.getByTitle("更多技能"));
+    expect(screen.getByRole("option", { name: /图片/ })).toBeDefined();
+    expect(screen.getByRole("option", { name: /深度研究/ })).toBeDefined();
+    expect(screen.getByRole("option", { name: /视频/ })).toBeDefined();
+    // 选中建设中技能：卡片标题出现、带「建设中」角标、无真实缩略图
+    fireEvent.click(screen.getByRole("option", { name: /音频/ }));
+    expect(screen.getByText("音频 · 示例模板")).toBeDefined();
+    expect(screen.getAllByText("建设中").length).toBeGreaterThan(0);
+    // 顶部更多入口显示当前选中技能名
+    expect(screen.getByRole("tab", { name: /音频/ })).toBeDefined();
   });
 
   it("给出回车/换行的操作提示", () => {
@@ -146,20 +164,29 @@ describe("ChatPanel 空态", () => {
     }
   });
 
-  it("首页渲染全部 6 张示例卡（含研究/视频）", () => {
+  it("「全部」默认显示前 9 张（六技能代表作可见），箭头展开后共 12 张", () => {
     seed();
     render(<ChatPanel />);
     for (const name of ["撰写邮件", "生成文档", "制作 PPT", "生成图片", "深度研究", "视频脚本"]) {
       expect(screen.getByRole("button", { name })).toBeDefined();
     }
+    // 隐藏的最后 3 张（image/research/video 的第 2 条）
+    expect(screen.queryByRole("button", { name: "产品海报" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /还有 3 个，展开看看/ }));
+    expect(screen.getByRole("button", { name: "产品海报" })).toBeDefined();
+    expect(screen.getByRole("button", { name: /收起/ })).toBeDefined();
   });
 
-  it("技能条选中文档时只显示对应示例卡", () => {
+  it("选中技能后下方展示该技能 12 个模板（每行 3 个）", () => {
     seed();
     render(<ChatPanel />);
     fireEvent.click(screen.getByRole("tab", { name: "文档" }));
+    expect(screen.getByText("文档 · 示例模板")).toBeDefined();
     expect(screen.getByRole("button", { name: "生成文档" })).toBeDefined();
     expect(screen.queryByRole("button", { name: "制作 PPT" })).toBeNull();
+    // 共 12 个模板：先显示 9 个，展开后到 12
+    fireEvent.click(screen.getByRole("button", { name: /还有 3 个，展开看看/ }));
+    expect(screen.getByRole("button", { name: "新闻稿" })).toBeDefined();
   });
 
   it("空消息态不渲染角色选择器", () => {
