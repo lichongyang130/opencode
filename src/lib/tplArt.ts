@@ -18,13 +18,17 @@ export const TPL_ART: Record<string, Record<string, string>> = {
     项目汇报: "/canvas-art/ppt-2.jpg",
     融资路演: "/canvas-art/ppt-3.jpg",
     培训课件: "/canvas-art/ppt-4.jpg",
+    数据复盘: "/canvas-art/slides-1.jpg",
+    方案汇报: "/canvas-art/slides-1.jpg",
+    行业趋势: "/canvas-art/slides-3.jpg",
+    年度回顾: "/canvas-art/slides-4.jpg",
   },
   // 原型：真实线框/界面图
   prototype: {
     登录注册流程: "/canvas-art/prototype-1.jpg",
     电商商品页: "/canvas-art/prototype-2.jpg",
   },
-  // 图片：仓库真实 AI 生成成品（public/cases，语义匹配卡标题）
+  // 图片：真实 AI 成品（public/cases + canvas-art，语义匹配卡标题）
   image: {
     生成图片: "/cases/d-corgi-2.jpg",
     产品海报: "/cases/m-brand-poster-2.jpg",
@@ -33,5 +37,7 @@ export const TPL_ART: Record<string, Record<string, string>> = {
     水彩插画: "/cases/d-watercolor-2.jpg",
     杂志封面: "/cases/d-cover-2.jpg",
     头像定制: "/cases/d-avatar-2.jpg",
+    赛博城市: "/canvas-art/image-3.jpg",
+    家居效果图: "/canvas-art/image-4.jpg",
   },
 };
