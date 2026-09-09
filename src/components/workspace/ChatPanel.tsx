@@ -81,14 +81,14 @@ const HOME_SKILL_TABS: { mode: WorkspaceMode | "all"; label: string; icon: typeo
   { mode: "video", label: "视频", icon: Video },
 ];
 
-/** 每个技能的示例卡缩略图渐变（无图片素材，用纯 CSS 迷你画布模拟截图里的预览缩略图） */
-const THUMB_STYLE: Record<WorkspaceMode, { bg: string }> = {
-  chat: { bg: "from-sky-400 to-blue-600" },
-  docs: { bg: "from-amber-400 to-orange-500" },
-  slides: { bg: "from-violet-500 to-purple-600" },
-  image: { bg: "from-fuchsia-500 to-pink-600" },
-  research: { bg: "from-emerald-400 to-teal-600" },
-  video: { bg: "from-rose-500 to-red-600" },
+/** 每个技能的示例卡缩略图：/prompt-thumbs 下的真实 UI 预览小图（对应截图卡片的画面） */
+const THUMB_IMG: Record<WorkspaceMode, string> = {
+  chat: "/prompt-thumbs/thumb-email.jpg",
+  docs: "/prompt-thumbs/thumb-doc.jpg",
+  slides: "/prompt-thumbs/thumb-ppt.jpg",
+  image: "/prompt-thumbs/thumb-img.jpg",
+  research: "/prompt-thumbs/thumb-report.jpg",
+  video: "/prompt-thumbs/thumb-video.jpg",
 };
 
 /** 技能选择（输入框内下拉）：六个创作能力 —— 与竖栏 PRIMARY_MODES 一致 */
@@ -1162,8 +1162,6 @@ export function ChatPanel() {
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-3 text-left lg:grid-cols-3">
                   {visibleCards.map((q) => {
-                    const Icon = q.icon;
-                    const g = THUMB_STYLE[q.mode];
                     return (
                       <button
                         key={q.title}
@@ -1171,11 +1169,14 @@ export function ChatPanel() {
                         onClick={() => runStarter(q)}
                         className="group overflow-hidden rounded-2xl border border-stone-200/90 bg-white p-2 text-left transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_12px_30px_-16px_rgba(76,29,149,0.4)]"
                       >
-                        <span className={cn("relative block h-24 overflow-hidden rounded-xl bg-gradient-to-br lg:h-20", g.bg)}>
-                          <Icon className="absolute -bottom-2 -right-2 h-14 w-14 text-white/25 transition group-hover:scale-105" />
-                          <span aria-hidden className="absolute left-2 top-2 h-2 w-6 rounded-full bg-white/45" />
-                          <span aria-hidden className="absolute left-2 top-6 h-1.5 w-16 rounded-full bg-white/25" />
-                          <span aria-hidden className="absolute bottom-2 left-2 h-1.5 w-12 rounded-full bg-white/20" />
+                        <span className="relative block aspect-[16/10] w-full overflow-hidden rounded-xl bg-stone-100">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={THUMB_IMG[q.mode]}
+                            alt=""
+                            loading="lazy"
+                            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
+                          />
                         </span>
                         <span className="block px-1 pt-2">
                           <span className="block truncate text-[13px] font-semibold text-stone-800">{q.title}</span>
