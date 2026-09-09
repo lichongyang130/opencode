@@ -459,6 +459,13 @@ export function ArtifactPanel({
   // 对照＝当前适中宽度与对话并排。切换只作用于本组件 UI，不持久化。
   const [immersive, setImmersive] = useState(() => mode === "docs" || mode === "research");
   const wideCanvas = immersive;
+  // 切到另一会话时按该会话的产物类型重置默认宽度（docs/research 默认沉浸宽），
+  // 避免上一会话手动/默认的沉浸态残留到当前会话
+  useEffect(() => {
+    setImmersive(mode === "docs" || mode === "research");
+    // 仅会话（activeId/mode）变化时重置；同会话内用户手动切换不受影响
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId]);
 
   // F42: 只有「真产物」模式（PPT/文档/图/报告/分镜）才自动弹出；
   // 纯聊天不再每次抢屏（手动点开仍可看最近回复的文档化视图）

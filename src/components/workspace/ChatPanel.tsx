@@ -1118,7 +1118,9 @@ export function ChatPanel() {
           {/* d5：PPT 生成时，阶段条显示在对话流顶部 */}
           {deckLoading && <SlidesProgressStrip message={convo?.deckMessage ?? ""} />}
           {messages.length === 0 ? (
-            <div className="relative px-2 pb-4 pt-6 text-center">
+            <div className="relative px-2 pb-4 pt-4 text-center">
+              {/* 页面主标题（sr-only：视觉上已由技能条+示例区承担引导，标题供读屏/结构用） */}
+              <h1 className="sr-only">AI 对话</h1>
               {/* n5 氛围的浅色版：柔紫主光晕 + 一点琥珀偏光；背景仍是现有白底 */}
               <div aria-hidden className="pointer-events-none absolute -top-6 left-1/2 h-64 w-[560px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(139,92,246,0.13),transparent_70%)] blur-2xl" />
               <div aria-hidden className="pointer-events-none absolute right-2 top-24 hidden h-44 w-72 rounded-full bg-[radial-gradient(closest-side,rgba(251,146,60,0.09),transparent_70%)] blur-2xl md:block" />
@@ -1138,8 +1140,9 @@ export function ChatPanel() {
                         role="tab"
                         aria-selected={active}
                         onClick={() => {
+                          // 仅过滤示例；不改会话技能，避免“看看示例”把输入框带进
+                          // PPT/图片等模式（卡片点击发送时才由 runStarter 切技能）
                           setHomeFilter(t.mode);
-                          if (t.mode !== "all") useChatStore.getState().setMode(t.mode);
                         }}
                         className={cn(
                           "flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition",
@@ -1156,20 +1159,20 @@ export function ChatPanel() {
                 </div>
 
                 {/* 示例提示词：截图风格的灵感卡（迷你缩略图 + 标题 + 描述），点卡直接生成 */}
-                <div className="mt-7 flex items-baseline justify-between px-1 text-left">
+                <div className="mt-5 flex items-baseline justify-between px-1 text-left">
                   <h2 className="text-sm font-semibold tracking-wide text-stone-500">示例提示词</h2>
                   <span className="text-xs text-stone-400">点击卡片直接生成 · 也可以在下方向 AI 描述你的需求</span>
                 </div>
-                <div className="mt-3 grid grid-cols-2 gap-3 text-left lg:grid-cols-3">
+                <div className="mt-2.5 grid grid-cols-2 gap-2.5 text-left lg:grid-cols-3">
                   {visibleCards.map((q) => {
                     return (
                       <button
                         key={q.title}
                         aria-label={q.title}
                         onClick={() => runStarter(q)}
-                        className="group overflow-hidden rounded-2xl border border-stone-200/90 bg-white p-2 text-left transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_12px_30px_-16px_rgba(76,29,149,0.4)]"
+                        className="group overflow-hidden rounded-2xl border border-stone-200/90 bg-white p-1.5 text-left transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_12px_30px_-16px_rgba(76,29,149,0.4)]"
                       >
-                        <span className="relative block aspect-[16/10] w-full overflow-hidden rounded-xl bg-stone-100">
+                        <span className="relative block h-16 w-full overflow-hidden rounded-lg bg-stone-100 sm:h-20 lg:h-[4.5rem]">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={THUMB_IMG[q.mode]}
@@ -1188,7 +1191,7 @@ export function ChatPanel() {
                 </div>
 
                 {/* E5 分体式输入舱 */}
-                <div className="mx-auto mt-6 max-w-3xl">
+                <div className="mx-auto mt-5 max-w-3xl">
                 <SplitComposer
                   input={input}
                   setInput={changeInput as typeof setInput}
