@@ -89,7 +89,6 @@ type HomeSkill = {
 };
 
 const HOME_SKILLS: HomeSkill[] = [
-  { key: "all", label: "全部", icon: MessageSquare },
   { key: "docs", label: "文档", icon: FileText, mode: "docs" },
   { key: "ppt", label: "PPT", icon: Presentation, mode: "slides" },
   { key: "prototype", label: "原型", icon: LayoutTemplate, planned: true },
@@ -104,8 +103,8 @@ const HOME_SKILLS: HomeSkill[] = [
   { key: "research", label: "深度研究", icon: Search, mode: "research" },
 ];
 
-/** 顶部可见技能；其余进「更多」下拉（AI对话即本页默认态，不作为技能展示） */
-const HOME_VISIBLE_KEYS = ["all", "docs", "ppt"];
+/** 顶部可见技能；其余进「更多」下拉 */
+const HOME_VISIBLE_KEYS = ["docs", "ppt", "image", "slides", "website"];
 
 /** 各技能图标与缩略图 */
 const SKILL_ICON = Object.fromEntries(HOME_SKILLS.map((x) => [x.key, x.icon])) as Record<string, typeof MessageSquare>;
@@ -290,23 +289,6 @@ const SKILL_TEMPLATES: Record<string, TemplateCard[]> = {
     { title: "全景看房", desc: "", prompt: undefined },
   ],
 };
-
-/** 「全部」：文档/PPT/图片/研究/视频 五类各 2 条 + 各补 1 条共 12 张，
- *  首屏先见每个技能代表作；每卡带所属技能 key，点卡按该技能填充提示词。 */
-const ALL_CURATED: { skill: string; card: TemplateCard }[] = [
-  { skill: "docs", card: SKILL_TEMPLATES["docs"][0] },
-  { skill: "ppt", card: SKILL_TEMPLATES["slides"][0] },
-  { skill: "image", card: SKILL_TEMPLATES["image"][0] },
-  { skill: "research", card: SKILL_TEMPLATES["research"][0] },
-  { skill: "video", card: SKILL_TEMPLATES["video"][0] },
-  { skill: "docs", card: SKILL_TEMPLATES["docs"][1] },
-  { skill: "ppt", card: SKILL_TEMPLATES["slides"][1] },
-  { skill: "image", card: SKILL_TEMPLATES["image"][1] },
-  { skill: "research", card: SKILL_TEMPLATES["research"][1] },
-  { skill: "video", card: SKILL_TEMPLATES["video"][1] },
-  { skill: "docs", card: SKILL_TEMPLATES["docs"][2] },
-  { skill: "ppt", card: SKILL_TEMPLATES["slides"][2] },
-];
 
 /** 输入框「+」添加菜单：按参考截图（234.png）整理的入口列表。
  *  这些能力在演示版中多为占位，点击提示即将支持；后续逐个接入真功能。 */
@@ -1045,7 +1027,7 @@ export function ChatPanel() {
   // UX10: 召回态（继续按 ↑ 可再往前翻）；用户手动编辑即退出
   const [recallActive, setRecallActive] = useState(false);
   // 空态技能条：当前选中技能 key（all=全部 / 具体技能）
-  const [homeFilter, setHomeFilter] = useState("all");
+  const [homeFilter, setHomeFilter] = useState("docs");
   // 「更多」下拉开关
   const [moreOpen, setMoreOpen] = useState(false);
   // 示例模板轮播：当前页（每页 3 张、共 12 张 4 页，左右箭头循环翻页）
@@ -1124,14 +1106,12 @@ export function ChatPanel() {
   const homeVisible = HOME_SKILLS.filter((sk) => HOME_VISIBLE_KEYS.includes(sk.key));
   const homeMore = HOME_SKILLS.filter((sk) => !HOME_VISIBLE_KEYS.includes(sk.key));
   const activeSkill = HOME_SKILLS.find((sk) => sk.key === homeFilter) ?? HOME_SKILLS[0];
-  // 当前模板卡视图：全部=精选 12（各带源技能）；具体技能=该技能 12 张（PPT 与幻灯片共用一套）。
-  // 统一成 { skill, card } 视图模型，点击时按卡所属技能生成，不受「全部」聚合影响。
+  // 当前技能模板卡：该技能 12 张（PPT 与幻灯片共用一套 slides）。
+  // 统一成 { skill, card } 视图模型，点击时按卡所属技能生成。
   const templateKey = homeFilter === "ppt" ? "slides" : homeFilter;
   const templateSkill = homeFilter === "ppt" ? "ppt" : templateKey;
   const templates: { skill: string; card: TemplateCard }[] =
-    homeFilter === "all"
-      ? ALL_CURATED
-      : (SKILL_TEMPLATES[templateKey] ?? []).map((card) => ({ skill: templateSkill, card }));
+    (SKILL_TEMPLATES[templateKey] ?? []).map((card) => ({ skill: templateSkill, card }));
   // 轮播：一行 3 张 / 页，左右箭头翻页（首尾循环）
   const PER_PAGE = 3;
   const totalPages = Math.max(1, Math.ceil(templates.length / PER_PAGE));
@@ -1504,7 +1484,7 @@ export function ChatPanel() {
                 <div className="mt-5 flex items-center justify-between gap-3 px-1 text-left">
                   <div className="flex min-w-0 items-baseline gap-2">
                     <h2 className="text-sm font-semibold tracking-wide text-stone-500">
-                      {activeSkill.key === "all" ? "示例提示词" : `${activeSkill.label} · 示例模板`}
+                      {activeSkill.label} · 示例模板
                     </h2>
                     <span className="truncate text-xs text-stone-400">
                       {activeSkill.planned

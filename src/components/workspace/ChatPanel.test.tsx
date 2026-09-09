@@ -94,27 +94,28 @@ describe("ChatPanel 空态", () => {
     expect(h.textContent).toContain("欢迎回来，今天想做点什么？");
   });
 
-  it("空态技能条收纳：AI对话即默认态不作为技能，顶部显示 全部/文档/PPT + 更多", () => {
+  it("顶部技能条：文档/PPT/图片/幻灯片/网站复刻 + 更多（无全部）", () => {
     seed();
     render(<ChatPanel />);
-    for (const name of ["全部", "文档", "PPT"]) {
+    for (const name of ["文档", "PPT", "图片", "幻灯片", "网站复刻"]) {
       expect(screen.getByRole("tab", { name: new RegExp(name) })).toBeDefined();
     }
-    // AI对话 不再是技能项
-    expect(screen.queryByRole("tab", { name: /AI对话/ })).toBeNull();
+    expect(screen.queryByRole("tab", { name: /全部/ })).toBeNull();
     expect(screen.getByTitle("更多技能")).toBeDefined();
-    expect(screen.getByText("示例提示词")).toBeDefined();
+    expect(screen.getByText("文档 · 示例模板")).toBeDefined();
     expect(screen.getByText(/点卡片填入详细提示词/)).toBeDefined();
   });
 
-  it("更多下拉展开后包含收纳的技能，选中即切换模板", () => {
+  it("更多下拉包含收纳技能（图片已在顶部，不再进更多），选中即切换模板", () => {
     seed();
     render(<ChatPanel />);
     fireEvent.click(screen.getByTitle("更多技能"));
-    expect(screen.getByRole("option", { name: /图片/ })).toBeDefined();
+    expect(screen.queryByRole("option", { name: /图片/ })).toBeNull();
     expect(screen.getByRole("option", { name: /深度研究/ })).toBeDefined();
     expect(screen.getByRole("option", { name: /视频/ })).toBeDefined();
-    // 选中建设中技能：卡片标题出现、带「建设中」角标、无真实缩略图
+    expect(screen.getByRole("option", { name: /原型/ })).toBeDefined();
+    expect(screen.getByRole("option", { name: /HyperFrames/ })).toBeDefined();
+    // 选中建设中技能：卡片标题出现、带「建设中」角标
     fireEvent.click(screen.getByRole("option", { name: /音频/ }));
     expect(screen.getByText("音频 · 示例模板")).toBeDefined();
     expect(screen.getAllByText("建设中").length).toBeGreaterThan(0);
@@ -165,39 +166,13 @@ describe("ChatPanel 空态", () => {
     expect((screen.getByTitle("输入内容后可优化提示词") as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it("「全部」第 1 页渲染 3 个快捷卡片（文档/PPT/图片代表）", () => {
+  it("默认技能（文档）第 1 页渲染 3 张示例卡", () => {
     seed();
     render(<ChatPanel />);
-    for (const name of ["生成文档", "制作 PPT", "生成图片"]) {
+    for (const name of ["生成文档", "公司介绍", "PRD 文档"]) {
       expect(screen.getByRole("button", { name })).toBeDefined();
     }
-    // AI对话写作类模板不再出现
-    expect(screen.queryByRole("button", { name: "撰写邮件" })).toBeNull();
-  });
-
-  it("「全部」示例为一行轮播：每页 3 张，右箭头逐页翻到 12 张并可循环", () => {
-    seed();
-    render(<ChatPanel />);
-    // 第 1 页：文档/PPT/图片代表
-    for (const name of ["生成文档", "制作 PPT", "生成图片"]) {
-      expect(screen.getByRole("button", { name })).toBeDefined();
-    }
-    expect(screen.queryByRole("button", { name: "深度研究" })).toBeNull();
-    // 第 2 页
-    fireEvent.click(screen.getByTitle("下一个示例"));
-    for (const name of ["深度研究", "视频脚本", "公司介绍"]) {
-      expect(screen.getByRole("button", { name })).toBeDefined();
-    }
-    expect(screen.queryByRole("button", { name: "生成文档" })).toBeNull();
-    // 翻到最后一页（第 4 页）可见第 11、12 张
-    fireEvent.click(screen.getByTitle("下一个示例"));
-    fireEvent.click(screen.getByTitle("下一个示例"));
-    expect(screen.getByRole("button", { name: "产品宣传" })).toBeDefined();
-    expect(screen.getByRole("button", { name: "PRD 文档" })).toBeDefined();
-    expect(screen.getByRole("button", { name: "融资路演" })).toBeDefined();
-    // 左箭头回到第 3 页
-    fireEvent.click(screen.getByTitle("上一个示例"));
-    expect(screen.getByRole("button", { name: "产品海报" })).toBeDefined();
+    expect(screen.queryByRole("button", { name: "制作 PPT" })).toBeNull();
   });
 
   it("选中技能后 12 个模板轮播展示，箭头可翻到最后一页", () => {
@@ -578,6 +553,7 @@ describe("ChatPanel 预填", () => {
   it("点击示例卡：把详细提示词填入输入框并切到对应技能，但不自动发送", () => {
     const spies = seed();
     render(<ChatPanel />);
+    fireEvent.click(screen.getByRole("tab", { name: "PPT" }));
     fireEvent.click(screen.getByRole("button", { name: "制作 PPT" }));
     // 填入的是详细变体提示词（长于原始一句），内容属于该卡主题
     expect(ta().value.length).toBeGreaterThan(30);
@@ -591,6 +567,7 @@ describe("ChatPanel 预填", () => {
   it("点击图片示例卡：切到图片技能并填入绘图详细提示词", () => {
     const spies = seed();
     render(<ChatPanel />);
+    fireEvent.click(screen.getByRole("tab", { name: "图片" }));
     fireEvent.click(screen.getByRole("button", { name: "生成图片" }));
     expect(ta().value.length).toBeGreaterThan(30);
     expect(spies.generateImage).not.toHaveBeenCalled();
@@ -601,6 +578,7 @@ describe("ChatPanel 预填", () => {
   it("同一张模板卡点击两次：填入的详细提示词内容不同", () => {
     seed();
     render(<ChatPanel />);
+    fireEvent.click(screen.getByRole("tab", { name: "PPT" }));
     fireEvent.click(screen.getByRole("button", { name: "制作 PPT" }));
     const first = ta().value;
     // 清空后再次点击同一卡
