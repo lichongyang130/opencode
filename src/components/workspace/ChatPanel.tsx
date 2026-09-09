@@ -340,7 +340,7 @@ function SplitComposer({
   };
 
   return (
-    <div className="rounded-[26px] border border-stone-200/90 bg-white shadow-[0_2px_4px_rgba(0,0,0,0.02),0_12px_32px_-18px_rgba(0,0,0,0.18)] transition-shadow duration-200 focus-within:shadow-[0_2px_4px_rgba(0,0,0,0.02),0_16px_40px_-16px_rgba(0,0,0,0.26)]">
+    <div className="rounded-[28px] border border-white/70 bg-white/80 shadow-[0_2px_6px_rgba(0,0,0,0.03),0_16px_44px_-18px_rgba(76,29,149,0.22),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-2xl transition-shadow duration-200 focus-within:border-violet-200/80 focus-within:shadow-[0_2px_6px_rgba(0,0,0,0.03),0_20px_52px_-18px_rgba(124,58,237,0.34),inset_0_1px_0_rgba(255,255,255,0.95)]">
       <div className="relative flex min-w-0 flex-col">
         {/* 图片模式参数（IMG1~6）：模型直选 / 尺寸 / 张数 / 风格 / 负向 / 参考图 / 历史 */}
           {mode === "image" && (
@@ -691,7 +691,7 @@ function SplitComposer({
               onClick={submit}
               disabled={!input.trim()}
               title={input.trim() ? "发送（回车）" : "输入内容后可发送"}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-600 text-white shadow-sm shadow-violet-200 transition hover:bg-violet-700 disabled:bg-stone-100 disabled:text-stone-300 disabled:shadow-none dark:bg-violet-500 dark:hover:bg-violet-400 dark:shadow-none"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-600 text-white shadow-[0_2px_10px_rgba(124,58,237,0.35)] transition hover:bg-violet-700 hover:shadow-[0_2px_14px_rgba(124,58,237,0.50)] disabled:bg-stone-100 disabled:text-stone-300 disabled:shadow-none dark:bg-violet-500 dark:hover:bg-violet-400"
             >
               <ArrowUp className="h-4 w-4" />
             </button>
@@ -1070,8 +1070,12 @@ export function ChatPanel() {
           {/* d5：PPT 生成时，阶段条显示在对话流顶部 */}
           {deckLoading && <SlidesProgressStrip message={convo?.deckMessage ?? ""} />}
           {messages.length === 0 ? (
-            <div className="pt-4 text-center">
-              <h1 className="text-3xl font-semibold tracking-tight text-stone-900 md:text-4xl">
+            <div className="relative flex min-h-[56vh] flex-col justify-center px-2 pt-2 text-center">
+              {/* n5 氛围的浅色版：柔紫主光晕 + 一点琥珀偏光；背景仍是现有白底 */}
+              <div aria-hidden className="pointer-events-none absolute -top-6 left-1/2 h-64 w-[560px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(139,92,246,0.13),transparent_70%)] blur-2xl" />
+              <div aria-hidden className="pointer-events-none absolute right-2 top-24 hidden h-44 w-72 rounded-full bg-[radial-gradient(closest-side,rgba(251,146,60,0.09),transparent_70%)] blur-2xl md:block" />
+              <div className="relative">
+              <h1 className="text-3xl font-semibold tracking-tight text-stone-900 md:text-4xl dark:text-stone-100">
                 欢迎回来，今天想做点什么？
               </h1>
               <p className="mt-2 text-sm text-stone-500">用 AI 把想法变成现实。</p>
@@ -1150,6 +1154,7 @@ export function ChatPanel() {
                   })}
                 </div>
               )}
+              </div>
             </div>
           ) : (
             <div className="space-y-5">
@@ -1203,8 +1208,9 @@ export function ChatPanel() {
 
       {/* 对话中底部的分体式输入舱 */}
       {messages.length > 0 && (
-        <div className="px-6 pb-4 pt-1">
-          <div className="mx-auto w-full max-w-3xl">
+        <div className="relative px-6 pb-4 pt-1">
+          <div aria-hidden className="pointer-events-none absolute inset-x-8 -top-14 bottom-0 rounded-[44px] bg-[radial-gradient(closest-side,rgba(139,92,246,0.10),transparent_75%)] blur-xl" />
+          <div className="relative mx-auto w-full max-w-3xl">
             <SplitComposer
               input={input}
               setInput={changeInput as typeof setInput}

@@ -192,13 +192,21 @@ describe("DB14 文件夹分组", () => {
 
 describe("UX2 时间分组", () => {
   const base = (offsetMs: number) => ({ updatedAt: Date.now() - offsetMs });
+  // 按本地日历日构造时间点：分桶逻辑按「本地今天/昨天/更早」走，
+  // 固定毫秒偏移（如 now-26h）在 UTC 环境会跨到前天导致标签断言失败
+  const atLocalDay = (dayOffset: number, hour: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + dayOffset);
+    d.setHours(hour, 0, 0, 0);
+    return d.getTime();
+  };
 
   it("未分组会话按时间桶渲染标签（今天/昨天/更早）", async () => {
     useChatStore.setState({
       conversations: [
         { id: "t1", title: "今天的会话", mode: "chat", model: "demo", createdAt: 1, messages: [], ...base(0) },
-        { id: "t2", title: "昨天的会话", mode: "chat", model: "demo", createdAt: 1, messages: [], ...base(26 * 3600_000) },
-        { id: "t3", title: "去年的会话", mode: "chat", model: "demo", createdAt: 1, messages: [], ...base(400 * 24 * 3600_000) },
+        { id: "t2", title: "昨天的会话", mode: "chat", model: "demo", createdAt: 1, messages: [], updatedAt: atLocalDay(-1, 12) },
+        { id: "t3", title: "去年的会话", mode: "chat", model: "demo", createdAt: 1, messages: [], updatedAt: atLocalDay(-400, 12) },
       ],
       activeId: "t1",
       hydrated: true,
