@@ -96,7 +96,7 @@ describe("ChatPanel 空态", () => {
 
   it("顶部技能条：文档/PPT/图片/幻灯片/网站复刻 + 更多（无全部）", () => {
     seed();
-    render(<ChatPanel />);
+    const { container } = render(<ChatPanel />);
     for (const name of ["文档", "PPT", "图片", "幻灯片", "网站复刻"]) {
       expect(screen.getByRole("tab", { name: new RegExp(name) })).toBeDefined();
     }
@@ -104,6 +104,16 @@ describe("ChatPanel 空态", () => {
     expect(screen.getByTitle("更多技能")).toBeDefined();
     expect(screen.getByText("文档 · 示例模板")).toBeDefined();
     expect(screen.getByText(/点卡片填入详细提示词/)).toBeDefined();
+    // 模板卡用真实预览图（首屏文档卡「生成文档」映射 canvas-art/docs-2）
+    expect(container.querySelector('img[src="/canvas-art/docs-2.jpg"]')).not.toBeNull();
+  });
+
+  it("图片技能模板卡显示真实 AI 成品图（d-* 图库）", () => {
+    seed();
+    const { container } = render(<ChatPanel />);
+    fireEvent.click(screen.getByRole("tab", { name: /图片/ }));
+    expect(screen.getByText("图片 · 示例模板")).toBeDefined();
+    expect(container.querySelector('img[src="/cases/d-corgi-2.jpg"]')).not.toBeNull();
   });
 
   it("更多下拉包含收纳技能（图片已在顶部，不再进更多），选中即切换模板", () => {

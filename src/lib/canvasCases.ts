@@ -15,6 +15,8 @@ export interface CanvasCase {
   desc: string;
   /** 点击后预填进输入框的提示词 */
   prompt: string;
+  /** 该案例的真实预览图（/public/canvas-art 下）；缺省用渐变占位，按轮补齐 */
+  image?: string;
 }
 
 export interface CanvasCategory {
@@ -38,21 +40,25 @@ export const CANVAS_CATEGORIES: CanvasCategory[] = [
         title: "年度产品路线图",
         desc: "从目标拆解到里程碑的完整规划文档",
         prompt: "帮我写一份《2026 年度产品路线图》：愿景与目标、三大主线、分季度里程碑、资源与风险，输出完整 Markdown 文档。",
+        image: "/canvas-art/docs-1.jpg",
       },
       {
         title: "SaaS 商业计划书",
         desc: "市场、产品、商业模式一页页讲清",
         prompt: "写一份 SaaS 产品商业计划书：市场痛点、目标客群、产品方案、定价与商业模式、竞争壁垒、财务预测与融资用途。",
+        image: "/canvas-art/docs-2.jpg",
       },
       {
         title: "新品营销方案",
         desc: "目标人群、渠道与落地节奏",
         prompt: "为新品设计一份营销方案：人群画像、核心卖点、渠道组合（社媒/投放/达人）、预算分配与 4 周落地节奏。",
+        image: "/canvas-art/docs-3.jpg",
       },
       {
         title: "PRD：团队周报功能",
         desc: "背景、流程到验收标准的完整 PRD",
         prompt: "为「团队周报」功能写 PRD：背景与目标、用户故事、功能清单、交互流程、字段定义、边界情况与验收标准。",
+        image: "/canvas-art/docs-4.jpg",
       },
     ],
   },
@@ -66,21 +72,25 @@ export const CANVAS_CATEGORIES: CanvasCategory[] = [
         title: "战略发布会",
         desc: "悬念开场 + 证据链 + 愿景收尾",
         prompt: "为一场战略发布会生成 10 页 PPT：开场用一个行业问题制造悬念，中段给出战略判断与数据证据，收尾落到愿景与行动号召。",
+        image: "/canvas-art/ppt-1.jpg",
       },
       {
         title: "季度项目汇报",
         desc: "进度、结果、问题一步到位",
         prompt: "做一份季度项目汇报 PPT：目标回顾、关键进展与量化结果、遇到的问题与对策、下季度计划，控制在 8 页。",
+        image: "/canvas-art/ppt-2.jpg",
       },
       {
         title: "种子轮融资路演",
         desc: "讲清商业模式与增长空间",
         prompt: "做一份种子轮融资路演 PPT：痛点与机会、产品与壁垒、商业模式、市场空间、增长数据、团队与资金用途。",
+        image: "/canvas-art/ppt-3.jpg",
       },
       {
         title: "新人培训课件",
         desc: "从公司介绍到上手流程",
         prompt: "做一套新人入职培训课件 PPT：公司介绍、文化价值观、核心业务流程、常用工具、30 天上手路径。",
+        image: "/canvas-art/ppt-4.jpg",
       },
     ],
   },
@@ -92,11 +102,13 @@ export const CANVAS_CATEGORIES: CanvasCategory[] = [
         title: "登录注册流程原型",
         desc: "页面清单 + 状态流转一版给全",
         prompt: "帮我设计「登录注册流程」的可用原型方案：页面清单（登录/注册/找回/三方授权）、每页字段与按钮、异常与空状态、页面流转图，用清晰的结构输出，方便我照做。",
+        image: "/canvas-art/prototype-1.jpg",
       },
       {
         title: "移动端电商商品页",
         desc: "从信息架构到关键交互",
         prompt: "帮我设计一个移动端电商商品页原型：信息架构、视觉层级（头图/价格/规格/加购）、上下滑动的交互节奏、评价与推荐模块，输出页面级线框说明。",
+        image: "/canvas-art/prototype-2.jpg",
       },
       {
         title: "数据仪表盘原型",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   Activity,
@@ -27,6 +27,7 @@ import {
   type CanvasCategory,
   type CanvasCase,
 } from "@/lib/canvasCases";
+import { PreviewPopover, type AnchorRect } from "./PreviewPopover";
 import { cn } from "@/lib/utils";
 
 /** 画布产物条目：来自各会话的 AI 产物（doc/deck/report/images/video） */
@@ -180,21 +181,41 @@ function CaseCard({
   card: CanvasCase;
   onStart: (category: CanvasCategory, card: CanvasCase) => void;
 }) {
+  const [anchor, setAnchor] = useState<AnchorRect | null>(null);
   const cover =
     CATEGORY_COVER[category.key] ?? { grad: "from-stone-200/90 via-stone-100 to-white", icon: LayoutTemplate };
   const CoverIcon = cover.icon;
+  const enter = (e: ReactMouseEvent<HTMLElement>) => {
+    if (!card.image) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    setAnchor({ left: r.left, top: r.top, width: r.width, height: r.height });
+  };
   return (
     <button
       onClick={() => onStart(category, card)}
+      onMouseEnter={enter}
+      onMouseLeave={() => setAnchor(null)}
       className="group overflow-hidden rounded-2xl border border-stone-200/90 bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_14px_30px_-18px_rgba(76,29,149,0.35)]"
     >
       <span
         className={cn(
-          "relative flex aspect-[16/9] w-full items-center justify-center overflow-hidden bg-gradient-to-br",
+          "relative block aspect-[16/9] w-full overflow-hidden bg-gradient-to-br",
           cover.grad
         )}
       >
-        <CoverIcon className="h-8 w-8 text-stone-500/50 transition group-hover:scale-110" strokeWidth={1.6} />
+        {card.image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={card.image}
+            alt={card.title}
+            loading="lazy"
+            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
+          />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center">
+            <CoverIcon className="h-8 w-8 text-stone-500/50 transition group-hover:scale-110" strokeWidth={1.6} />
+          </span>
+        )}
         <span className="absolute left-2 top-2 rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-semibold text-stone-600">
           {category.label}
         </span>
@@ -212,6 +233,18 @@ function CaseCard({
         <span className="block truncate text-[13px] font-semibold text-stone-800">{card.title}</span>
         <span className="mt-0.5 block truncate text-[11px] text-stone-400">{card.desc}</span>
       </span>
+      {card.image && anchor && (
+        <PreviewPopover anchor={anchor}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={card.image} alt={card.title} className="aspect-[16/9] w-full object-cover" />
+          <span className="block border-t border-stone-100 px-3 py-2.5">
+            <span className="block truncate text-[13px] font-semibold text-stone-800">
+              {category.label} · {card.title}
+            </span>
+            <span className="mt-0.5 block truncate text-xs text-stone-400">{card.desc}</span>
+          </span>
+        </PreviewPopover>
+      )}
     </button>
   );
 }

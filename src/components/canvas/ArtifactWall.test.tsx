@@ -160,6 +160,19 @@ describe("画布产物墙 ArtifactWall", () => {
     expect(pushMock).toHaveBeenCalledWith("/chat");
   });
 
+  it("hover 带真实图的案例卡显示大图浮层", () => {
+    render(<ArtifactWall />); // 无产物 → 各栏目案例速览（含真实图 docs-1）
+    const card = screen.getByRole("button", { name: /年度产品路线图/ });
+    fireEvent.mouseEnter(card);
+    // 浮层出现大图（预览角色弹层里的图片带 alt=卡片标题）
+    const imgs = screen.getAllByRole("img", { name: /年度产品路线图/ });
+    expect(imgs.length).toBeGreaterThan(1);
+    expect(imgs.some((i) => i.getAttribute("src") === "/canvas-art/docs-1.jpg")).toBe(true);
+    fireEvent.mouseLeave(card);
+    // 浮层消失，只保留卡片封面那张
+    expect(screen.getAllByRole("img", { name: /年度产品路线图/ })).toHaveLength(1);
+  });
+
   it("点击产物卡打开预览，可跳转原会话", () => {
     act(() => {
       useChatStore.setState({

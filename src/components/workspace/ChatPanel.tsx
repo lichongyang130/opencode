@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { useSseStream } from "@/hooks/useSseStream";
 import {
   ArrowUp,
@@ -59,6 +59,8 @@ import {
 } from "@/lib/slash";
 import { cn } from "@/lib/utils";
 import { buildDetailedPrompt } from "@/lib/promptStudio";
+import { PreviewPopover, type AnchorRect } from "@/components/canvas/PreviewPopover";
+import { TPL_ART } from "@/lib/tplArt";
 
 const IMAGE_SIZES = [
   { id: "1024x1024", label: "方形 1:1" },
@@ -104,17 +106,8 @@ const HOME_SKILLS: HomeSkill[] = [
 /** 顶部可见技能；其余进「更多」下拉 */
 const HOME_VISIBLE_KEYS = ["docs", "ppt", "image", "slides", "website"];
 
-/** 各技能图标与缩略图 */
+/** 各技能图标 */
 const SKILL_ICON = Object.fromEntries(HOME_SKILLS.map((x) => [x.key, x.icon])) as Record<string, typeof MessageSquare>;
-const THUMB_IMG: Record<string, string> = {
-  "chat": "/prompt-thumbs/thumb-email.jpg",
-  "docs": "/prompt-thumbs/thumb-doc.jpg",
-  "slides": "/prompt-thumbs/thumb-ppt.jpg",
-  "ppt": "/prompt-thumbs/thumb-ppt.jpg",
-  "image": "/prompt-thumbs/thumb-img.jpg",
-  "research": "/prompt-thumbs/thumb-report.jpg",
-  "video": "/prompt-thumbs/thumb-video.jpg",
-};
 
 /** 每技能的 12 个模板：已上线技能带完整 prompt；新形态技能由标题组合详细提示词 */
 const SKILL_TEMPLATES: Record<string, TemplateCard[]> = {
@@ -997,6 +990,70 @@ function SlidesProgressStrip({ message }: { message: string }) {
  *  主 ChatPanel
  * ═══════════════════════════════════════════ */
 
+/** 模板卡：真实预览图 + hover 大图浮层；无图卡片用技能色渐变兜底（不再破图） */
+function TemplateCard({
+  card,
+  skillLabel,
+  skillIcon: SkillIcon,
+  art,
+  onFill,
+}: {
+  card: TemplateCard;
+  skillLabel: string;
+  skillIcon: typeof MessageSquare;
+  art?: string;
+  onFill: () => void;
+}) {
+  const [anchor, setAnchor] = useState<AnchorRect | null>(null);
+  const enter = (e: ReactMouseEvent<HTMLElement>) => {
+    if (!art) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    setAnchor({ left: r.left, top: r.top, width: r.width, height: r.height });
+  };
+  return (
+    <button
+      type="button"
+      aria-label={card.title}
+      onClick={onFill}
+      onMouseEnter={enter}
+      onMouseLeave={() => setAnchor(null)}
+      className="group overflow-hidden rounded-2xl border border-stone-200/90 bg-white p-1.5 text-left transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_12px_30px_-16px_rgba(76,29,149,0.4)]"
+    >
+      <span className="relative block h-16 w-full overflow-hidden rounded-lg bg-stone-100 sm:h-20 lg:h-[4.5rem]">
+        {art ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={art}
+            alt=""
+            loading="lazy"
+            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
+          />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center bg-gradient-to-br from-stone-50 to-stone-100">
+            <SkillIcon className="h-5 w-5 text-stone-400/70 sm:h-6 sm:w-6" strokeWidth={1.6} />
+          </span>
+        )}
+      </span>
+      <span className="block px-1 pt-2">
+        <span className="block truncate text-[13px] font-semibold text-stone-800">{card.title}</span>
+        {card.desc && <span className="mt-0.5 block truncate text-xs text-stone-500">{card.desc}</span>}
+      </span>
+      {art && anchor && (
+        <PreviewPopover anchor={anchor}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={art} alt="" className="aspect-[16/9] w-full object-cover" />
+          <span className="block border-t border-stone-100 px-3 py-2.5 text-left">
+            <span className="block truncate text-[13px] font-semibold text-stone-800">
+              {skillLabel} · {card.title}
+            </span>
+            {card.desc && <span className="mt-0.5 block truncate text-xs text-stone-400">{card.desc}</span>}
+          </span>
+        </PreviewPopover>
+      )}
+    </button>
+  );
+}
+
 export function ChatPanel() {
   const { conversations, activeId, send, sending, stopGeneration, model, setModel } = useChatStore();
   const pendingInput = useChatStore((s) => s.pendingInput);
@@ -1508,27 +1565,17 @@ export function ChatPanel() {
                   {shownTemplates.map((item) => {
                     const curSkill = HOME_SKILLS.find((x) => x.key === item.skill) ?? activeSkill;
                     const q = item.card;
+                    // 每张卡的真实预览图：优先按模板集合+标题命中；未命中用技能色渐变占位
+                    const art = TPL_ART[templateKey]?.[q.title];
                     return (
-                      <button
+                      <TemplateCard
                         key={item.skill + ":" + q.title}
-                        aria-label={q.title}
-                        onClick={() => fillStarter(curSkill, q)}
-                        className="group overflow-hidden rounded-2xl border border-stone-200/90 bg-white p-1.5 text-left transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_12px_30px_-16px_rgba(76,29,149,0.4)]"
-                      >
-                        <span className="relative block h-16 w-full overflow-hidden rounded-lg bg-stone-100 sm:h-20 lg:h-[4.5rem]">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={THUMB_IMG[curSkill.mode ?? "chat"]}
-                            alt=""
-                            loading="lazy"
-                            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
-                          />
-                        </span>
-                        <span className="block px-1 pt-2">
-                          <span className="block truncate text-[13px] font-semibold text-stone-800">{q.title}</span>
-                          {q.desc && <span className="mt-0.5 block truncate text-xs text-stone-500">{q.desc}</span>}
-                        </span>
-                      </button>
+                        card={q}
+                        skillLabel={curSkill.label}
+                        skillIcon={curSkill.icon}
+                        art={art}
+                        onFill={() => fillStarter(curSkill, q)}
+                      />
                     );
                   })}
                 </div>
