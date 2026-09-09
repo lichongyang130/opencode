@@ -51,6 +51,8 @@ export const TPL_ART: Record<string, Record<string, string>> = {
   research: {
     深度研究: "/canvas-art/research-1.jpg",
     出海机会: "/canvas-art/research-2.jpg",
+    消费者洞察: "/canvas-art/research-3.jpg",
+    新能源: "/canvas-art/research-4.jpg",
   },
   // 网站复刻
   website: {
@@ -58,5 +60,16 @@ export const TPL_ART: Record<string, Record<string, string>> = {
     企业官网: "/canvas-art/website-1.jpg",
     个人作品集: "/canvas-art/website-3.jpg",
     电商首页: "/canvas-art/website-4.jpg",
+  },
+  // 音频（配音/片头/提示音/冥想）
+  audio: {
+    语音配音: "/canvas-art/audio-1.jpg",
+    播客片头: "/canvas-art/audio-2.jpg",
+    语音提示音: "/canvas-art/audio-3.jpg",
+    冥想引导: "/canvas-art/audio-4.jpg",
+  },
+  // HyperFrames（/chat 内该技能卡以灵感/教程类为主，能对应的先映射）
+  hyperframes: {
+    教程系列: "/canvas-art/hyperframes-4.jpg",
   },
 };
