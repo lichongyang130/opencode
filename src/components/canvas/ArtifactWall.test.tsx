@@ -90,10 +90,25 @@ describe("画布产物墙 ArtifactWall", () => {
     expect(screen.getByText(/柯基宇航员/)).toBeDefined();
     expect(screen.getByText("AI 搜索赛道调研")).toBeDefined();
     expect(screen.getByText("新品宣传片")).toBeDefined();
-    // 分类 tab 存在
-    for (const k of ["全部", "文档", "PPT", "图片", "研究报告", "视频分镜"]) {
+    // 分类 tab 与首页技能体系一致：已建成技能 + 建设中(soon)技能都在
+    for (const k of ["全部", "文档", "PPT", "幻灯片", "图片", "视频", "深度研究"]) {
       expect(screen.getByRole("button", { name: k })).toBeDefined();
     }
+    for (const k of ["原型 soon", "HyperFrames soon", "网站复刻 soon", "音频 soon", "实时产物 soon", "WebGL soon"]) {
+      expect(screen.getByRole("button", { name: k })).toBeDefined();
+    }
+  });
+
+  it("点击建设中技能（网站复刻）提示即将支持，不假装可用", () => {
+    act(() => {
+      useChatStore.setState({
+        conversations: [convo({ id: "d1", title: "a", doc: { title: "一篇文档" } })] as never,
+      });
+    });
+    render(<ArtifactWall />);
+    fireEvent.click(screen.getByRole("button", { name: "网站复刻 soon" }));
+    expect(screen.getByText(/「网站复刻」正在建设中/)).toBeDefined();
+    expect(screen.queryByText("一篇文档")).toBeNull();
   });
 
   it("类型筛选只显示对应产物", () => {

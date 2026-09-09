@@ -10,8 +10,10 @@ import {
   Play,
   Plus,
   Search,
+  Sparkles,
 } from "lucide-react";
 import { useChatStore, type Conversation } from "@/lib/store/chat";
+import { toast } from "@/lib/store/toast";
 import { cn } from "@/lib/utils";
 
 /** 画布产物条目：来自各会话的 AI 产物（doc/deck/report/images/video） */
@@ -19,7 +21,7 @@ export interface ArtifactItem {
   key: string; // 会话id::产物类型（唯一）
   convoId: string;
   convoTitle: string;
-  kind: "文档" | "PPT" | "图片" | "研究报告" | "视频分镜";
+  kind: ArtifactKind;
   title: string;
   updatedAt: number;
   /** 预览主图 / 首图（PPT/图片/视频）；文档/报告为 null 用样式占位 */
@@ -27,6 +29,8 @@ export interface ArtifactItem {
   /** 概要一行（文档/报告摘要或图片/PPT描述） */
   blurb?: string;
 }
+
+export type ArtifactKind = "文档" | "PPT" | "图片" | "深度研究" | "视频分镜";
 
 /** 从会话聚合产物（排除纯聊天无产物的会话与草稿/大纲暂态） */
 function collectArtifacts(convos: Conversation[]): ArtifactItem[] {
@@ -71,7 +75,7 @@ function collectArtifacts(convos: Conversation[]): ArtifactItem[] {
       out.push({
         ...base,
         key: `${c.id}::report`,
-        kind: "研究报告",
+        kind: "深度研究",
         title: c.report.topic,
         updatedAt: c.report.createdAt ?? base.updatedAt,
         blurb:
@@ -96,13 +100,42 @@ function collectArtifacts(convos: Conversation[]): ArtifactItem[] {
   return out.sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
-const KIND_FILTERS = ["全部", "文档", "PPT", "图片", "研究报告", "视频分镜"] as const;
+/**
+ * 分类与首页技能体系（ChatPanel HOME_SKILLS）保持一致：
+ * 已具备的技能按产物类型过滤；planned 技能（原型/HyperFrames/网站复刻/
+ * 音频/实时产物/WebGL）暂无产物，点击提示「建设中 · 即将支持」。
+ * 注：PPT 与 幻灯片 两种技能产出的都是演示文稿（deck），归同一产物类型。
+ */
+interface FilterDef {
+  key: string;
+  label: string;
+  /** 对应产物类型；缺省=全部/建设中 */
+  kind?: ArtifactKind;
+  /** 建设中技能（soon）：不假装有产物，仅提示即将支持 */
+  planned?: boolean;
+}
 
-const KIND_STYLE: Record<ArtifactItem["kind"], { badge: string }> = {
+const FILTERS: FilterDef[] = [
+  { key: "all", label: "全部" },
+  { key: "docs", label: "文档", kind: "文档" },
+  { key: "ppt", label: "PPT", kind: "PPT" },
+  { key: "prototype", label: "原型", planned: true },
+  { key: "slides", label: "幻灯片", kind: "PPT" },
+  { key: "image", label: "图片", kind: "图片" },
+  { key: "hyperframes", label: "HyperFrames", planned: true },
+  { key: "website", label: "网站复刻", planned: true },
+  { key: "video", label: "视频", kind: "视频分镜" },
+  { key: "audio", label: "音频", planned: true },
+  { key: "realtime", label: "实时产物", planned: true },
+  { key: "webgl", label: "WebGL", planned: true },
+  { key: "research", label: "深度研究", kind: "深度研究" },
+];
+
+const KIND_STYLE: Record<ArtifactKind, { badge: string }> = {
   文档: { badge: "bg-sky-50 text-sky-600" },
   PPT: { badge: "bg-violet-50 text-violet-600" },
   图片: { badge: "bg-amber-50 text-amber-600" },
-  研究报告: { badge: "bg-emerald-50 text-emerald-600" },
+  深度研究: { badge: "bg-emerald-50 text-emerald-600" },
   视频分镜: { badge: "bg-rose-50 text-rose-600" },
 };
 
@@ -142,7 +175,7 @@ function timeAgo(ts: number): string {
 export function ArtifactWall() {
   const router = useRouter();
   const conversations = useChatStore((s) => s.conversations);
-  const [filter, setFilter] = useState<(typeof KIND_FILTERS)[number]>("全部");
+  const [filterKey, setFilterKey] = useState("all");
   const [query, setQuery] = useState("");
   const [preview, setPreview] = useState<ArtifactItem | null>(null);
   /** 相对时间依赖 Date.now()：挂载后再显示，避免 SSR/水合文本不一致 */
@@ -150,16 +183,28 @@ export function ArtifactWall() {
   useEffect(() => setMounted(true), []);
   const ago = (ts: number) => (mounted ? timeAgo(ts) : "");
 
+  const activeFilter = FILTERS.find((f) => f.key === filterKey) ?? FILTERS[0];
+
   const items = useMemo(() => collectArtifacts(conversations), [conversations]);
   const visible = useMemo(() => {
     let list = items;
-    if (filter !== "全部") list = list.filter((i) => i.kind === filter);
+    if (activeFilter.kind) list = list.filter((i) => i.kind === activeFilter.kind);
     const q = query.trim().toLowerCase();
     if (q) list = list.filter((i) => (i.title + i.convoTitle).toLowerCase().includes(q));
     return list;
-  }, [items, filter, query]);
+  }, [items, activeFilter, query]);
+
+  const pickFilter = (f: FilterDef) => {
+    if (f.planned) {
+      toast(`「${f.label}」正在建设中，即将支持 —— 先试试文档 / PPT / 图片 / 视频 / 深度研究`, "info");
+    }
+    setFilterKey(f.key);
+    setPreview(null);
+  };
 
   const openConvo = (convoId: string) => router.push(`/chat?c=${convoId}`);
+
+  const hasArtifacts = items.length > 0;
 
   return (
     <div className="mx-auto w-full max-w-6xl px-6 py-6">
@@ -180,23 +225,40 @@ export function ArtifactWall() {
         </button>
       </div>
 
-      {/* 分类 tab + 搜索 */}
+      {/* 分类 tab（与首页技能体系一致，建设中技能带 soon）+ 搜索 */}
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-1">
-          {KIND_FILTERS.map((k) => (
-            <button
-              key={k}
-              onClick={() => setFilter(k)}
-              className={cn(
-                "rounded-full px-3.5 py-1.5 text-[13px] font-medium transition",
-                filter === k
-                  ? "bg-stone-900 text-white"
-                  : "text-stone-600 hover:bg-stone-100"
-              )}
-            >
-              {k}
-            </button>
-          ))}
+          {FILTERS.map((f) => {
+            const isActive = filterKey === f.key;
+            return (
+              <button
+                key={f.key}
+                onClick={() => pickFilter(f)}
+                aria-pressed={isActive}
+                title={f.planned ? `${f.label}（建设中）` : f.label}
+                className={cn(
+                  "flex items-center gap-1 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition",
+                  isActive
+                    ? "bg-stone-900 text-white"
+                    : f.planned
+                      ? "border border-dashed border-stone-300 text-stone-400 hover:border-stone-400 hover:text-stone-500"
+                      : "text-stone-600 hover:bg-stone-100"
+                )}
+              >
+                {f.label}
+                {f.planned && (
+                  <span
+                    className={cn(
+                      "rounded-full bg-stone-200/80 px-1 text-[9px] leading-4 text-stone-500",
+                      isActive && "bg-white/25 text-white"
+                    )}
+                  >
+                    soon
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
         <label className="flex h-9 w-64 items-center gap-2 rounded-full border border-stone-200 bg-white px-3 text-stone-400 transition focus-within:border-violet-300">
           <Search className="h-4 w-4" />
@@ -209,15 +271,32 @@ export function ArtifactWall() {
         </label>
       </div>
 
-      {/* 空态 / 产物墙 */}
-      {items.length === 0 ? (
+      {/* 建设中分类提示（planned 技能尚无产物） */}
+      {activeFilter.planned ? (
+        <div className="mt-16 flex flex-col items-center rounded-3xl border border-dashed border-stone-200 bg-white/60 px-6 py-14 text-center">
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-100 text-stone-400">
+            <Sparkles className="h-6 w-6" />
+          </span>
+          <h2 className="mt-4 text-lg font-semibold text-stone-800">「{activeFilter.label}」正在建设中</h2>
+          <p className="mt-1 max-w-sm text-sm text-stone-500">
+            即将支持该能力。现在可以先试试文档、PPT、图片、视频或深度研究，产物会自动出现在这里
+          </p>
+          <button
+            onClick={() => router.push("/chat")}
+            className="mt-5 flex items-center gap-2 rounded-full bg-violet-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-violet-700"
+          >
+            <MessageSquare className="h-4 w-4" />
+            去 AI 对话试试
+          </button>
+        </div>
+      ) : !hasArtifacts ? (
         <div className="mt-16 flex flex-col items-center rounded-3xl border border-dashed border-stone-200 bg-white/60 px-6 py-14 text-center">
           <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50 text-violet-500">
             <LayoutTemplate className="h-6 w-6" />
           </span>
           <h2 className="mt-4 text-lg font-semibold text-stone-800">你的画布还是空的</h2>
           <p className="mt-1 max-w-sm text-sm text-stone-500">
-            去 AI 对话里生成一份文档、PPT、图片或研究报告，它会自动出现在这里
+            去 AI 对话里生成一份文档、PPT、图片、视频分镜或深度研究报告，它会自动出现在这里
           </p>
           <button
             onClick={() => router.push("/chat")}
