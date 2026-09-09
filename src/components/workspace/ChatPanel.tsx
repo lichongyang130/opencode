@@ -51,6 +51,7 @@ import {
   type PromptChip,
 } from "@/lib/slash";
 import { cn } from "@/lib/utils";
+import { buildDetailedPrompt } from "@/lib/promptStudio";
 
 const IMAGE_SIZES = [
   { id: "1024x1024", label: "方形 1:1" },
@@ -1225,33 +1226,20 @@ export function ChatPanel() {
   };
 
   /** 输入变更统一入口：手动编辑即退出 UX10 召回态（召回态下 ↑ 可继续前翻） */
-  // 空态模板卡：点击直接按技能+提示词开始生成（对应截图「点卡即出」）；
-  // planned（建设中）技能仅提示，不假装能生成
-  const runStarter = (skill: HomeSkill, q: TemplateCard) => {
-    if (sending) return;
-    if (skill.planned || !skill.mode || !q.prompt) {
+  // 空态模板卡：点击不自动发送，而是生成一条「详细提示词」（同卡多次点击组合
+  // 出不同变体）填入输入框，供用户查看 / 修改后回车发送。
+  const fillStarter = (skill: HomeSkill, q: TemplateCard) => {
+    if (skill.planned || !skill.mode) {
       toast(`「${skill.label}」正在建设中，先用 AI 对话 / 文档 / PPT / 图片 / 视频试试`, "info");
       return;
     }
-    const text = q.prompt;
+    // 切换技能（输入框 placeholder 与后续发送通道跟随）；与当前相同则不动
     if (skill.mode !== mode) useChatStore.getState().setMode(skill.mode);
-    setInput("");
-    if (sentStack.current[sentStack.current.length - 1] !== text) sentStack.current.push(text);
-    if (sentStack.current.length > 20) sentStack.current.shift();
-    recallIdx.current = -1;
-    if (skill.mode === "image") {
-      void useChatStore.getState().generateImage(text, {
-        size: imgSize,
-        model: imgModel,
-        n: imgCount,
-        style: imgStyle || undefined,
-        negative: imgNegative || undefined,
-        reference: imgReference || undefined,
-      });
-      setImgReference("");
-      return;
-    }
-    void useChatStore.getState().send(text);
+    // 同卡多次点击 → promptStudio 组合出内容不同的详细提示词，并防连续重复
+    const text = buildDetailedPrompt(skill.key, q.title, skill.label);
+    if (text !== input) setInput(text);
+    setTimeout(() => inputRef.current?.focus(), 0);
+    toast(`已填入「${q.title}」的详细提示词，可编辑后回车发送`, "success");
   };
 
   /** 切换技能：回到模板第 1 页并收起更多下拉 */
@@ -1512,7 +1500,7 @@ export function ChatPanel() {
                     <span className="truncate text-xs text-stone-400">
                       {activeSkill.planned
                         ? "建设中 · 点击卡片可用其它技能生成"
-                        : `共 ${templates.length} 个 · 点击卡片直接生成`}
+                        : `共 ${templates.length} 个 · 点卡片填入详细提示词`}
                     </span>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
@@ -1548,7 +1536,7 @@ export function ChatPanel() {
                       <button
                         key={item.skill + ":" + q.title}
                         aria-label={q.title}
-                        onClick={() => runStarter(curSkill, q)}
+                        onClick={() => fillStarter(curSkill, q)}
                         className="group overflow-hidden rounded-2xl border border-stone-200/90 bg-white p-1.5 text-left transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_12px_30px_-16px_rgba(76,29,149,0.4)]"
                       >
                         {planned ? (

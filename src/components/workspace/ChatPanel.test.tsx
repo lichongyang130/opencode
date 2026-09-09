@@ -102,7 +102,7 @@ describe("ChatPanel 空态", () => {
     }
     expect(screen.getByTitle("更多技能")).toBeDefined();
     expect(screen.getByText("示例提示词")).toBeDefined();
-    expect(screen.getByText(/点击卡片直接生成/)).toBeDefined();
+    expect(screen.getByText(/点卡片填入详细提示词/)).toBeDefined();
   });
 
   it("更多下拉展开后包含收纳的技能，选中即切换模板", () => {
@@ -562,24 +562,40 @@ describe("ChatPanel 消息列表", () => {
 /* ─────────────── 快捷卡片与预填 ─────────────── */
 
 describe("ChatPanel 预填", () => {
-  it("点击示例卡直接发送提示词并切到对应技能", () => {
+  it("点击示例卡：把详细提示词填入输入框并切到对应技能，但不自动发送", () => {
     const spies = seed();
     render(<ChatPanel />);
     fireEvent.click(screen.getByRole("button", { name: "制作 PPT" }));
-    expect(spies.send).toHaveBeenCalledWith("为产品发布会生成一套 10 页 PPT");
+    // 填入的是详细变体提示词（长于原始一句），内容属于该卡主题
+    expect(ta().value.length).toBeGreaterThan(30);
+    expect(ta().value).toContain("幻灯片");
+    // 不触发发送 / 绘图
+    expect(spies.send).not.toHaveBeenCalled();
+    expect(spies.generateImage).not.toHaveBeenCalled();
     expect(useChatStore.getState().conversations[0].mode).toBe("slides");
   });
 
-  it("点击图片示例卡走绘图通道（先翻到第 2 页）", () => {
+  it("点击图片示例卡：切到图片技能并填入绘图详细提示词", () => {
     const spies = seed();
     render(<ChatPanel />);
     fireEvent.click(screen.getByTitle("下一个示例"));
     fireEvent.click(screen.getByRole("button", { name: "生成图片" }));
-    expect(spies.generateImage).toHaveBeenCalledWith(
-      "一只戴宇航头盔的柯基在月球上，电影感海报",
-      expect.objectContaining({ n: 1 })
-    );
+    expect(ta().value.length).toBeGreaterThan(30);
+    expect(spies.generateImage).not.toHaveBeenCalled();
+    expect(spies.send).not.toHaveBeenCalled();
     expect(useChatStore.getState().conversations[0].mode).toBe("image");
+  });
+
+  it("同一张模板卡点击两次：填入的详细提示词内容不同", () => {
+    seed();
+    render(<ChatPanel />);
+    fireEvent.click(screen.getByRole("button", { name: "制作 PPT" }));
+    const first = ta().value;
+    // 清空后再次点击同一卡
+    act(() => { type(""); });
+    fireEvent.click(screen.getByRole("button", { name: "制作 PPT" }));
+    expect(ta().value).not.toBe(first);
+    expect(ta().value.length).toBeGreaterThan(30);
   });
 
   it("store 的 pendingInput 会填入输入框", () => {
