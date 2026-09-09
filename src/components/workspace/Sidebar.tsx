@@ -14,11 +14,11 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /** 左侧产品导航（图标 + 文字）。
- *  AI 对话 = /chat 工作台；画布 = /docs 文档画布；灵感 = /templates 模板灵感；
+ *  AI 对话 = /chat 工作台；画布 = /canvas 产物墙（AI 产物之家）；灵感 = /templates 模板灵感；
  *  知识库 / 智能体 / 工具 = 各自独立模块页；底部固定会员中心。 */
 const NAV: { key: string; label: string; icon: LucideIcon; href: string }[] = [
   { key: "chat", label: "AI 对话", icon: MessageSquare, href: "/chat" },
-  { key: "canvas", label: "画布", icon: FileText, href: "/docs" },
+  { key: "canvas", label: "画布", icon: FileText, href: "/canvas" },
   { key: "ideas", label: "灵感", icon: Lightbulb, href: "/templates" },
   { key: "knowledge", label: "知识库", icon: Database, href: "/knowledge" },
   { key: "agents", label: "智能体", icon: Bot, href: "/agents" },
@@ -28,7 +28,7 @@ const NAV: { key: string; label: string; icon: LucideIcon; href: string }[] = [
 function sectionOf(pathname: string | null): string | null {
   if (!pathname) return null;
   if (pathname.startsWith("/chat")) return "chat";
-  if (pathname.startsWith("/docs")) return "canvas";
+  if (pathname.startsWith("/canvas")) return "canvas";
   if (pathname.startsWith("/templates")) return "ideas";
   if (pathname.startsWith("/knowledge")) return "knowledge";
   if (pathname.startsWith("/agents")) return "agents";
