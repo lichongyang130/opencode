@@ -11,6 +11,10 @@ coverage/
 # typescript incremental build info
 *.tsbuildinfo
 
+# sqlite runtime sidecar files (transient; actual data stays in dev.db)
+data/*.db-shm
+data/*.db-wal
+
 # misc system files
 .DS_Store
 Thumbs.db
