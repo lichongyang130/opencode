@@ -591,7 +591,7 @@ function SplitComposer({
                     ? "想做什么？写下来告诉我…"
                     : `${MODE_LABELS[mode]}：描述你的需求…`
               }
-              className="min-h-[92px] w-full resize-none bg-transparent px-4 py-3.5 text-[14px] leading-relaxed outline-none placeholder:text-stone-400"
+              className="chat-composer-input min-h-[92px] w-full resize-none bg-transparent px-4 py-3.5 text-[14px] leading-relaxed outline-none placeholder:text-stone-400"
             />
           </div>
 

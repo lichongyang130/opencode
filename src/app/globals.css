@@ -238,3 +238,13 @@ html.dark :focus-visible {
   outline-offset: 2px;
   border-radius: 6px;
 }
+
+/* 对话输入框：文本输入框在鼠标点击聚焦时也会命中 :focus-visible，
+   导致点击输入框出现橙红外框。输入舱容器已有 focus-within 紫描边作聚焦
+   反馈，这里单独去掉该输入框的全局焦点环（其余元素的可达性环保留） */
+.chat-composer-input:focus-visible {
+  outline: none;
+}
+html.dark .chat-composer-input:focus-visible {
+  outline: none;
+}
