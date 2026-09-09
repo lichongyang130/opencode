@@ -7,6 +7,8 @@ import {
   Box,
   Check,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ChevronUp,
   Copy,
   FileText,
@@ -1036,8 +1038,8 @@ export function ChatPanel() {
   const [homeFilter, setHomeFilter] = useState("all");
   // 「更多」下拉开关
   const [moreOpen, setMoreOpen] = useState(false);
-  // 模板卡展开（每技能 12 张：先显 9，展开到 12）
-  const [tplExpanded, setTplExpanded] = useState(false);
+  // 示例模板轮播：当前页（每页 3 张、共 12 张 4 页，左右箭头循环翻页）
+  const [tplPage, setTplPage] = useState(0);
 
   const slashMatches = matchSlash(input);
   useEffect(() => setSlashIdx(0), [input]);
@@ -1120,8 +1122,13 @@ export function ChatPanel() {
     homeFilter === "all"
       ? ALL_CURATED
       : (SKILL_TEMPLATES[templateKey] ?? []).map((card) => ({ skill: templateSkill, card }));
-  const shownTemplates = tplExpanded ? templates : templates.slice(0, 9);
-  const hasMoreTemplates = templates.length > 9;
+  // 轮播：一行 3 张 / 页，左右箭头翻页（首尾循环）
+  const PER_PAGE = 3;
+  const totalPages = Math.max(1, Math.ceil(templates.length / PER_PAGE));
+  const curPage = Math.min(tplPage, totalPages - 1);
+  const shownTemplates = templates.slice(curPage * PER_PAGE, curPage * PER_PAGE + PER_PAGE);
+  const goTplPrev = () => setTplPage((p) => (p - 1 + totalPages) % totalPages);
+  const goTplNext = () => setTplPage((p) => (p + 1) % totalPages);
   // d5：PPT 生成中（对话内顶部阶段条）
   const deckLoading = mode === "slides" && convo?.deckStatus === "loading";
   // 助手身份行小标签：当前模型名（Codex 每条消息头部同款）
@@ -1247,10 +1254,10 @@ export function ChatPanel() {
     void useChatStore.getState().send(text);
   };
 
-  /** 切换技能：重置模板展开态并收起更多下拉 */
+  /** 切换技能：回到模板第 1 页并收起更多下拉 */
   const pickSkill = (key: string) => {
     setHomeFilter(key);
-    setTplExpanded(false);
+    setTplPage(0);
     setMoreOpen(false);
   };
 
@@ -1394,10 +1401,7 @@ export function ChatPanel() {
                       aria-selected={homeMore.some((sk) => sk.key === homeFilter)}
                       aria-haspopup="listbox"
                       aria-expanded={moreOpen}
-                      onClick={() => {
-                        setMoreOpen((v) => !v);
-                        setTplExpanded(false);
-                      }}
+                      onClick={() => setMoreOpen((v) => !v)}
                       title="更多技能"
                       className={cn(
                         "flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition",
@@ -1497,18 +1501,43 @@ export function ChatPanel() {
               </div>
               <p className="mt-2 text-xs text-stone-400">回车发送 · Shift+回车换行 · 上方技能条选择文档 / PPT / 图片 / 更多</p>
 
-              {/* 示例模板：每个技能 12 张（每行 3 个，先显 9，箭头展开隐藏 3） */}
-                <div className="mt-5 flex items-baseline justify-between px-1 text-left">
-                  <h2 className="text-sm font-semibold tracking-wide text-stone-500">
-                    {activeSkill.key === "all" ? "示例提示词" : `${activeSkill.label} · 示例模板`}
-                  </h2>
-                  <span className="text-xs text-stone-400">
-                    {activeSkill.planned
-                      ? "该能力正在建设中 · 其它技能点击卡片即可直接生成"
-                      : `共 ${templates.length} 个 · 点击卡片直接生成`}
-                  </span>
+              {/* 示例模板：一行轮播（每页 3 张，右上角左右箭头循环翻页） */}
+                <div className="mt-5 flex items-center justify-between gap-3 px-1 text-left">
+                  <div className="flex min-w-0 items-baseline gap-2">
+                    <h2 className="text-sm font-semibold tracking-wide text-stone-500">
+                      {activeSkill.key === "all" ? "示例提示词" : `${activeSkill.label} · 示例模板`}
+                    </h2>
+                    <span className="truncate text-xs text-stone-400">
+                      {activeSkill.planned
+                        ? "建设中 · 点击卡片可用其它技能生成"
+                        : `共 ${templates.length} 个 · 点击卡片直接生成`}
+                    </span>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={goTplPrev}
+                      title="上一个示例"
+                      aria-label="上一个示例"
+                      className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-500 transition hover:border-stone-300 hover:text-violet-600"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <span className="min-w-[2.5rem] text-center text-xs tabular-nums text-stone-400">
+                      {curPage + 1} / {totalPages}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={goTplNext}
+                      title="下一个示例"
+                      aria-label="下一个示例"
+                      className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-500 transition hover:border-stone-300 hover:text-violet-600"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-                <div className="mt-2.5 grid grid-cols-2 gap-2.5 text-left sm:grid-cols-3">
+                <div className="mt-2.5 grid grid-cols-3 gap-2.5 text-left">
                   {shownTemplates.map((item) => {
                     const curSkill = HOME_SKILLS.find((x) => x.key === item.skill) ?? activeSkill;
                     const q = item.card;
@@ -1549,25 +1578,6 @@ export function ChatPanel() {
                     );
                   })}
                 </div>
-                {hasMoreTemplates && (
-                  <div className="mt-3 flex justify-center">
-                    <button
-                      onClick={() => setTplExpanded((v) => !v)}
-                      aria-expanded={tplExpanded}
-                      className="flex items-center gap-1 rounded-full border border-stone-200 bg-white px-3.5 py-1.5 text-xs font-medium text-stone-500 transition hover:border-stone-300 hover:text-violet-600"
-                    >
-                      {tplExpanded ? (
-                        <>
-                          <ChevronUp className="h-3.5 w-3.5" /> 收起
-                        </>
-                      ) : (
-                        <>
-                          <ChevronDown className="h-3.5 w-3.5" /> 还有 {templates.length - 9} 个，展开看看
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
 
 
               </div>

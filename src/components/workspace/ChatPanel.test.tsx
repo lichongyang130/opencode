@@ -156,37 +156,51 @@ describe("ChatPanel 空态", () => {
     expect((screen.getByTitle("输入内容后可优化提示词") as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it("渲染 4 个首页快捷按钮", () => {
+  it("示例卡首页第 1 页渲染 3 个快捷卡片", () => {
     seed();
     render(<ChatPanel />);
-    for (const name of ["撰写邮件", "生成文档", "制作 PPT", "生成图片"]) {
+    for (const name of ["撰写邮件", "生成文档", "制作 PPT"]) {
       expect(screen.getByRole("button", { name })).toBeDefined();
     }
   });
 
-  it("「全部」默认显示前 9 张（六技能代表作可见），箭头展开后共 12 张", () => {
+  it("示例区为一行轮播：每页 3 张，右箭头逐页翻到 12 张并可循环", () => {
     seed();
     render(<ChatPanel />);
-    for (const name of ["撰写邮件", "生成文档", "制作 PPT", "生成图片", "深度研究", "视频脚本"]) {
+    // 第 1 页：前 3 个代表
+    for (const name of ["撰写邮件", "生成文档", "制作 PPT"]) {
       expect(screen.getByRole("button", { name })).toBeDefined();
     }
-    // 隐藏的最后 3 张（image/research/video 的第 2 条）
-    expect(screen.queryByRole("button", { name: "产品海报" })).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: /还有 3 个，展开看看/ }));
+    expect(screen.queryByRole("button", { name: "生成图片" })).toBeNull();
+    // 第 2 页
+    fireEvent.click(screen.getByTitle("下一个示例"));
+    for (const name of ["生成图片", "深度研究", "视频脚本"]) {
+      expect(screen.getByRole("button", { name })).toBeDefined();
+    }
+    expect(screen.queryByRole("button", { name: "撰写邮件" })).toBeNull();
+    // 翻到最后一页可见第 12 张
+    fireEvent.click(screen.getByTitle("下一个示例"));
+    fireEvent.click(screen.getByTitle("下一个示例"));
     expect(screen.getByRole("button", { name: "产品海报" })).toBeDefined();
-    expect(screen.getByRole("button", { name: /收起/ })).toBeDefined();
+    // 左箭头回到第 3 页（docs/slides 第 2 张区）
+    fireEvent.click(screen.getByTitle("上一个示例"));
+    expect(screen.getByRole("button", { name: "周报汇总" })).toBeDefined();
   });
 
-  it("选中技能后下方展示该技能 12 个模板（每行 3 个）", () => {
+  it("选中技能后 12 个模板轮播展示，箭头可翻到最后一页", () => {
     seed();
     render(<ChatPanel />);
     fireEvent.click(screen.getByRole("tab", { name: "文档" }));
     expect(screen.getByText("文档 · 示例模板")).toBeDefined();
-    expect(screen.getByRole("button", { name: "生成文档" })).toBeDefined();
+    // 第 1 页：文档模板前 3 张
+    for (const name of ["生成文档", "公司介绍", "PRD 文档"]) {
+      expect(screen.getByRole("button", { name })).toBeDefined();
+    }
     expect(screen.queryByRole("button", { name: "制作 PPT" })).toBeNull();
-    // 共 12 个模板：先显示 9 个，展开后到 12
-    fireEvent.click(screen.getByRole("button", { name: /还有 3 个，展开看看/ }));
+    // 翻 3 次到最后一页（12/3=4 页）
+    for (let i = 0; i < 3; i++) fireEvent.click(screen.getByTitle("下一个示例"));
     expect(screen.getByRole("button", { name: "新闻稿" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "白皮书" })).toBeDefined();
   });
 
   it("空消息态不渲染角色选择器", () => {
@@ -549,9 +563,10 @@ describe("ChatPanel 预填", () => {
     expect(useChatStore.getState().conversations[0].mode).toBe("slides");
   });
 
-  it("点击图片示例卡走绘图通道", () => {
+  it("点击图片示例卡走绘图通道（先翻到第 2 页）", () => {
     const spies = seed();
     render(<ChatPanel />);
+    fireEvent.click(screen.getByTitle("下一个示例"));
     fireEvent.click(screen.getByRole("button", { name: "生成图片" }));
     expect(spies.generateImage).toHaveBeenCalledWith(
       "一只戴宇航头盔的柯基在月球上，电影感海报",
