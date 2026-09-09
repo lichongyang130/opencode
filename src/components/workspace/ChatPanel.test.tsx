@@ -87,11 +87,12 @@ afterEach(() => {
 /* ─────────────── 空态引导 ─────────────── */
 
 describe("ChatPanel 空态", () => {
-  it("显示欢迎标题与副标题", () => {
+  it("空态渲染技能条与示例提示词引导", () => {
     seed();
     render(<ChatPanel />);
-    expect(screen.getByRole("heading", { name: /欢迎回来，今天想做点什么/ })).toBeDefined();
-    expect(screen.getByText("用 AI 把想法变成现实。")).toBeDefined();
+    expect(screen.getByRole("tablist", { name: /按技能浏览示例/ })).toBeDefined();
+    expect(screen.getByText("示例提示词")).toBeDefined();
+    expect(screen.getByText(/点击卡片直接生成/)).toBeDefined();
   });
 
   it("给出回车/换行的操作提示", () => {
@@ -145,11 +146,20 @@ describe("ChatPanel 空态", () => {
     }
   });
 
-  it("首页快捷按钮只取前 4 张卡片", () => {
+  it("首页渲染全部 6 张示例卡（含研究/视频）", () => {
     seed();
     render(<ChatPanel />);
-    expect(screen.queryByRole("button", { name: "深度研究" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "视频脚本" })).toBeNull();
+    for (const name of ["撰写邮件", "生成文档", "制作 PPT", "生成图片", "深度研究", "视频脚本"]) {
+      expect(screen.getByRole("button", { name })).toBeDefined();
+    }
+  });
+
+  it("技能条选中文档时只显示对应示例卡", () => {
+    seed();
+    render(<ChatPanel />);
+    fireEvent.click(screen.getByRole("tab", { name: "文档" }));
+    expect(screen.getByRole("button", { name: "生成文档" })).toBeDefined();
+    expect(screen.queryByRole("button", { name: "制作 PPT" })).toBeNull();
   });
 
   it("空消息态不渲染角色选择器", () => {
@@ -504,17 +514,22 @@ describe("ChatPanel 消息列表", () => {
 /* ─────────────── 快捷卡片与预填 ─────────────── */
 
 describe("ChatPanel 预填", () => {
-  it("点击快捷卡片填入提示词", () => {
-    seed();
+  it("点击示例卡直接发送提示词并切到对应技能", () => {
+    const spies = seed();
     render(<ChatPanel />);
     fireEvent.click(screen.getByRole("button", { name: "制作 PPT" }));
-    expect(ta().value).toBe("为产品发布会生成一套 10 页 PPT");
+    expect(spies.send).toHaveBeenCalledWith("为产品发布会生成一套 10 页 PPT");
+    expect(useChatStore.getState().conversations[0].mode).toBe("slides");
   });
 
-  it("点击快捷卡片同时切换工作模式", () => {
-    seed();
+  it("点击图片示例卡走绘图通道", () => {
+    const spies = seed();
     render(<ChatPanel />);
     fireEvent.click(screen.getByRole("button", { name: "生成图片" }));
+    expect(spies.generateImage).toHaveBeenCalledWith(
+      "一只戴宇航头盔的柯基在月球上，电影感海报",
+      expect.objectContaining({ n: 1 })
+    );
     expect(useChatStore.getState().conversations[0].mode).toBe("image");
   });
 

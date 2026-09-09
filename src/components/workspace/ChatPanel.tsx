@@ -70,6 +70,27 @@ const HOME_CARDS: {
   { icon: Video, title: "视频脚本", desc: "带货 / 分镜 / 口播脚本", mode: "video", prompt: "为新款降噪耳机写一条 15 秒带货短视频脚本" },
 ];
 
+/** 空态顶部「技能选择条」（对应截图里的能力 chips）：点选即切换技能并过滤示例 */
+const HOME_SKILL_TABS: { mode: WorkspaceMode | "all"; label: string; icon: typeof MessageSquare }[] = [
+  { mode: "all", label: "全部", icon: MessageSquare },
+  { mode: "chat", label: "AI 对话", icon: MessageSquare },
+  { mode: "docs", label: "文档", icon: FileText },
+  { mode: "slides", label: "PPT", icon: Presentation },
+  { mode: "image", label: "图片", icon: ImageIcon },
+  { mode: "research", label: "深度研究", icon: Search },
+  { mode: "video", label: "视频", icon: Video },
+];
+
+/** 每个技能的示例卡缩略图渐变（无图片素材，用纯 CSS 迷你画布模拟截图里的预览缩略图） */
+const THUMB_STYLE: Record<WorkspaceMode, { bg: string }> = {
+  chat: { bg: "from-sky-400 to-blue-600" },
+  docs: { bg: "from-amber-400 to-orange-500" },
+  slides: { bg: "from-violet-500 to-purple-600" },
+  image: { bg: "from-fuchsia-500 to-pink-600" },
+  research: { bg: "from-emerald-400 to-teal-600" },
+  video: { bg: "from-rose-500 to-red-600" },
+};
+
 /** 技能选择（输入框内下拉）：六个创作能力 —— 与竖栏 PRIMARY_MODES 一致 */
 const SKILLS: { mode: WorkspaceMode; icon: typeof MessageSquare }[] = [
   { mode: "chat", icon: MessageSquare },
@@ -803,6 +824,8 @@ export function ChatPanel() {
   const recallIdx = useRef(-1);
   // UX10: 召回态（继续按 ↑ 可再往前翻）；用户手动编辑即退出
   const [recallActive, setRecallActive] = useState(false);
+  // 空态「技能条」当前选中：all=全部，或具体技能（同步过滤示例卡）
+  const [homeFilter, setHomeFilter] = useState<WorkspaceMode | "all">("all");
 
   const slashMatches = matchSlash(input);
   useEffect(() => setSlashIdx(0), [input]);
@@ -873,13 +896,13 @@ export function ChatPanel() {
 
   const messages = convo?.messages ?? [];
   const mode: WorkspaceMode = convo?.mode ?? "chat";
+  // 空态示例卡：按技能条过滤（全部 或 单技能）
+  const visibleCards =
+    homeFilter === "all" ? HOME_CARDS : HOME_CARDS.filter((c) => c.mode === homeFilter);
   // d5：PPT 生成中（对话内顶部阶段条）
   const deckLoading = mode === "slides" && convo?.deckStatus === "loading";
   // 助手身份行小标签：当前模型名（Codex 每条消息头部同款）
   const modelLabel = MODELS.find((m) => m.id === model)?.label ?? model;
-  // d4：仅有当前这一个（新开）会话＝新用户，空态给建议卡引导；
-  // 已有历史会话＝老用户，回到纯净 r5 空态（只欢迎语 + 输入框）
-  const isFirstTime = conversations.length <= 1;
 
   const scrollToBottom = (smooth = true) =>
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: smooth ? "smooth" : "auto" });
@@ -972,6 +995,31 @@ export function ChatPanel() {
   };
 
   /** 输入变更统一入口：手动编辑即退出 UX10 召回态（召回态下 ↑ 可继续前翻） */
+  // 空态示例卡：点击直接按卡片技能+提示词开始生成（对应截图「点卡即出」）
+  const runStarter = (q: (typeof HOME_CARDS)[number]) => {
+    if (sending) return;
+    const text = q.prompt;
+    if (q.mode !== mode) useChatStore.getState().setMode(q.mode);
+    setInput("");
+    // 与手输发送同规则入栈，↑ 可召回
+    if (sentStack.current[sentStack.current.length - 1] !== text) sentStack.current.push(text);
+    if (sentStack.current.length > 20) sentStack.current.shift();
+    recallIdx.current = -1;
+    if (q.mode === "image") {
+      void useChatStore.getState().generateImage(text, {
+        size: imgSize,
+        model: imgModel,
+        n: imgCount,
+        style: imgStyle || undefined,
+        negative: imgNegative || undefined,
+        reference: imgReference || undefined,
+      });
+      setImgReference("");
+      return;
+    }
+    void useChatStore.getState().send(text);
+  };
+
   const changeInput = (v: string | ((prev: string) => string)) => {
     setRecallActive(false);
     setInput(v);
@@ -1070,18 +1118,76 @@ export function ChatPanel() {
           {/* d5：PPT 生成时，阶段条显示在对话流顶部 */}
           {deckLoading && <SlidesProgressStrip message={convo?.deckMessage ?? ""} />}
           {messages.length === 0 ? (
-            <div className="relative flex min-h-[56vh] flex-col justify-center px-2 pt-2 text-center">
+            <div className="relative px-2 pb-4 pt-6 text-center">
               {/* n5 氛围的浅色版：柔紫主光晕 + 一点琥珀偏光；背景仍是现有白底 */}
               <div aria-hidden className="pointer-events-none absolute -top-6 left-1/2 h-64 w-[560px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(139,92,246,0.13),transparent_70%)] blur-2xl" />
               <div aria-hidden className="pointer-events-none absolute right-2 top-24 hidden h-44 w-72 rounded-full bg-[radial-gradient(closest-side,rgba(251,146,60,0.09),transparent_70%)] blur-2xl md:block" />
               <div className="relative">
-              <h1 className="text-3xl font-semibold tracking-tight text-stone-900 md:text-4xl dark:text-stone-100">
-                欢迎回来，今天想做点什么？
-              </h1>
-              <p className="mt-2 text-sm text-stone-500">用 AI 把想法变成现实。</p>
+                {/* 顶部技能条：对应截图的能力 chips；点选即切技能并过滤下方示例 */}
+                <div
+                  role="tablist"
+                  aria-label="按技能浏览示例"
+                  className="mx-auto flex w-fit max-w-full flex-wrap items-center justify-center gap-1 rounded-full border border-stone-200/80 bg-white/70 p-1 shadow-[0_1px_6px_rgba(0,0,0,0.04)] backdrop-blur"
+                >
+                  {HOME_SKILL_TABS.map((t) => {
+                    const active = homeFilter === t.mode;
+                    const TabIcon = t.icon;
+                    return (
+                      <button
+                        key={t.mode}
+                        role="tab"
+                        aria-selected={active}
+                        onClick={() => {
+                          setHomeFilter(t.mode);
+                          if (t.mode !== "all") useChatStore.getState().setMode(t.mode);
+                        }}
+                        className={cn(
+                          "flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition",
+                          active
+                            ? "bg-violet-600 text-white shadow-sm shadow-violet-200"
+                            : "text-stone-600 hover:bg-stone-100 hover:text-stone-900"
+                        )}
+                      >
+                        {t.mode !== "all" && <TabIcon className="h-3.5 w-3.5" />}
+                        {t.label}
+                      </button>
+                    );
+                  })}
+                </div>
 
-              {/* E5 分体式输入舱 */}
-              <div className="mx-auto mt-8 max-w-3xl">
+                {/* 示例提示词：截图风格的灵感卡（迷你缩略图 + 标题 + 描述），点卡直接生成 */}
+                <div className="mt-7 flex items-baseline justify-between px-1 text-left">
+                  <h2 className="text-sm font-semibold tracking-wide text-stone-500">示例提示词</h2>
+                  <span className="text-xs text-stone-400">点击卡片直接生成 · 也可以在下方向 AI 描述你的需求</span>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-3 text-left lg:grid-cols-3">
+                  {visibleCards.map((q) => {
+                    const Icon = q.icon;
+                    const g = THUMB_STYLE[q.mode];
+                    return (
+                      <button
+                        key={q.title}
+                        aria-label={q.title}
+                        onClick={() => runStarter(q)}
+                        className="group overflow-hidden rounded-2xl border border-stone-200/90 bg-white p-2 text-left transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_12px_30px_-16px_rgba(76,29,149,0.4)]"
+                      >
+                        <span className={cn("relative block h-24 overflow-hidden rounded-xl bg-gradient-to-br lg:h-20", g.bg)}>
+                          <Icon className="absolute -bottom-2 -right-2 h-14 w-14 text-white/25 transition group-hover:scale-105" />
+                          <span aria-hidden className="absolute left-2 top-2 h-2 w-6 rounded-full bg-white/45" />
+                          <span aria-hidden className="absolute left-2 top-6 h-1.5 w-16 rounded-full bg-white/25" />
+                          <span aria-hidden className="absolute bottom-2 left-2 h-1.5 w-12 rounded-full bg-white/20" />
+                        </span>
+                        <span className="block px-1 pt-2">
+                          <span className="block truncate text-[13px] font-semibold text-stone-800">{q.title}</span>
+                          <span className="mt-0.5 block truncate text-xs text-stone-500">{q.desc}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* E5 分体式输入舱 */}
+                <div className="mx-auto mt-6 max-w-3xl">
                 <SplitComposer
                   input={input}
                   setInput={changeInput as typeof setInput}
@@ -1126,34 +1232,6 @@ export function ChatPanel() {
               </div>
               <p className="mt-2 text-xs text-stone-400">回车发送 · Shift+回车换行 · 点上方「技能」可切换 文档 / PPT / 图片</p>
 
-              {/* d4：新用户（无历史会话）空态给 2×2 建议卡引导；老用户回落纯净 r5 */}
-              {isFirstTime && (
-                <div className="mx-auto mt-7 grid max-w-2xl grid-cols-1 gap-3 text-left sm:grid-cols-2">
-                  {HOME_CARDS.slice(0, 4).map((q) => {
-                    const Icon = q.icon;
-                    return (
-                      <button
-                        key={q.title}
-                        aria-label={q.title}
-                        onClick={() => {
-                          useChatStore.getState().setMode(q.mode);
-                          setInput(q.prompt);
-                          setTimeout(() => inputRef.current?.focus(), 0);
-                        }}
-                        className="flex items-start gap-3 rounded-2xl border border-stone-200 bg-white p-4 text-left transition hover:border-stone-300 hover:bg-stone-50"
-                      >
-                        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-stone-100 text-stone-600">
-                          <Icon className="h-[18px] w-[18px]" />
-                        </span>
-                        <span className="min-w-0">
-                          <span className="block text-sm font-semibold text-stone-800">{q.title}</span>
-                          <span className="mt-0.5 block text-xs text-stone-500">{q.desc}</span>
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
               </div>
             </div>
           ) : (
