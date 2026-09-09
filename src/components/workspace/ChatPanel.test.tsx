@@ -223,42 +223,49 @@ describe("ChatPanel 空态", () => {
   });
 });
 
-/* ─────────────── 技能选择（单框下拉） ─────────────── */
+/* ─────────────── 输入框「+」添加菜单 ─────────────── */
 
-describe("ChatPanel 技能选择", () => {
-  const openSkill = () => fireEvent.click(screen.getByTitle(/技能选择/));
-
-  it("输入框内渲染技能下拉（当前为对话）", () => {
+describe("ChatPanel 添加菜单", () => {
+  it("输入框不再显示 AI 对话技能下拉，改为「+」十字按钮", () => {
     seed();
     render(<ChatPanel />);
-    expect(screen.getByTitle(/技能选择/)).toBeDefined();
-    expect(screen.getByRole("button", { name: /AI 对话/ })).toBeDefined();
+    // 旧技能下拉入口已移除（不再有“AI 对话”文本）
+    expect(screen.queryByTitle(/技能选择/)).toBeNull();
+    expect(screen.queryByRole("button", { name: /AI 对话/ })).toBeNull();
+    // 新增「+」按钮
+    expect(screen.getByTitle(/添加：/)).toBeDefined();
   });
 
-  it("展开后列出全部六种技能", () => {
+  it("点击 + 弹出添加菜单（含参考截图各项）", () => {
     seed();
     render(<ChatPanel />);
-    openSkill();
-    for (const m of ["AI 对话", "文档", "PPT", "图片", "深度研究", "视频"]) {
-      expect(screen.getByRole("option", { name: new RegExp(m) })).toBeDefined();
+    fireEvent.click(screen.getByTitle(/添加：/));
+    const items: RegExp[] = [/附加文件/, /引用其它项目/, /关联本地代码/, /插件/, /Figma/, /连接器/, /MCP/, /看板/];
+    for (const re of items) {
+      expect(screen.getByRole("menuitem", { name: re })).toBeDefined();
     }
   });
 
-  it("选择技能切到对应模式", () => {
-    seed();
+  it("点击菜单项收起菜单且不发送消息（演示态提示即将支持）", () => {
+    const spies = seed();
     render(<ChatPanel />);
-    openSkill();
-    fireEvent.click(screen.getByRole("option", { name: /PPT/ }));
-    expect(useChatStore.getState().conversations[0].mode).toBe("slides");
+    fireEvent.click(screen.getByTitle(/添加：/));
+    fireEvent.click(screen.getByRole("menuitem", { name: /附加文件/ }));
+    // 菜单已收起
+    expect(screen.queryByRole("menuitem")).toBeNull();
+    // 不触发对话
+    expect(spies.send).not.toHaveBeenCalled();
+    expect(spies.generateImage).not.toHaveBeenCalled();
   });
 
-  it("切换技能后已输入内容保留", () => {
+  it("再次点击 + 可收起菜单", () => {
     seed();
     render(<ChatPanel />);
-    type("写点什么");
-    openSkill();
-    fireEvent.click(screen.getByRole("option", { name: /图片/ }));
-    expect(ta().value).toBe("写点什么");
+    const btn = screen.getByTitle(/添加：/);
+    fireEvent.click(btn);
+    expect(screen.getByRole("menu")).toBeDefined();
+    fireEvent.click(btn);
+    expect(screen.queryByRole("menu")).toBeNull();
   });
 });
 

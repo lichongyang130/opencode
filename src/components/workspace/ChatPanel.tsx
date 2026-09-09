@@ -10,18 +10,25 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
+  Code,
   Copy,
+  Cpu,
   FileText,
+  FolderGit2,
+  Frame,
   Globe,
   ImageIcon,
   Layers,
-  LayoutGrid,
+  Kanban,
   LayoutTemplate,
   Loader2,
-  Mail,
   MessageSquare,
   Music,
+  Paperclip,
   Pencil,
+  Plug,
+  Plus,
+  Puzzle,
   Presentation,
   RotateCcw,
   Search,
@@ -301,23 +308,24 @@ const ALL_CURATED: { skill: string; card: TemplateCard }[] = [
   { skill: "ppt", card: SKILL_TEMPLATES["slides"][2] },
 ];
 
-/** 技能选择（输入框内下拉）：六个创作能力 —— 与竖栏 PRIMARY_MODES 一致 */
-const SKILLS: { mode: WorkspaceMode; icon: typeof MessageSquare }[] = [
-  { mode: "chat", icon: MessageSquare },
-  { mode: "docs", icon: FileText },
-  { mode: "slides", icon: Presentation },
-  { mode: "image", icon: ImageIcon },
-  { mode: "research", icon: Search },
-  { mode: "video", icon: Video },
+/** 输入框「+」添加菜单：按参考截图（234.png）整理的入口列表。
+ *  这些能力在演示版中多为占位，点击提示即将支持；后续逐个接入真功能。 */
+const ADD_MENU_GROUPS: { label: string; icon: typeof Paperclip; hint: string }[][] = [
+  [
+    { label: "附加文件", icon: Paperclip, hint: "上传图片 / 文档作为上下文" },
+    { label: "引用其它项目", icon: FolderGit2, hint: "关联仓库 / 项目里的内容" },
+  ],
+  [
+    { label: "关联本地代码", icon: Code, hint: "把本地代码目录带进对话" },
+    { label: "插件", icon: Puzzle, hint: "安装扩展能力" },
+    { label: "从 Figma 导入", icon: Frame, hint: "把设计稿转成可对话内容" },
+  ],
+  [
+    { label: "连接器", icon: Plug, hint: "接入第三方服务" },
+    { label: "MCP", icon: Cpu, hint: "模型上下文协议工具" },
+    { label: "看板", icon: Kanban, hint: "打开任务看板" },
+  ],
 ];
-const SKILL_META: Record<WorkspaceMode, { icon: typeof MessageSquare; desc: string }> = {
-  chat: { icon: MessageSquare, desc: "自由对话，AI 自动判断格式" },
-  docs: { icon: FileText, desc: "计划书 / 报告 / 制度" },
-  slides: { icon: Presentation, desc: "主题 → 整套幻灯片" },
-  image: { icon: ImageIcon, desc: "一句话生成 / 编辑图片" },
-  research: { icon: Search, desc: "联网查证 · 带引用报告" },
-  video: { icon: Video, desc: "分镜 / 口播 / 带货脚本" },
-};
 
 /* ═══════════════════════════════════════════
  *  消息气泡
@@ -545,16 +553,16 @@ function SplitComposer({
    */
   conversing?: boolean;
 }) {
-  // 简化单框：技能选择收敛为输入框内的一个下拉（点击其它处 / Esc 关闭）
-  const [skillOpen, setSkillOpen] = useState(false);
-  const skillRef = useRef<HTMLDivElement>(null);
+  // 「+」添加菜单（点击其它处 / Esc 关闭）
+  const [addOpen, setAddOpen] = useState(false);
+  const addRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (!skillOpen) return;
+    if (!addOpen) return;
     const onDown = (e: MouseEvent) => {
-      if (skillRef.current && !skillRef.current.contains(e.target as Node)) setSkillOpen(false);
+      if (addRef.current && !addRef.current.contains(e.target as Node)) setAddOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSkillOpen(false);
+      if (e.key === "Escape") setAddOpen(false);
     };
     document.addEventListener("mousedown", onDown);
     window.addEventListener("keydown", onKey);
@@ -562,12 +570,11 @@ function SplitComposer({
       document.removeEventListener("mousedown", onDown);
       window.removeEventListener("keydown", onKey);
     };
-  }, [skillOpen]);
-  const chooseSkill = (m: WorkspaceMode) => {
-    setSkillOpen(false);
-    if (m === mode) return;
-    useChatStore.getState().setMode(m);
-    toast(`已切换到「${MODE_LABELS[m]}」`, "success");
+  }, [addOpen]);
+  const runAddItem = (label: string) => {
+    setAddOpen(false);
+    // 演示版暂无对应后端能力：统一提示，避免假装已支持
+    toast(`「${label}」即将支持，先把想法写下来试试 AI 生成`, "info");
   };
 
   return (
@@ -828,49 +835,52 @@ function SplitComposer({
 
           {/* ──── 底部工具栏：技能选择 ▾ ｜ 润色提示词 · 模型下拉 · 发送，全部收在输入框下方 ──── */}
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 border-t border-stone-100 px-2.5 py-2.5">
-          {/* 技能选择下拉 */}
-          <div ref={skillRef} className="relative">
+          {/* 「+」十字按钮：弹出添加菜单（附加文件 / 引用项目 / 连接器 … 按参考截图） */}
+          <div ref={addRef} className="relative">
             <button
-              onClick={() => setSkillOpen((v) => !v)}
-              aria-haspopup="listbox"
-              aria-expanded={skillOpen}
-              title="技能选择：对话 / 文档 / PPT / 图片 / 研究 / 视频"
-              className="flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 text-[13px] font-medium text-stone-700 transition hover:border-stone-300 hover:bg-stone-50 hover:text-stone-900"
+              onClick={() => setAddOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={addOpen}
+              title="添加：附加文件 / 引用其它项目 / 连接器等"
+              aria-label="添加"
+              className={cn(
+                "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition",
+                addOpen
+                  ? "border-violet-300 bg-violet-50 text-violet-600"
+                  : "border-stone-200 bg-white text-stone-500 hover:border-stone-300 hover:text-stone-700"
+              )}
             >
-              {(() => {
-                const Icon = SKILL_META[mode].icon;
-                return <Icon className="h-3.5 w-3.5" />;
-              })()}
-              {MODE_LABELS[mode]}
-              <ChevronDown className={cn("h-3 w-3 text-stone-400 transition-transform", skillOpen && "rotate-180")} />
+              <Plus className={cn("h-4 w-4 transition-transform duration-200", addOpen && "rotate-45")} />
             </button>
-            {skillOpen && (
-              <div role="listbox" className="absolute bottom-full left-0 z-40 mb-2 w-48 overflow-hidden rounded-xl border border-[#e5d9c6] bg-white p-1 shadow-xl">
-                {SKILLS.map((skill) => {
-                  const Icon = SKILL_META[skill.mode].icon;
-                  const cur = skill.mode === mode;
-                  return (
-                    <button
-                      key={skill.mode}
-                      role="option"
-                      aria-selected={cur}
-                      onClick={() => chooseSkill(skill.mode)}
-                      className={cn(
-                        "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-brand-50",
-                        cur && "bg-brand-50"
-                      )}
-                    >
-                      <Icon className={cn("h-4 w-4", cur ? "text-brand-600" : "text-stone-400")} />
-                      <span className="min-w-0 flex-1">
-                        <span className={cn("block text-xs", cur ? "font-medium text-brand-700" : "text-stone-700")}>
-                          {MODE_LABELS[skill.mode]}
-                        </span>
-                        <span className="block truncate text-[10px] text-stone-400">{SKILL_META[skill.mode].desc}</span>
-                      </span>
-                      {cur && <Check className="h-3.5 w-3.5 text-brand-600" />}
-                    </button>
-                  );
-                })}
+            {addOpen && (
+              <div
+                role="menu"
+                aria-label="添加菜单"
+                className="absolute bottom-full left-0 z-40 mb-2 w-72 overflow-hidden rounded-2xl border border-stone-200 bg-white py-1.5 shadow-xl"
+              >
+                {ADD_MENU_GROUPS.map((group, gi) => (
+                  <div key={gi} className={gi > 0 ? "mt-1 border-t border-stone-100 pt-1" : ""}>
+                    {group.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <button
+                          key={item.label}
+                          role="menuitem"
+                          onClick={() => runAddItem(item.label)}
+                          className="flex w-full items-center gap-2.5 px-3 py-2 text-left transition hover:bg-stone-50"
+                        >
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-stone-500">
+                            <Icon className="h-4 w-4" />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-[13px] text-stone-700">{item.label}</span>
+                            <span className="block truncate text-[11px] text-stone-400">{item.hint}</span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
               </div>
             )}
           </div>
