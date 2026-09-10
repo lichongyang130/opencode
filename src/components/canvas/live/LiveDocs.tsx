@@ -7,6 +7,7 @@ import { LiveLamp3D } from "./LiveLamp3D";
 
 export function LiveDocByTitle({ title }: { title: string }) {
   if (title.includes("磁悬浮") || title.includes("氛围灯") || title.includes("Saturn")) return <LiveLampBrief />;
+  if (title.includes("香薰") || title.includes("火焰") || title.includes("diffuser")) return <LiveDiffuserBrief />;
   if (title.includes("会议纪要") || title.includes("会议")) return <LiveMinutes />;
   if (title.includes("营销") || title.includes("Campaign") || title.includes("活动")) return <LiveMarketing />;
   if (title.includes("商业模式画布")) return <LiveMindmap />;
@@ -143,6 +144,120 @@ export function LiveLampBrief() {
         一颗被托住的土星，落在你的桌上。光从深海走到琥珀，声音是没有声音。
       </blockquote>
       <p className="mt-8 text-[10px] text-stone-400">SATURN LAMP · 拍摄简报 v1.0 · 提示词由需求方提供，版式由开帆画布落地</p>
+    </Paper>
+  );
+}
+
+const DIFFUSER_PROMPT = `Cozy product photography of a flame-effect aroma diffuser humidifier, matte white rounded body with realistic warm orange flame light rising from the top, delicate water mist swirling upward like silk ribbons, placed on a natural oak desk corner beside an open book and a steaming cup of coffee, warm ambient night lighting, shallow depth of field, Nordic minimalist interior, ultra-realistic render, 8K, soft cinematic lighting --ar 3:4 --v 6.1 --style raw`;
+
+export function LiveDiffuserBrief() {
+  return (
+    <Paper>
+      <p className="text-[11px] tracking-[0.22em] text-stone-400">LOOKBOOK · LIFESTYLE PRODUCT PHOTOGRAPHY</p>
+      <h1 className="mt-3 text-[28px] font-extrabold leading-tight text-stone-900">EMBER MIST</h1>
+      <p className="mt-1 text-[15px] text-stone-500">火焰香薰加湿器 · 北欧桌角氛围拍摄简报</p>
+      <p className="mt-2 text-[12px] text-stone-400">文档编号 EM-2026-092 · 机密 · 仅供场景主图与详情页使用</p>
+
+      <div className="mt-8 grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+        <figure className="overflow-hidden rounded-sm bg-stone-950 shadow-[0_20px_50px_-24px_rgba(0,0,0,0.55)]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/cases/diffuser-flame.jpg" alt="EMBER MIST 主视觉" className="aspect-[3/4] h-auto w-full object-cover object-center" />
+        </figure>
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-800/80">产品叙事</p>
+          <p className="mt-3 text-[13.5px] leading-7 text-stone-700">
+            EMBER MIST 不是一台上桌的「小家电」，而是一簇被托住的炉火。哑光白圆身压在橡木桌角，顶口升起暖橙火焰灯效，水雾像丝带绕着夜色往上走。旁边是摊开的书和还在冒热气的咖啡——生活先入画，产品后被记住。
+          </p>
+          <p className="mt-3 text-[13.5px] leading-7 text-stone-700">
+            本简报按你提供的提示词直出主视觉，并补齐景深、色温、道具纪律与电商裁切，方便摄影与详情页共用同一口径。
+          </p>
+          <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 text-[12px]">
+            {[
+              ["定位", "北欧家居 / 夜间仪式"],
+              ["价格带", "¥268 – 398"],
+              ["材质", "哑光白 ABS · 雾化芯"],
+              ["光效", "仿真火焰 LED"],
+              ["比例", "3:4 主图 · 16:9 窗边"],
+              ["景深", "f/1.8–2.2 浅景深"],
+            ].map(([k, v]) => (
+              <div key={k} className="border-t border-stone-200 pt-2">
+                <dt className="text-[10px] uppercase tracking-wider text-stone-400">{k}</dt>
+                <dd className="mt-0.5 font-medium text-stone-800">{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </div>
+
+      <H>01  提示词（原文，不可改语气）</H>
+      <pre className="mt-2 whitespace-pre-wrap rounded-xl bg-[#16120e] px-4 py-4 font-mono text-[11.5px] leading-6 text-amber-100/90">{DIFFUSER_PROMPT}</pre>
+      <p className="mt-2 text-[11px] text-stone-400">参数：--ar 3:4 --v 6.1 --style raw。禁止加冷白日光灯，只允许钨丝暖色与窗外星光。</p>
+
+      <H>02  镜头与灯光</H>
+      <table className="w-full border-collapse text-[12px]">
+        <thead>
+          <tr className="bg-stone-900 text-amber-50">
+            {["镜号", "用途", "机位", "光", "雾", "备注"].map((h) => (
+              <th key={h} className="px-2 py-2 text-left font-medium">
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="text-stone-700">
+          {[
+            ["B1", "电商主图", "桌面 35° 俯", "台灯暖光 + 火焰自发光", "丝带状上旋", "3:4，书与杯入画"],
+            ["B2", "火焰特写", "顶口微距", "压环境、留焰芯", "薄雾一层", "1:1 详情页"],
+            ["B3", "夜窗场景", "窗边侧逆", "窗外城市微光", "可见丝带", "16:9 生活方式"],
+            ["B4", "材质", "机身 45°", "侧光扫哑光颗粒", "无雾", "白身不可过曝"],
+            ["B5", "道具关系", "书页平视", "浅景深虚化后景", "轻雾", "眼镜可入画"],
+          ].map((r) => (
+            <tr key={r[0]} className="border-b border-stone-100">
+              {r.map((c) => (
+                <td key={c} className="px-2 py-2">
+                  {c}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <H>03  色彩与道具纪律</H>
+      <div className="grid gap-3 sm:grid-cols-3">
+        {[
+          ["Flame Orange", "#E07A2F", "焰芯，不可偏红霓虹"],
+          ["Mist Ivory", "#E8D9C8", "水雾，保持透明"],
+          ["Oak", "#C4A574", "桌面，年轮可读"],
+          ["Matte White", "#EFECE7", "机身，禁止高光炸点"],
+          ["Night Amber", "#8B5A2B", "台灯环境光"],
+          ["Coffee Steam", "8% 白", "杯沿一小缕即可"],
+        ].map(([n, hex, d]) => (
+          <div key={n} className="rounded-xl border border-stone-200 p-3">
+            <div className="flex items-center gap-2">
+              <span className="h-6 w-6 rounded-full border border-stone-200" style={{ background: hex.startsWith("#") ? hex : "#e7e5e4" }} />
+              <p className="text-[13px] font-semibold text-stone-800">{n}</p>
+            </div>
+            <p className="mt-1 font-mono text-[11px] text-stone-400">{hex}</p>
+            <p className="mt-1 text-[11px] text-stone-500">{d}</p>
+          </div>
+        ))}
+      </div>
+
+      <H>04  交付清单</H>
+      <ul className="list-disc pl-5 text-[13px] leading-7 text-stone-600">
+        <li>主图 3:4，长边 4000px，sRGB，无水印。</li>
+        <li>窗边 16:9 一张，人物不出镜。</li>
+        <li>火焰特写 1:1 一张；机身哑光特写一张。</li>
+        <li>PSD 分层：背景 / 桌面 / 机身 / 火焰 / 雾 / 书与杯。</li>
+        <li>本页简报 PDF 与提示词原文一并存档。</li>
+      </ul>
+
+      <H>05  文案可用句</H>
+      <blockquote className="border-l-2 border-amber-700/70 pl-4 text-[13.5px] leading-7 text-stone-700">
+        一簇不烫手的火，一缕会绕弯的雾。书还摊着，咖啡还热着，夜先安静下来。
+      </blockquote>
+      <p className="mt-8 text-[10px] text-stone-400">EMBER MIST · 拍摄简报 v1.0 · 提示词由需求方提供，版式由开帆画布落地</p>
     </Paper>
   );
 }

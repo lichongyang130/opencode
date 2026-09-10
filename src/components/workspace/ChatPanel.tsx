@@ -32,7 +32,9 @@ import {
   Presentation,
   RotateCcw,
   Search,
+  Sparkles,
   Square,
+  X,
   Video,
   Wand2,
   Zap,
@@ -59,8 +61,8 @@ import {
 } from "@/lib/slash";
 import { cn } from "@/lib/utils";
 import { buildDetailedPrompt } from "@/lib/promptStudio";
-import { PreviewPopover, type AnchorRect } from "@/components/canvas/PreviewPopover";
 import { TPL_ART } from "@/lib/tplArt";
+import { LiveCaseBody } from "@/components/canvas/live/LiveCaseBody";
 
 const IMAGE_SIZES = [
   { id: "1024x1024", label: "方形 1:1" },
@@ -79,7 +81,7 @@ const IMAGE_COUNTS = [
  * （每行 3 个，先显示 9 张，箭头展开隐藏 3 张）。点击模板卡会把该卡主题
  * 组合成详细提示词填入输入框。
  */
-type TemplateCard = { title: string; desc: string; prompt?: string };
+type TemplateCard = { title: string; desc: string; prompt?: string; verbatim?: boolean; author?: string };
 type HomeSkill = {
   key: string;
   label: string;
@@ -126,7 +128,22 @@ const SKILL_TEMPLATES: Record<string, TemplateCard[]> = {
     { title: "合同要点", desc: "把合同讲成人话", prompt: "用大白话解释这份合同里我需要重点关注的条款" },
   ],
   "docs": [
-    { title: "生成文档", desc: "商业计划书 / 报告一键成稿", prompt: "写一份 SaaS 产品商业计划书" },
+    {
+      title: "磁悬浮氛围灯拍摄简报",
+      desc: "商业产品摄影文档 · 主视觉 + 提示词",
+      author: "开帆工坊 · 林予安",
+      verbatim: true,
+      prompt:
+        "Commercial product photography of a futuristic magnetic levitation ambient lamp, a glowing Saturn-like sphere floating above a minimalist walnut wood base with brass ring detail, gradient light shifting from deep ocean blue to warm amber, delicate mist surrounding the sphere, dark studio background with dramatic rim lighting, ultra-realistic, 8K render, octane render, premium industrial design, cinematic lighting --ar 3:4 --v 6.1 --style raw",
+    },
+    {
+      title: "火焰香薰机氛围拍摄简报",
+      desc: "北欧桌角场景摄影 · 主视觉 + 提示词",
+      author: "开帆工坊 · 林予安",
+      verbatim: true,
+      prompt:
+        "Cozy product photography of a flame-effect aroma diffuser humidifier, matte white rounded body with realistic warm orange flame light rising from the top, delicate water mist swirling upward like silk ribbons, placed on a natural oak desk corner beside an open book and a steaming cup of coffee, warm ambient night lighting, shallow depth of field, Nordic minimalist interior, ultra-realistic render, 8K, soft cinematic lighting --ar 3:4 --v 6.1 --style raw",
+    },
     { title: "公司介绍", desc: "企业简介与亮点提炼", prompt: "写一份 800 字公司介绍，突出技术壁垒" },
     { title: "PRD 文档", desc: "需求背景到验收标准", prompt: "为新功能「团队周报」写一份 PRD" },
     { title: "竞品分析", desc: "优劣势与差异化建议", prompt: "对比 Notion 与飞书文档，输出竞品分析" },
@@ -137,7 +154,6 @@ const SKILL_TEMPLATES: Record<string, TemplateCard[]> = {
     { title: "立项提案", desc: "背景目标与资源预算", prompt: "写一份「数据中台」立项提案" },
     { title: "FAQ 文档", desc: "常见问题标准化回答", prompt: "整理产品常见问题 FAQ 二十条" },
     { title: "新闻稿", desc: "正式有新闻感的企业稿", prompt: "写一篇融资成功的企业新闻稿" },
-    { title: "白皮书", desc: "行业洞察型深度长文", prompt: "写一份《2026 企业 AI 应用白皮书》框架" },
   ],
   "slides": [
     { title: "制作 PPT", desc: "输入主题生成整套幻灯片", prompt: "为产品发布会生成一套 10 页 PPT" },
@@ -636,7 +652,7 @@ function SplitComposer({
                   value={imgNegative}
                   onChange={(e) => setImgNegative(e.target.value)}
                   placeholder="不想出现的元素，逗号分隔（仅万相生效）"
-                  className="min-w-0 flex-1 rounded border border-stone-200 bg-transparent px-2 py-0.5 text-[11px] outline-none placeholder:text-stone-300 focus:border-brand-300"
+                  className="min-w-0 flex-1 rounded border border-stone-200 bg-transparent px-2 py-0.5 text-[11px] outline-none placeholdex] outline-none placeholder:text-stone-300 focus:border-brand-300"
                 />
                 <button
                   onClick={() => fileRef.current?.click()}
@@ -990,67 +1006,133 @@ function SlidesProgressStrip({ message }: { message: string }) {
  *  主 ChatPanel
  * ═══════════════════════════════════════════ */
 
-/** 模板卡：真实预览图 + hover 大图浮层；无图卡片用技能色渐变兜底（不再破图） */
+function liveKindOfSkill(skillKey: string): string {
+  if (skillKey === "ppt" || skillKey === "slides") return "ppt";
+  return skillKey;
+}
+
+/** 模板卡：点击打开左交互成品 + 右介绍/提示词/做同款 */
 function TemplateCard({
   card,
   skillLabel,
+  skillKey,
   skillIcon: SkillIcon,
   art,
   onFill,
 }: {
   card: TemplateCard;
   skillLabel: string;
+  skillKey: string;
   skillIcon: typeof MessageSquare;
   art?: string;
   onFill: () => void;
 }) {
-  const [anchor, setAnchor] = useState<AnchorRect | null>(null);
-  const enter = (e: ReactMouseEvent<HTMLElement>) => {
-    if (!art) return;
-    const r = e.currentTarget.getBoundingClientRect();
-    setAnchor({ left: r.left, top: r.top, width: r.width, height: r.height });
+  const [open, setOpen] = useState(false);
+  const kind = liveKindOfSkill(skillKey);
+  const author = card.author ?? "开帆画布官方";
+  const promptText = card.prompt?.trim() || `请帮我完成「${card.title}」：${skillLabel}相关的任务，给出可直接使用的成品。`;
+  const intro =
+    card.title.includes("磁悬浮")
+      ? "按商业摄影提示词落地的产品拍摄简报：主视觉、镜头表、色板与交付清单都在左侧纸页里，可滚动阅读。"
+      : card.title.includes("香薰")
+        ? "按场景摄影提示词落地的香薰机简报：橡木桌角、火焰灯效与丝带水雾都在左侧纸页，可滚动阅读。"
+        : card.desc || `${skillLabel}示例。左侧是可交互成品，右侧可复制提示词后做同款。`;
+
+  const show = () => setOpen(true);
+  const close = () => setOpen(false);
+  const same = () => {
+    onFill();
+    setOpen(false);
   };
+
   return (
-    <button
-      type="button"
-      aria-label={card.title}
-      onClick={onFill}
-      onMouseEnter={enter}
-      onMouseLeave={() => setAnchor(null)}
-      className="group overflow-hidden rounded-2xl border border-stone-200/90 bg-white p-1.5 text-left transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_12px_30px_-16px_rgba(76,29,149,0.4)]"
-    >
-      <span className="relative block h-16 w-full overflow-hidden rounded-lg bg-stone-100 sm:h-20 lg:h-[4.5rem]">
-        {art ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={art}
-            alt=""
-            loading="lazy"
-            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
-          />
-        ) : (
-          <span className="flex h-full w-full items-center justify-center bg-gradient-to-br from-stone-50 to-stone-100">
-            <SkillIcon className="h-5 w-5 text-stone-400/70 sm:h-6 sm:w-6" strokeWidth={1.6} />
-          </span>
-        )}
-      </span>
-      <span className="block px-1 pt-2">
-        <span className="block truncate text-[13px] font-semibold text-stone-800">{card.title}</span>
-        {card.desc && <span className="mt-0.5 block truncate text-xs text-stone-500">{card.desc}</span>}
-      </span>
-      {art && anchor && (
-        <PreviewPopover anchor={anchor}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={art} alt="" className="aspect-[16/9] w-full object-cover" />
-          <span className="block border-t border-stone-100 px-3 py-2.5 text-left">
-            <span className="block truncate text-[13px] font-semibold text-stone-800">
-              {skillLabel} · {card.title}
+    <>
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label={card.title}
+        onClick={show}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            show();
+          }
+        }}
+        className="group cursor-pointer overflow-hidden rounded-2xl border border-stone-200/90 bg-white p-1.5 text-left transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_12px_30px_-16px_rgba(76,29,149,0.4)]"
+      >
+        <span className="relative block h-16 w-full overflow-hidden rounded-lg bg-stone-100 sm:h-20 lg:h-[4.5rem]">
+          {art ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={art}
+              alt=""
+              loading="lazy"
+              className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
+            />
+          ) : (
+            <span className="flex h-full w-full items-center justify-center bg-gradient-to-br from-stone-50 to-stone-100">
+              <SkillIcon className="h-5 w-5 text-stone-400/70 sm:h-6 sm:w-6" strokeWidth={1.6} />
             </span>
-            {card.desc && <span className="mt-0.5 block truncate text-xs text-stone-400">{card.desc}</span>}
-          </span>
-        </PreviewPopover>
+          )}
+        </span>
+        <span className="block px-1 pt-2">
+          <span className="block truncate text-[13px] font-semibold text-stone-800">{card.title}</span>
+          {card.desc && <span className="mt-0.5 block truncate text-xs text-stone-500">{card.desc}</span>}
+        </span>
+      </div>
+
+      {open && (
+        <div className="fixed inset-0 z-[80] flex bg-stone-900/55 p-3 sm:p-6" onClick={close}>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={card.title}
+            className="mx-auto flex h-full w-full max-w-[1280px] overflow-hidden rounded-[22px] bg-[#f4eee4] shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="min-h-0 min-w-0 flex-1 bg-[#ebe4d6]">
+              <LiveCaseBody kind={kind} title={card.title} image={art} interactive />
+            </div>
+            <aside className="flex w-[min(380px,40vw)] shrink-0 flex-col border-l border-stone-200 bg-[#fbf8f2]">
+              <header className="flex items-start gap-3 border-b border-stone-200/80 bg-white/80 px-4 py-3">
+                <div className="min-w-0 flex-1 text-left">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#c45c2a]">介绍</p>
+                  <h3 className="mt-0.5 truncate text-[16px] font-semibold text-stone-800">{card.title}</h3>
+                  <p className="mt-0.5 text-[11px] text-stone-400">
+                    {skillLabel} · 作者 {author}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={close}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-stone-400 hover:bg-stone-100"
+                  aria-label="关闭"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </header>
+              <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 text-left">
+                <p className="text-[13px] leading-6 text-stone-600">{intro}</p>
+                <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#c45c2a]">提示词</p>
+                <pre className="mt-2 whitespace-pre-wrap rounded-xl bg-stone-900 px-3.5 py-3 font-sans text-[12px] leading-6 text-amber-50">
+                  {promptText}
+                </pre>
+              </div>
+              <div className="shrink-0 space-y-2 border-t border-stone-200 bg-white/80 px-4 py-3">
+                <p className="text-[12px] text-stone-500">作者 · {author}</p>
+                <button
+                  type="button"
+                  onClick={same}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-orange-400 to-red-500 py-2.5 text-[14px] font-semibold text-white shadow-[0_8px_20px_-10px_rgba(234,88,12,0.8)]"
+                >
+                  <Sparkles className="h-4 w-4" /> 做同款
+                </button>
+              </div>
+            </aside>
+          </div>
+        </div>
       )}
-    </button>
+    </>
   );
 }
 
@@ -1277,8 +1359,10 @@ export function ChatPanel() {
     // 模式，落到 AI 对话先出方案；与当前相同则不动
     const targetMode = skill.mode ?? "chat";
     if (targetMode !== mode) useChatStore.getState().setMode(targetMode);
-    // 同卡多次点击 → promptStudio 组合出内容不同的详细提示词，并防连续重复
-    const text = buildDetailedPrompt(skill.key, q.title, skill.label);
+    // 卡上带原文提示词时原样填入（文档示例按用户给的 prompt 落地）
+    const text = q.verbatim && q.prompt?.trim()
+      ? q.prompt
+      : buildDetailedPrompt(skill.key, q.title, skill.label);
     if (text !== input) setInput(text);
     setTimeout(() => inputRef.current?.focus(), 0);
     toast(`已填入「${q.title}」的详细提示词，可编辑后回车发送`, "success");
@@ -1534,7 +1618,7 @@ export function ChatPanel() {
                       {activeSkill.label} · 示例模板
                     </h2>
                     <span className="truncate text-xs text-stone-400">
-                      {`共 ${templates.length} 个 · 点卡片填入详细提示词`}
+                      {`共 ${templates.length} 个 · 点卡片预览，再做同款`}
                     </span>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
@@ -1572,6 +1656,7 @@ export function ChatPanel() {
                         key={item.skill + ":" + q.title}
                         card={q}
                         skillLabel={curSkill.label}
+                        skillKey={curSkill.key}
                         skillIcon={curSkill.icon}
                         art={art}
                         onFill={() => fillStarter(curSkill, q)}

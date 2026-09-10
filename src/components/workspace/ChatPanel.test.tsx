@@ -103,9 +103,9 @@ describe("ChatPanel 空态", () => {
     expect(screen.queryByRole("tab", { name: /全部/ })).toBeNull();
     expect(screen.getByTitle("更多技能")).toBeDefined();
     expect(screen.getByText("文档 · 示例模板")).toBeDefined();
-    expect(screen.getByText(/点卡片填入详细提示词/)).toBeDefined();
-    // 模板卡用真实预览图（首屏文档卡「生成文档」映射 canvas-art/docs-2）
-    expect(container.querySelector('img[src="/canvas-art/docs-2.jpg"]')).not.toBeNull();
+    expect(screen.getByText(/点卡片预览/)).toBeDefined();
+    // 模板卡用真实预览图（首屏文档卡「磁悬浮氛围灯拍摄简报」）
+    expect(container.querySelector('img[src="/cases/lamp-levitation.jpg"]')).not.toBeNull();
   });
 
   it("图片技能模板卡显示真实 AI 成品图（d-* 图库）", () => {
@@ -183,7 +183,7 @@ describe("ChatPanel 空态", () => {
   it("默认技能（文档）第 1 页渲染 3 张示例卡", () => {
     seed();
     render(<ChatPanel />);
-    for (const name of ["生成文档", "公司介绍", "PRD 文档"]) {
+    for (const name of ["磁悬浮氛围灯拍摄简报", "火焰香薰机氛围拍摄简报", "公司介绍"]) {
       expect(screen.getByRole("button", { name })).toBeDefined();
     }
     expect(screen.queryByRole("button", { name: "制作 PPT" })).toBeNull();
@@ -195,14 +195,14 @@ describe("ChatPanel 空态", () => {
     fireEvent.click(screen.getByRole("tab", { name: "文档" }));
     expect(screen.getByText("文档 · 示例模板")).toBeDefined();
     // 第 1 页：文档模板前 3 张
-    for (const name of ["生成文档", "公司介绍", "PRD 文档"]) {
+    for (const name of ["磁悬浮氛围灯拍摄简报", "火焰香薰机氛围拍摄简报", "公司介绍"]) {
       expect(screen.getByRole("button", { name })).toBeDefined();
     }
     expect(screen.queryByRole("button", { name: "制作 PPT" })).toBeNull();
     // 翻 3 次到最后一页（12/3=4 页）
     for (let i = 0; i < 3; i++) fireEvent.click(screen.getByTitle("下一个示例"));
+    expect(screen.getByRole("button", { name: "立项提案" })).toBeDefined();
     expect(screen.getByRole("button", { name: "新闻稿" })).toBeDefined();
-    expect(screen.getByRole("button", { name: "白皮书" })).toBeDefined();
   });
 
   it("空消息态不渲染角色选择器", () => {
@@ -569,6 +569,7 @@ describe("ChatPanel 预填", () => {
     render(<ChatPanel />);
     fireEvent.click(screen.getByRole("tab", { name: "PPT" }));
     fireEvent.click(screen.getByRole("button", { name: "制作 PPT" }));
+    fireEvent.click(screen.getByRole("button", { name: /做同款/ }));
     // 填入的是详细变体提示词（长于原始一句），内容属于该卡主题
     expect(ta().value.length).toBeGreaterThan(30);
     expect(ta().value).toContain("幻灯片");
@@ -583,6 +584,7 @@ describe("ChatPanel 预填", () => {
     render(<ChatPanel />);
     fireEvent.click(screen.getByRole("tab", { name: "图片" }));
     fireEvent.click(screen.getByRole("button", { name: "生成图片" }));
+    fireEvent.click(screen.getByRole("button", { name: /做同款/ }));
     expect(ta().value.length).toBeGreaterThan(30);
     expect(spies.generateImage).not.toHaveBeenCalled();
     expect(spies.send).not.toHaveBeenCalled();
@@ -594,10 +596,12 @@ describe("ChatPanel 预填", () => {
     render(<ChatPanel />);
     fireEvent.click(screen.getByRole("tab", { name: "PPT" }));
     fireEvent.click(screen.getByRole("button", { name: "制作 PPT" }));
+    fireEvent.click(screen.getByRole("button", { name: /做同款/ }));
     const first = ta().value;
     // 清空后再次点击同一卡
     act(() => { type(""); });
     fireEvent.click(screen.getByRole("button", { name: "制作 PPT" }));
+    fireEvent.click(screen.getByRole("button", { name: /做同款/ }));
     expect(ta().value).not.toBe(first);
     expect(ta().value.length).toBeGreaterThan(30);
   });
