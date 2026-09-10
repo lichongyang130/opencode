@@ -317,6 +317,15 @@ const FACE_POOL = [
   "/cases/experts/r10.jpg",
   "/cases/experts/r11.jpg",
   "/cases/experts/r12.jpg",
+  "/cases/experts/r13.jpg",
+  "/cases/experts/r14.jpg",
+  "/cases/experts/r15.jpg",
+  "/cases/experts/r16.jpg",
+  "/cases/experts/r17.jpg",
+  "/cases/experts/r18.jpg",
+  "/cases/experts/r19.jpg",
+  "/cases/experts/r20.jpg",
+  "/cases/experts/r21.jpg",
 ];
 
 function hashId(id: string) {

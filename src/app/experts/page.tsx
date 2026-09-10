@@ -262,7 +262,7 @@ function ExpertsStudio() {
                 className={`rounded-[22px] border bg-white p-5 ${on ? "border-[#e0b79c] shadow-sm" : "border-stone-200/80"}`}
               >
                 <div className="flex gap-3">
-                  <span className="h-14 w-14 shrink-0 overflow-hidden rounded-full bg-[#fbf3ec]">
+                  <span className="h-20 w-20 shrink-0 overflow-hidden rounded-full bg-[#fbf3ec] ring-1 ring-stone-200">
                     {src ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={src} alt="" className="h-full w-full object-cover" />
