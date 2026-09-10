@@ -140,18 +140,18 @@ const SKILL_TEMPLATES: Record<string, TemplateCard[]> = {
     { title: "PRD 文档", desc: "需求背景到验收标准", prompt: "为新功能「团队周报」写一份 PRD" },
   ],
   "slides": [
-    { title: "制作 PPT", desc: "输入主题生成整套幻灯片", prompt: "为产品发布会生成一套 10 页 PPT" },
-    { title: "项目汇报", desc: "进度结果问题一步到位", prompt: "为季度项目汇报做一份 8 页 PPT" },
-    { title: "融资路演", desc: "讲清商业模式与空间", prompt: "做一份种子轮融资路演 PPT" },
-    { title: "营销提案", desc: "策略到创意的提案", prompt: "做一份品牌联名营销提案 PPT" },
-    { title: "培训课件", desc: "知识要点清晰拆解", prompt: "做一套新人入职培训课件 PPT" },
-    { title: "周会同步", desc: "快速对齐本周进展", prompt: "做一份 5 页周会同步 PPT" },
-    { title: "竞品对比", desc: "关键维度并排呈现", prompt: "做一份我们与竞品对比的 PPT" },
-    { title: "读书分享", desc: "观点提炼与启发", prompt: "为《纳瓦尔宝典》做读书分享 PPT" },
-    { title: "行业趋势", desc: "数据支撑的趋势分析", prompt: "做一份 AI 行业 2026 趋势分析 PPT" },
-    { title: "数据复盘", desc: "指标变化一目了然", prompt: "做一份上季度数据复盘 PPT" },
-    { title: "方案汇报", desc: "需求理解到实施计划", prompt: "为客户做一份数字化改造方案 PPT" },
-    { title: "年度回顾", desc: "大事记与来年展望", prompt: "做一份团队年度回顾 PPT" },
+    { title: "产品发布 SCQA", desc: "对话即成品 · 15分钟客户面谈", author: "开帆工坊 · 战略组", verbatim: true, prompt: "按 SCQA+金字塔做 12 页深色大屏PPT。主题：开帆画布对话即成品。听众：决策者，只要结论。论点：同一会话交付可上会成品不是提示词草稿。行动：批准20席位8周试点。禁止编造客户与ROI百分比。示意数据须标注。" },
+    { title: "工作汇报金字塔", desc: "结论先行 · 董事会预审", author: "开帆工坊 · 战略组", verbatim: true, prompt: "金字塔原理工作汇报PPT，12页。结论先行，3个支撑：进度、风险、下一步。听众高管，不要细节堆砌。未知数字写待核实。" },
+    { title: "融资路演故事弧", desc: "背景-冲突-高潮-解决", author: "开帆工坊 · 战略组", verbatim: true, prompt: "种子轮路演PPT，12页故事弧线。讲清问题、方案、差异、路径。不编ARR与客户名。要行动：进入尽调。" },
+    { title: "方案提案问题解决", desc: "现状-问题-方案-效果", author: "开帆工坊 · 战略组", verbatim: true, prompt: "客户方案提案PPT。问题解决结构。效果写规划口径，不承诺未测指标。" },
+    { title: "培训教学 PREP", desc: "观点-理由-案例-重申", author: "开帆工坊 · 战略组", verbatim: true, prompt: "内部培训课件PPT。PREP结构。每章一个观点句，不是目录式介绍。" },
+    { title: "年终总结时间线", desc: "过去-现在-未来", author: "开帆工坊 · 战略组", verbatim: true, prompt: "年终总结PPT。时间线结构。大事记与来年三件事。不编造营收。" },
+    { title: "行业分析对照", desc: "格局与可执行判断", author: "开帆工坊 · 战略组", verbatim: true, prompt: "行业分析PPT。发现/对照/建议。数据标示意或来源待补。" },
+    { title: "客户面谈FAB", desc: "特征-优势-利益", author: "开帆工坊 · 战略组", verbatim: true, prompt: "产品介绍PPT用FAB。利益对齐决策者关注的投入产出，不堆功能清单。" },
+    { title: "项目复盘时间线", desc: "过去现在未来 · 内部会", author: "开帆工坊 · 战略组", verbatim: true, prompt: "项目复盘PPT。失败与取舍写清楚。下一步可执行。" },
+    { title: "竞品差异一页", desc: "只要结论和关键对照", author: "开帆工坊 · 战略组", verbatim: true, prompt: "竞品对照PPT。维度并列。禁止贬低竞品绝对化。" },
+    { title: "周会同步极简", desc: "5页结论 · 执行层", author: "开帆工坊 · 战略组", verbatim: true, prompt: "5页周会PPT。完成/风险/求助。不要装饰页。" },
+    { title: "董事会一页地图", desc: "逻辑地图 + 强攻区", author: "开帆工坊 · 战略组", verbatim: true, prompt: "先出一页逻辑地图：核心论点、3-5支撑、页数与时间、强攻/带过。再拆章节。" },
   ],
   "image": [
     { title: "生成图片", desc: "一句话生成 / 编辑图片", prompt: "一只戴宇航头盔的柯基在月球上，电影感海报" },
@@ -1026,6 +1026,8 @@ function TemplateCard({
         ? "按场景摄影提示词落地的香薰机简报：橡木桌角、火焰灯效与丝带水雾都在左侧纸页，可滚动阅读。"
         : card.title.includes("音箱") || card.title.includes("机甲")
           ? "按赛博朋克提示词落地的透明机甲音箱简报：亚克力内构、冰蓝灯带与火山岩台面都在左侧宽屏轮播。"
+          : skillLabel === "PPT" || skillLabel === "幻灯片"
+            ? "咨询框架深色大屏：可翻页。先逻辑地图，再 SCQA/金字塔章节，示意不是实测。"
           : card.desc || `${skillLabel}示例。左侧是可交互成品，右侧可复制提示词后做同款。`;
 
   const show = () => setOpen(true);

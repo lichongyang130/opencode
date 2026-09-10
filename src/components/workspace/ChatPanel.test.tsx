@@ -185,7 +185,7 @@ describe("ChatPanel 空态", () => {
     for (const name of ["曜界 AURA ONE 产品手册", "静域 SILENCE PRO 产品手册", "澄光 LUMEN 4K 产品手册", "锋境 EDGEBOOK X 产品手册"]) {
       expect(screen.getByRole("button", { name })).toBeDefined();
     }
-    expect(screen.queryByRole("button", { name: "制作 PPT" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "产品发布 SCQA" })).toBeNull();
     expect(screen.queryByText(/共 \d+ 个/)).toBeNull();
     expect(screen.queryByTitle("下一个示例")).toBeNull();
   });
@@ -198,7 +198,7 @@ describe("ChatPanel 空态", () => {
     for (const name of ["曜界 AURA ONE 产品手册", "静域 SILENCE PRO 产品手册", "澄光 LUMEN 4K 产品手册", "锋境 EDGEBOOK X 产品手册"]) {
       expect(screen.getByRole("button", { name })).toBeDefined();
     }
-    expect(screen.queryByRole("button", { name: "制作 PPT" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "产品发布 SCQA" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "换一批" }));
     fireEvent.click(screen.getByRole("button", { name: "换一批" }));
     expect(screen.getByRole("button", { name: "映刻 FRAME ONE 产品手册" })).toBeDefined();
@@ -568,11 +568,11 @@ describe("ChatPanel 预填", () => {
     const spies = seed();
     render(<ChatPanel />);
     fireEvent.click(screen.getByRole("tab", { name: "PPT" }));
-    fireEvent.click(screen.getByRole("button", { name: "制作 PPT" }));
+    fireEvent.click(screen.getByRole("button", { name: "产品发布 SCQA" }));
     fireEvent.click(screen.getByRole("button", { name: /做同款/ }));
     // 填入的是详细变体提示词（长于原始一句），内容属于该卡主题
     expect(ta().value.length).toBeGreaterThan(30);
-    expect(ta().value).toContain("幻灯片");
+    expect(ta().value).toContain("SCQA");
     // 不触发发送 / 绘图
     expect(spies.send).not.toHaveBeenCalled();
     expect(spies.generateImage).not.toHaveBeenCalled();
@@ -594,13 +594,12 @@ describe("ChatPanel 预填", () => {
   it("同一张模板卡点击两次：填入的详细提示词内容不同", () => {
     seed();
     render(<ChatPanel />);
-    fireEvent.click(screen.getByRole("tab", { name: "PPT" }));
-    fireEvent.click(screen.getByRole("button", { name: "制作 PPT" }));
+    fireEvent.click(screen.getByRole("tab", { name: "图片" }));
+    fireEvent.click(screen.getByRole("button", { name: "生成图片" }));
     fireEvent.click(screen.getByRole("button", { name: /做同款/ }));
     const first = ta().value;
-    // 清空后再次点击同一卡
     act(() => { type(""); });
-    fireEvent.click(screen.getByRole("button", { name: "制作 PPT" }));
+    fireEvent.click(screen.getByRole("button", { name: "生成图片" }));
     fireEvent.click(screen.getByRole("button", { name: /做同款/ }));
     expect(ta().value).not.toBe(first);
     expect(ta().value.length).toBeGreaterThan(30);

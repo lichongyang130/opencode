@@ -33,7 +33,7 @@ const BRIEF = {
   action: "批准 20 席位、8 周试点，用周报与路演两件成品验收。",
 };
 
-function LivePptDeck() {
+function LivePptDeck({ kickerTitle }: { kickerTitle?: string }) {
   const slides: Slide[] = [
     {
       kicker: "PRODUCT BRIEFING · 15′",
@@ -311,6 +311,5 @@ function LivePptDeck() {
 }
 
 export function LivePpt({ title }: { title?: string }) {
-  void title;
-  return <LivePptDeck />;
+  return <LivePptDeck kickerTitle={title} />;
 }
