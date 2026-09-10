@@ -34,6 +34,7 @@ export function LiveAstraHandbook() {
         <h1 className="mt-8 text-[34px] font-semibold tracking-tight text-white">启衡 ASTRA</h1>
         <p className="mt-2 text-[16px] text-stone-400">企业智能工作系统 · 12 页产品手册</p>
         <p className="mt-1 text-[12px] text-stone-500">文档编号 AH-2026-001 · 规划稿 · 供设计排版</p>
+        <Shot src="/cases/astra/p01-hero.jpg" cap="工作台概念静帧 · 示意，非已上线界面" />
 
         <Page n="01" title="开篇：工作，正在被重新定义">
           <Thesis>真正的升级，不是更快地完成旧流程，而是让复杂工作以更清晰的方式发生。</Thesis>
@@ -52,6 +53,7 @@ export function LiveAstraHandbook() {
 
         <Page n="02" title="产品定位：ASTRA 是什么，不是什么">
           <Thesis>ASTRA 是企业工作的编排层，不是又一个聊天窗口。</Thesis>
+          <Shot src="/cases/astra/p02-workbench.jpg" cap="左意图 / 右草稿与出处 · 概念界面" />
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <Box h="是">
               连接已有系统中的数据与知识，按场景编排「检索—起草—审核—归档」，并留下可审计轨迹。
@@ -72,6 +74,7 @@ export function LiveAstraHandbook() {
 
         <Page n="03" title="能力全景：让复杂工作清晰发生">
           <Thesis>四条主能力，对应四类最耗判断力的工作。</Thesis>
+          <Shot src="/cases/astra/p03-capabilities.jpg" cap="编排 · 检索 · 起草 · 洞察" />
           <div className="mt-5 grid gap-2 sm:grid-cols-2">
             {[
               ["编排", "把跨系统动作收成可配置流程"],
@@ -91,6 +94,7 @@ export function LiveAstraHandbook() {
 
         <Page n="04" title="人机协作：职责写在界面上">
           <Thesis>系统负责组织与草稿，人负责确认与担责。</Thesis>
+          <Shot src="/cases/astra/p02-workbench.jpg" cap="职责写在同一屏：草稿可改、可退、可签" />
           <table className="mt-5 w-full border-collapse text-[12px]">
             <thead>
               <tr className="border-b border-white/15 text-left text-cyan-200/80">
@@ -124,6 +128,7 @@ export function LiveAstraHandbook() {
 
         <Page n="05" title="知识底座：企业记忆可被调用">
           <Thesis>没有权限与出处的「聪明」，只是不可用的聪明。</Thesis>
+          <Shot src="/cases/astra/p05-knowledge.jpg" cap="权限内召回：被点亮的才可进入上下文" />
           <p className="mt-4 text-[13.5px] leading-7 text-stone-300">
             ASTRA 将制度、项目纪要、产品说明与经授权的业务记录纳入可检索层。每次引用在草稿旁给出出处卡片；无权限的内容既不出现在结果里，也不进入模型上下文。
           </p>
@@ -139,6 +144,7 @@ export function LiveAstraHandbook() {
 
         <Page n="06" title="把重复工作，交给有序流程">
           <Thesis>一条可回退的流水线，比一次惊艳的生成更重要。</Thesis>
+          <Shot src="/cases/astra/p06-flow.jpg" cap="接收 → 提取 → 草稿 → 审核 → 归档" />
           <ol className="mt-5 space-y-2 text-[13px] text-stone-200">
             {[
               "接收需求：表单或会话采集目标、对象、截止与约束",
@@ -161,6 +167,7 @@ export function LiveAstraHandbook() {
 
         <Page n="07" title="决策辅助：看见数据，更看见关联">
           <Thesis>我们呈现事实、推断与建议，并让三者分开站立。</Thesis>
+          <Shot src="/cases/astra/p07-decision.jpg" cap="三栏权重递减：事实最实，建议最轻" />
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             {[
               ["事实", "可核对的记录、报表摘录、制度原文"],
@@ -182,6 +189,7 @@ export function LiveAstraHandbook() {
 
         <Page n="08" title="技术架构：复杂能力，清晰组织">
           <Thesis>四层能力，一层治理，从连接走到编排。</Thesis>
+          <Shot src="/cases/astra/p08-arch.jpg" cap="四层横叠，治理竖轨贯穿" />
           <div className="mt-5 space-y-2">
             {[
               ["应用编排层", "场景工作流、审核节点、通知与归档"],
@@ -201,6 +209,7 @@ export function LiveAstraHandbook() {
 
         <Page n="09" title="安全治理：让智能运行在边界之内">
           <Thesis>智能只在被允许的范围内工作，并且留下证据。</Thesis>
+          <Shot src="/cases/astra/p09-secure.jpg" cap="默认关闭，按角色打开" />
           <ul className="mt-4 list-disc space-y-2 pl-5 text-[13px] leading-7 text-stone-300">
             <li>身份认证：对接企业身份源；未认证不进入任何空间。</li>
             <li>最小权限：按角色、空间、密级授权；默认无权限。</li>
@@ -215,6 +224,7 @@ export function LiveAstraHandbook() {
 
         <Page n="10" title="应用场景：让价值落在具体工作里">
           <Thesis>四个场景，同一套边界：先试点，再谈推广。</Thesis>
+          <Shot src="/cases/astra/p10-scenes.jpg" cap="决策 / 销售 / 客服 / 研发 · 示意场景" />
           <div className="mt-5 space-y-4">
             {[
               ["管理决策", "材料难对齐、口径打架", "按议题拉取事实卡，生成对比草稿供会前审阅", "缩短对齐时间，会议从「找数」转向「判断」", "不自动形成决议；财务与人事敏感项需专权"],
@@ -238,6 +248,7 @@ export function LiveAstraHandbook() {
 
         <Page n="11" title="实施路径：从可控试点，到规模化应用">
           <Thesis>先证明在一个场景里可治理，再扩大范围。</Thesis>
+          <Shot src="/cases/astra/p06-flow.jpg" cap="试点只开通一条完整路径" />
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             {[
               ["1 需求梳理", "选定一个场景、一批用户、一类数据。验收：边界说明书签署。"],
@@ -257,6 +268,7 @@ export function LiveAstraHandbook() {
 
         <Page n="12" title="结语：构建企业的下一代工作方式">
           <Thesis>把智能关进流程，把责任留在人这边——这就是我们愿意称之为「下一代」的原因。</Thesis>
+          <Shot src="/cases/astra/p12-close.jpg" cap="从一间试点房间开始" />
           <p className="mt-4 text-[14px] leading-8 text-stone-200">
             企业不需要更多窗口。它需要一条能被看见、被撤回、被审计的工作路径。启衡 ASTRA 愿做这条路径的规划稿——从试点房间开始，而不是从口号开始。
           </p>
