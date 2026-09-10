@@ -47,189 +47,243 @@ function deckFor(title?: string): Slide[] {
 
 function scqaDeck(title: string): Slide[] {
   return [
-    { kind: "cover", kicker: "SCQA  ·  15 MIN", title: title || "产品发布 SCQA", sub: "同一会话，交可上会的页。", photo: P.hero },
-    { kind: "cards", kicker: "地图", title: "S → C → Q → A", items: [
-      { h: "S", b: "不缺模型，缺能上会的页" }, { h: "C", b: "对话停在草稿" },
-      { h: "Q", b: "怎样当场可投屏" }, { h: "A", b: "预览即成品" },
+    { kind: "cover", kicker: "AURA ONE  ·  发布会预审", title: title || "曜界眼镜发布 SCQA", sub: "空间计算眼镜概念稿 · 示意画面须标注 · 禁止无边界全息承诺", photo: P.launch },
+    { kind: "cards", kicker: "地图", title: "四句话讲完发布", items: [
+      { h: "S", b: "旗舰手机已到顶，下一块屏要戴在脸上" },
+      { h: "C", b: "现有头显仍像头盔，无法全天佩戴" },
+      { h: "Q", b: "能否先做观影+窗口，而不是全息办公" },
+      { h: "A", b: "曜界 AURA ONE：基础观影与空间窗口两档" },
     ]},
-    { kind: "photo", kicker: "S  情境", title: "聊天很快，上会仍隔夜", sub: "决策者不批提示词。", photo: P.board },
-    { kind: "quote", kicker: "C  冲突", title: "周转被粘贴吃掉。", sub: "换一层聊天皮肤，不值得换工具。" },
-    { kind: "photoL", kicker: "Q  疑问", title: "15 分钟后，桌上要有页", photo: P.data },
-    { kind: "split", kicker: "A  答案", title: "文档 · PPT · 研究", items: [
-      { h: "文档", b: "米色纸页可复制" }, { h: "PPT", b: "可翻页投屏" }, { h: "研究", b: "发现/对照/建议" },
+    { kind: "photo", kicker: "S  情境", title: "客厅已是第二块屏，办公室还没有", sub: "用户接受电视级观影，不接受全天候头盔。", photo: P.board },
+    { kind: "quote", kicker: "C  冲突", title: "重量、续航、社交尴尬，三件同时未解。", sub: "不能用「无边界全息」掩盖工程约束。" },
+    { kind: "photoL", kicker: "Q  疑问", title: "先切哪一档体验？", sub: "基础观影可演示；空间窗口待主机供电。", photo: P.data },
+    { kind: "split", kicker: "A  答案", title: "两档，不装第三档", items: [
+      { h: "观影", b: "暗室示意，不等于白日效果" },
+      { h: "窗口", b: "依赖兼容主机计算与供电" },
+      { h: "不做", b: "不承诺无边界全息办公" },
     ]},
-    { kind: "table", kicker: "对照", title: "旧路径 vs 本方案", rows: [
-      ["动作", "旧", "新"], ["周报", "聊天→排版", "会话内纸页"], ["路演", "大纲→设计", "可翻页 PPT"],
+    { kind: "table", kicker: "口径", title: "发布词 vs 工程事实", rows: [
+      ["对外", "对内", "禁止"],
+      ["空间窗口", "需主机", "独立全息电脑"],
+      ["钛银配色", "规划件", "已量产实拍"],
+      ["示意画面", "概念渲染", "用户实拍"],
     ]},
-    { kind: "time", kicker: "路径", title: "8 周试点", steps: [
-      { t: "W1–2", d: "周报 10 人" }, { t: "W3–5", d: "路演内部会" }, { t: "W6–8", d: "少一次隔夜排版" },
+    { kind: "time", kicker: "发布路径", title: "从预审到站会", steps: [
+      { t: "T-6 周", d: "锁两档体验边界" },
+      { t: "T-3 周", d: "暗室样机，白日图不下发" },
+      { t: "站会日", d: "只演示观影+窗口" },
     ]},
-    { kind: "close", kicker: "NEXT", title: "批准 20 席位、8 周、两件验收物。", photo: P.launch },
+    { kind: "close", kicker: "请批", title: "批准两档发布口径，删掉全息办公页。", photo: P.launch },
   ];
 }
 
 function reportDeck(): Slide[] {
   return [
-    { kind: "cover", kicker: "BOARD PRE-READ", title: "工作汇报 · 结论先行", sub: "进度、风险、下一步。未知数字待核实。", photo: P.report },
-    { kind: "quote", kicker: "结论", title: "试点可进入第二阶段。", sub: "不扩全员；先锁两件成品。" },
-    { kind: "cards", kicker: "三支柱", title: "只带这三件事上会", items: [
-      { h: "进度", b: "周报模板已跑 10 人" }, { h: "风险", b: "配额与口径未封板" }, { h: "下一步", b: "路演投一次内部会" },
+    { kind: "cover", kicker: "Q3 运营预审  ·  供应链", title: "华东仓准时率止跌", sub: "结论先行。缺货小时数待财务复核，不上董事会终稿。", photo: P.report },
+    { kind: "quote", kicker: "结论", title: "建议维持苏州仓双班，暂缓开郑州二仓。", sub: "开仓资本开支无法被当前准时率证明。" },
+    { kind: "cards", kicker: "三支柱", title: "只带这三件事", items: [
+      { h: "进度", b: "夜间出库从 62% 提到 71%（仓内计时，示意）" },
+      { h: "风险", b: "暴雨周运力缺口未投保" },
+      { h: "下一步", b: "11 月只加临时工，不加固定资产" },
     ]},
-    { kind: "photo", kicker: "进度", title: "栏目预览已等于交付物", photo: P.board },
-    { kind: "table", kicker: "风险", title: "红黄绿灯（示意）", rows: [
-      ["项", "状态", "口径"], ["模型配额", "黄", "演示兜底"], ["口径", "绿", "规划/待验证同页"], ["切换成本", "黄", "不迁全库"],
+    { kind: "photo", kicker: "进度", title: "夜班编制补齐，白班不再倒货", sub: "倒货是准时率的主因，不是车队。", photo: P.board },
+    { kind: "table", kicker: "风险灯", title: "仓网（示意，非审计数）", rows: [
+      ["节点", "灯", "动作"],
+      ["苏州", "绿", "维持双班"],
+      ["宁波港", "黄", "预约窗口仍抖动"],
+      ["郑州二仓", "红", "建议暂缓土建"],
     ]},
-    { kind: "time", kicker: "下一步", title: "本季只做两件", steps: [
-      { t: "本周", d: "锁定周报口径" }, { t: "四周内", d: "路演投屏" }, { t: "季末", d: "决定是否扩席" },
+    { kind: "time", kicker: "下一步", title: "到双十一只做运营", steps: [
+      { t: "本周", d: "夜班排班锁定" },
+      { t: "四周", d: "宁波预约复盘" },
+      { t: "Q4 末", d: "再议二仓" },
     ]},
-    { kind: "close", kicker: "请批", title: "请批第二阶段，不扩全员。", photo: P.report },
+    { kind: "close", kicker: "请批", title: "请批：不加仓、加夜班、保准时率。", photo: P.report },
   ];
 }
 
 function pitchDeck(): Slide[] {
   return [
-    { kind: "cover", kicker: "SEED  ·  STORY ARC", title: "融资路演", sub: "问题 → 方案 → 差异 → 路径。不编 ARR。", photo: P.pitch },
-    { kind: "photo", kicker: "世界", title: "对话很多，成品仍隔夜", photo: P.board },
-    { kind: "quote", kicker: "冲突", title: "董事会不买提示词。", sub: "他们买能投屏的页。" },
-    { kind: "photoL", kicker: "方案", title: "同一会话，三种栏目成品", photo: P.data },
-    { kind: "cards", kicker: "为何是现在", title: "上会节奏被粘贴拖死", items: [
-      { h: "痛", b: "隔夜排版" }, { h: "解", b: "预览即版式" }, { h: "卡点", b: "口径必须诚实" },
+    { kind: "cover", kicker: "SEED  ·  潮汐能源", title: "岸线 TideGrid", sub: "用港口闲时电，给冷链仓削峰。不编 ARR、不编客户名。", photo: P.pitch },
+    { kind: "photo", kicker: "世界", title: "港口有电，冷链仍在柴油发电", sub: "岸电接口在，调度软件不在。", photo: P.board },
+    { kind: "quote", kicker: "冲突", title: "电费账单按月，柴油按小时，没人站中间。", sub: "不是缺变压器，是缺调度权。" },
+    { kind: "photoL", kicker: "产品", title: "TideGrid：岸电预约 + 仓温联锁", sub: "先做一条航线、三座仓，不铺全国。", photo: P.data },
+    { kind: "cards", kicker: "为何现在", title: "三件外部条件刚齐", items: [
+      { h: "政策", b: "靠港禁怠速在部分港落地" },
+      { h: "硬件", b: "岸电桩密度够一条示范线" },
+      { h: "买方", b: "冷链货主开始问碳口径" },
     ]},
-    { kind: "split", kicker: "差异", title: "不是又一层套壳", items: [
-      { h: "通用聊天", b: "结构清楚，版式另做" }, { h: "开帆", b: "预览即上会" },
+    { kind: "split", kicker: "差异", title: "不是又一块储能柜", items: [
+      { h: "储能商", b: "卖设备，不管预约窗口" },
+      { h: "TideGrid", b: "卖调度权，设备可租赁" },
     ]},
-    { kind: "time", kicker: "路径", title: "进入尽调前只证明两件", steps: [
-      { t: "现在", d: "文档纸页" }, { t: "四周", d: "可翻页 PPT" }, { t: "尽调", d: "看投屏不看话术" },
+    { kind: "time", kicker: "路径", title: "尽调前只证明一条线", steps: [
+      { t: "现在", d: "仿真调度（示意）" },
+      { t: "两季", d: "一条航线联调" },
+      { t: "尽调", d: "看仓温曲线，不看宣传片" },
     ]},
-    { kind: "close", kicker: "ASK", title: "请进入尽调。", sub: "不编客户名与 ARR。", photo: P.pitch },
+    { kind: "close", kicker: "ASK", title: "请进入尽调。不披露未签港口名。", photo: P.pitch },
   ];
 }
 
 function proposalDeck(): Slide[] {
   return [
-    { kind: "cover", kicker: "CLIENT PROPOSAL", title: "方案提案 · 问题解决", sub: "效果写规划口径。", photo: P.proposal },
-    { kind: "photo", kicker: "现状", title: "工具很多，成品仍隔夜", photo: P.board },
-    { kind: "cards", kicker: "问题", title: "三处卡住上会", items: [
-      { h: "粘贴", b: "对话→文档→PPT" }, { h: "口径", b: "规划写成实测" }, { h: "验收", b: "看提示词不看页" },
+    { kind: "cover", kicker: "城商行  ·  对公信贷", title: "贷后巡检方案", sub: "把季度现场巡检改成「影像+例外抽查」。效果为规划口径。", photo: P.proposal },
+    { kind: "photo", kicker: "现状", title: "客户经理开车下厂，拍完照仍手填表", sub: "表和影像对不上号，是合规隐患。", photo: P.board },
+    { kind: "cards", kicker: "问题", title: "三处漏水", items: [
+      { h: "时效", b: "巡检周期被路程吃掉" },
+      { h: "证据", b: "照片无水印、无坐标" },
+      { h: "例外", b: "高风险户与普通户同一套表" },
     ]},
-    { kind: "photoL", kicker: "方案", title: "会话里直接出栏目", photo: P.launch },
-    { kind: "table", kicker: "效果", title: "规划对照，不是承诺", rows: [
-      ["项", "现在", "试点后（规划）"], ["周报", "隔夜", "当次会议"], ["路演", "另做设计", "预览翻页"],
+    { kind: "photoL", kicker: "方案", title: "影像必采，表格只填例外", photo: P.data },
+    { kind: "table", kicker: "效果", title: "规划对照，不是承诺降本百分比", rows: [
+      ["环节", "现在", "试点后（规划）"],
+      ["普通户", "全项现场", "影像+抽查"],
+      ["高风险", "全项现场", "仍全项，加双人"],
+      ["底稿", "纸质", "水印影像归档"],
     ]},
-    { kind: "close", kicker: "下一步", title: "先签 8 周、20 席。", photo: P.proposal },
+    { kind: "close", kicker: "商务", title: "先签两个支行、一个贷种。不全行铺开。", photo: P.proposal },
   ];
 }
 
 function prepDeck(): Slide[] {
   return [
-    { kind: "cover", kicker: "INTERNAL TRAINING  ·  PREP", title: "培训教学", sub: "每章一句观点，不是目录。", photo: P.gold },
-    { kind: "quote", kicker: "P  观点", title: "预览必须等于交付物。", sub: "否则只是聊天皮肤。" },
-    { kind: "cards", kicker: "R  理由", title: "为什么必须这样教", items: [
-      { h: "听众", b: "只要结论" }, { h: "时间", b: "15 分钟面谈" }, { h: "风险", b: "规划当合同" },
+    { kind: "cover", kicker: "销培  ·  PREP", title: "异议处理：先认损失，再谈方案", sub: "给一线，不是给培训部目录。", photo: P.gold },
+    { kind: "quote", kicker: "P  观点", title: "客户说贵，先重复他的损失，不先打折。", sub: "折扣是最后一张牌。" },
+    { kind: "cards", kicker: "R  理由", title: "为什么这句有效", items: [
+      { h: "情绪", b: "被听见才会听方案" },
+      { h: "信息", b: "损失细节才暴露真预算" },
+      { h: "权限", b: "一线没有无限折扣权" },
     ]},
-    { kind: "photo", kicker: "E  案例", title: "点开 PPT 必须可翻页", photo: P.data },
-    { kind: "quote", kicker: "P  重申", title: "先教口径，再教版式。" },
-    { kind: "close", kicker: "作业", title: "下周带两件成品来演。", photo: P.gold },
+    { kind: "photo", kicker: "E  案例", title: "「停机两小时」比「贵 8%」好谈", sub: "把异议从价格改写成停机成本。", photo: P.board },
+    { kind: "quote", kicker: "P  重申", title: "重复损失 → 对齐目标 → 再出价。" },
+    { kind: "close", kicker: "作业", title: "每人交一段 90 秒异议录音，下周互评。", photo: P.gold },
   ];
 }
 
 function yearDeck(): Slide[] {
   return [
-    { kind: "cover", kicker: "YEAR IN REVIEW", title: "年终总结 · 时间线", sub: "大事记与来年三件事。不编营收。", photo: P.report },
-    { kind: "time", kicker: "过去", title: "这一年只记三件", steps: [
-      { t: "Q1", d: "栏目预览立项" }, { t: "Q2–3", d: "文档纸页落地" }, { t: "Q4", d: "PPT 可翻页" },
+    { kind: "cover", kicker: "年终  ·  茶饮品牌「泊叶」", title: "今年只做成了三件事", sub: "不编营收。门店数为运营口径，未经审计。", photo: P.report },
+    { kind: "time", kicker: "过去", title: "时间线上的钉子", steps: [
+      { t: "春", d: "停联名、收 SKU 到 18 个" },
+      { t: "夏", d: "华南关 4 家亏损店" },
+      { t: "冬", d: "自有茶底中试通过" },
     ]},
-    { kind: "photo", kicker: "现在", title: "对话停在草稿的问题还在", photo: P.board },
-    { kind: "cards", kicker: "未来", title: "来年只做三件事", items: [
-      { h: "一", b: "周报当次交付" }, { h: "二", b: "路演可投屏" }, { h: "三", b: "口径模板化" },
+    { kind: "photo", kicker: "现在", title: "客单稳住了，联名红利没了", sub: "这是主动选择，不是市场消失。", photo: P.board },
+    { kind: "cards", kicker: "未来", title: "来年三件事，没有第四件", items: [
+      { h: "茶底", b: "自有配方铺到直营" },
+      { h: "门店", b: "只开商场店，停社区店" },
+      { h: "组织", b: "培训官从外包收回" },
     ]},
-    { kind: "close", kicker: "收束", title: "不扩故事，扩成品。", photo: P.hero },
+    { kind: "close", kicker: "收束", title: "明年考核：茶底占比，不考核联名曝光。", photo: P.hero },
   ];
 }
 
 function industryDeck(): Slide[] {
   return [
-    { kind: "cover", kicker: "SECTOR BRIEF", title: "行业分析对照", sub: "发现 / 对照 / 建议。数据标示意。", photo: P.data },
-    { kind: "cards", kicker: "发现", title: "工具层拥挤，交付层空", items: [
-      { h: "聊天", b: "分钟级草稿" }, { h: "设计", b: "仍隔夜" }, { h: "上会", b: "要成品" },
+    { kind: "cover", kicker: "行业  ·  城市充电", title: "公共桩：从抢地到抢在桩时长", sub: "发现 / 对照 / 建议。利用率来源待补。", photo: P.data },
+    { kind: "cards", kicker: "发现", title: "桩很多，车位被占着", items: [
+      { h: "供给", b: "新区桩密度已过规划线（示意）" },
+      { h: "占用", b: "燃油占位与超时占位未计价" },
+      { h: "电网", b: "晚高峰扩容比新桩更贵" },
     ]},
-    { kind: "table", kicker: "对照", title: "示意格局（来源待补）", rows: [
-      ["层", "玩家形态", "缺口"], ["模型", "通用对话", "无版式"], ["套壳", "提示词市场", "无投屏"], ["本方案", "栏目成品", "待试点"],
+    { kind: "table", kicker: "对照", title: "三种玩家（示意，来源待补）", rows: [
+      ["玩家", "赚钱方式", "瓶颈"],
+      ["地产配建", "车位绑定", "物业分成"],
+      ["专营桩企", "度电差", "占位"],
+      ["车企自营", "品牌服务", "跨网漫游"],
     ]},
-    { kind: "photoL", kicker: "建议", title: "先占「能上会」这一格", photo: P.board },
-    { kind: "close", kicker: "判断", title: "可执行：试点，不写未测份额。", photo: P.data },
+    { kind: "photoL", kicker: "建议", title: "先做占位计价，再谈超充", sub: "超充投资无法被当前在桩时长证明。", photo: P.board },
+    { kind: "close", kicker: "判断", title: "可执行：选 20 场站试点占位费。不写全国份额。", photo: P.data },
   ];
 }
 
 function fabDeck(): Slide[] {
   return [
-    { kind: "cover", kicker: "CLIENT MEETING  ·  FAB", title: "客户面谈 FAB", sub: "利益对齐投入产出，不堆功能。", photo: P.launch },
-    { kind: "photo", kicker: "F  特征", title: "同一会话三种栏目", photo: P.board },
-    { kind: "cards", kicker: "A  优势", title: "相对通用聊天", items: [
-      { h: "版式", b: "预览即页" }, { h: "口径", b: "规划分开写" }, { h: "验收", b: "看能否投屏" },
+    { kind: "cover", kicker: "面谈  ·  静域耳机", title: "SILENCE PRO · FAB", sub: "给采购：特征—优势—利益。禁止零漏音、完全隔绝、护听承诺。", photo: P.launch },
+    { kind: "photo", kicker: "F  特征", title: "四档：ANC / 通透 / 通话 / 有线", sub: "有线是兜底，不是情怀。", photo: P.board },
+    { kind: "cards", kicker: "A  优势", title: "相对「只有蓝牙」的竞品", items: [
+      { h: "会议", b: "通话链路与听歌链路分开" },
+      { h: "出差", b: "电量见底可插线继续" },
+      { h: "开放工位", b: "通透档保留环境声，不作医疗级隔绝" },
     ]},
-    { kind: "quote", kicker: "B  利益", title: "少一次隔夜排版（规划）。", sub: "不是承诺的工时百分比。" },
-    { kind: "close", kicker: "请拍板", title: "先 20 席，不迁全库。", photo: P.launch },
+    { kind: "quote", kicker: "B  利益", title: "采购要的是「会议不断麦」，不是「最静」。", sub: "续航分模式口径，待实测页另附。" },
+    { kind: "close", kicker: "请拍板", title: "先 200 副试用工位，不签全员标配。", photo: P.launch },
   ];
 }
 
 function retroDeck(): Slide[] {
   return [
-    { kind: "cover", kicker: "RETRO", title: "项目复盘时间线", sub: "失败与取舍写清楚。", photo: P.navy },
-    { kind: "time", kicker: "过去", title: "发生了什么", steps: [
-      { t: "立项", d: "按聊天交付" }, { t: "中期", d: "发现不能上会" }, { t: "现在", d: "改栏目成品" },
+    { kind: "cover", kicker: "复盘  ·  社区团购「邻里达」", title: "我们把履约做成了营销", sub: "失败写清楚。GMV 不上这页。", photo: P.navy },
+    { kind: "time", kicker: "过去", title: "三条错误的钉子", steps: [
+      { t: "立项", d: "用补贴换首单，履约外包" },
+      { t: "爆单", d: "客诉集中在晚到，不是缺货" },
+      { t: "止损", d: "关三个网格，收回自配送" },
     ]},
-    { kind: "split", kicker: "取舍", title: "我们放弃了什么", items: [
-      { h: "放弃", b: "全员替换" }, { h: "坚持", b: "两件验收物" }, { h: "未决", b: "配额上限" },
+    { kind: "split", kicker: "取舍", title: "当时没选的路", items: [
+      { h: "放弃", b: "全城铺网格" },
+      { h: "坚持", b: "只留写字楼午间达" },
+      { h: "未决", b: "冷链要不要自建" },
     ]},
-    { kind: "cards", kicker: "下一步", title: "可执行三项", items: [
-      { h: "1", b: "锁周报模板" }, { h: "2", b: "路演投一次" }, { h: "3", b: "写风险一页" },
+    { kind: "cards", kicker: "下一步", title: "可执行，不抒情", items: [
+      { h: "1", b: "午间达 SLA 写成合同附件" },
+      { h: "2", b: "补贴只给复购，不给首单" },
+      { h: "3", b: "客诉周报进经营会，不进品牌会" },
     ]},
-    { kind: "close", kicker: "记一笔", title: "下次复盘只看成品，不看话术。", photo: P.navy },
+    { kind: "close", kicker: "记一笔", title: "下次立项先写履约，再写投放。", photo: P.navy },
   ];
 }
 
 function competeDeck(): Slide[] {
   return [
-    { kind: "cover", kicker: "ONE-PAGER", title: "竞品差异一页", sub: "禁止贬低竞品绝对化。", photo: P.data },
-    { kind: "table", kicker: "对照", title: "维度并列（示意）", rows: [
-      ["维度", "通用聊天", "设计工具", "开帆（规划）"],
-      ["草稿", "强", "弱", "中"],
-      ["版式", "无", "强", "预览即页"],
-      ["上会", "想象", "另导出", "可翻页"],
+    { kind: "cover", kicker: "采购预审  ·  工单系统", title: "自研 vs 两家 SaaS", sub: "维度并列。禁止「全面落后」类绝对化。", photo: P.data },
+    { kind: "table", kicker: "对照", title: "现场维修场景（示意）", rows: [
+      ["维度", "自研旧系统", "云枢工单", "邻厂维修云"],
+      ["离线", "有", "弱", "有（缓存 24h）"],
+      ["配件库", "强", "中", "弱"],
+      ["移动端", "差", "强", "中"],
+      ["驻场实施", "自己人", "按人天", "打包"],
     ]},
-    { kind: "quote", kicker: "结论", title: "我们只打「能不能上会」。", sub: "不写「全面领先」。" },
-    { kind: "close", kicker: "用途", title: "这一页可直接贴进预审包。", photo: P.data },
+    { kind: "quote", kicker: "结论", title: "移动端选云枢；配件库暂留自研。", sub: "不一次替换核心库。" },
+    { kind: "close", kicker: "用途", title: "本页可进采购委员会，不进新闻稿。", photo: P.data },
   ];
 }
 
 function weeklyDeck(): Slide[] {
   return [
-    { kind: "cover", kicker: "WEEKLY  ·  5 PAGES", title: "周会同步极简", sub: "完成 / 风险 / 求助。无装饰页。", photo: P.board },
+    { kind: "cover", kicker: "研发周会  ·  W32", title: "支付中台：完成 / 风险 / 求助", sub: "5 页。无愿景页。", photo: P.board },
     { kind: "cards", kicker: "完成", title: "本周合上的", items: [
-      { h: "文档", b: "纸页图文混排" }, { h: "PPT", b: "可翻页封面" }, { h: "口径", b: "示意标注" },
+      { h: "退款", b: "幂等键上线，灰度 5%" },
+      { h: "对账", b: "渠道 B 日切对齐" },
+      { h: "文档", b: "错误码表给到商户群" },
     ]},
     { kind: "split", kicker: "风险", title: "两件黄灯", items: [
-      { h: "配额", b: "演示模式兜底" }, { h: "图源", b: "生成图须换新底" },
+      { h: "渠道 C", b: "沙箱证书过期，联调停" },
+      { h: "值班", b: "国庆排班未签到人" },
     ]},
-    { kind: "quote", kicker: "求助", title: "需要拍板：20 席还是 10 席。" },
-    { kind: "close", kicker: "散会", title: "记下负责人，不追加页。", photo: P.board },
+    { kind: "quote", kicker: "求助", title: "需要法务本周确认：部分退款的展示文案。" },
+    { kind: "close", kicker: "散会", title: "负责人：退款-陈柯 / 证书-周南 / 文案-法务。", photo: P.board },
   ];
 }
 
 function boardDeck(): Slide[] {
   return [
-    { kind: "cover", kicker: "BOARD MAP", title: "董事会一页地图", sub: "论点、支撑、时间、强攻/带过。", photo: P.hero },
+    { kind: "cover", kicker: "董事会  ·  地图", title: "停「全国仓网」，改「三城密度」", sub: "论点、支撑、时间、强攻/带过。数字待审计。", photo: P.hero },
     { kind: "cards", kicker: "地图", title: "先看全篇", items: [
-      { h: "论点", b: "会话即成品" }, { h: "支撑 1", b: "预览=交付  · 强攻" },
-      { h: "支撑 2", b: "周转当次  · 强攻" }, { h: "支撑 3", b: "口径诚实  · 带过" },
-      { h: "路径", b: "8 周两件  · 强攻" }, { h: "风险", b: "不全员  · 带过" },
+      { h: "论点", b: "密度优于覆盖" },
+      { h: "支撑 1", b: "三城已占订单 68%  · 强攻" },
+      { h: "支撑 2", b: "新城履约亏损  · 强攻" },
+      { h: "支撑 3", b: "品牌曝光可带过" },
+      { h: "路径", b: "12 个月只加密三城  · 强攻" },
+      { h: "风险", b: "竞对下沉叙事  · 带过" },
     ]},
-    { kind: "time", kicker: "时间", title: "15 分钟怎么切", steps: [
-      { t: "2′", d: "地图" }, { t: "8′", d: "强攻三页" }, { t: "5′", d: "行动" },
+    { kind: "time", kicker: "时间", title: "25 分钟怎么切", steps: [
+      { t: "4′", d: "地图与论点" },
+      { t: "12′", d: "三城密度模型" },
+      { t: "9′", d: "停仓清单与投票" },
     ]},
-    { kind: "quote", kicker: "强攻", title: "只打「预览等于交付物」。" },
-    { kind: "close", kicker: "请批", title: "批准地图，再拆章节。", photo: P.hero },
+    { kind: "quote", kicker: "强攻", title: "今天只投票：停哪五座新城仓。" },
+    { kind: "close", kicker: "请批", title: "批准三城密度战略，否决全国铺仓预算。", photo: P.hero },
   ];
 }
 
