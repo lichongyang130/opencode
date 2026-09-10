@@ -17,6 +17,26 @@ export function LiveCaseBody({
   if (kind === "docs" || title.includes("手册") || title.includes("简报") || title.includes("PRD")) {
     return <LiveDocByTitle title={title} />;
   }
+  if (
+    kind === "ppt" ||
+    kind === "slides" ||
+    title.includes("PPT") ||
+    title.includes("SCQA") ||
+    title.includes("金字塔") ||
+    title.includes("路演") ||
+    title.includes("汇报") ||
+    title.includes("提案") ||
+    title.includes("培训") ||
+    title.includes("年终") ||
+    title.includes("行业") ||
+    title.includes("FAB") ||
+    title.includes("复盘") ||
+    title.includes("竞品") ||
+    title.includes("周会") ||
+    title.includes("董事会")
+  ) {
+    return <LivePpt title={title} />;
+  }
   if (image) {
     return (
       <div className="flex h-full items-center justify-center bg-[#ebe4d6] p-4">

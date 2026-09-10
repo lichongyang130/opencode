@@ -272,20 +272,24 @@ function LivePptDeck({ kickerTitle }: { kickerTitle?: string }) {
   const s = slides[i];
 
   return (
-    <div className="flex h-full flex-col bg-[#12141a] text-stone-100">
+    <div className="flex h-full flex-col bg-[#0b0c10] text-stone-100">
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-2 text-[11px] text-stone-500">
+        <span>PPT · {kickerTitle || BRIEF.theme} · 共 {n} 页</span>
         <span>
-          {BRIEF.theme} · {BRIEF.type}
-        </span>
-        <span>
-          {i + 1} / {n} · 方向键翻页
+          {i + 1} / {n} · 点画面或方向键翻页
         </span>
       </div>
-      <button type="button" onClick={() => go(1)} className="min-h-0 flex-1 overflow-y-auto px-8 py-8 text-left">
-        <p className="text-[11px] tracking-[0.28em] text-amber-200/80">{s.kicker}</p>
-        <h1 className="mt-3 max-w-3xl text-[26px] font-semibold leading-snug tracking-tight sm:text-[30px]">{s.title}</h1>
-        {s.body}
-        {s.note && <p className="mt-10 text-[11px] text-stone-600">{s.note}</p>}
+      <button
+        type="button"
+        onClick={() => go(1)}
+        className="flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-[#1a1c22] p-4 text-left"
+      >
+        <div className="aspect-video w-full max-h-full overflow-y-auto rounded-sm bg-[#12141a] px-8 py-7 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.8)]">
+          <p className="text-[11px] tracking-[0.28em] text-amber-200/80">{s.kicker}</p>
+          <h1 className="mt-3 max-w-3xl text-[24px] font-semibold leading-snug tracking-tight sm:text-[28px]">{s.title}</h1>
+          {s.body}
+          {s.note && <p className="mt-8 text-[11px] text-stone-600">{s.note}</p>}
+        </div>
       </button>
       <div className="flex items-center justify-between border-t border-white/10 px-4 py-2">
         <button type="button" onClick={() => go(-1)} className="rounded-full border border-white/15 px-3 py-1 text-[12px] text-stone-300">
