@@ -244,6 +244,65 @@ const META: Record<string, Omit<ExpertMeta, "id" | "face" | "official">> = {
   },
 };
 
+export const EXPERT_CATS = [
+  "OPC·一人公司",
+  "开学季·高校新生攻略",
+  "腾讯专家",
+  "产品设计",
+  "技术工程",
+  "金融投资",
+  "全球发展",
+  "教育学习",
+  "游戏空间",
+  "数据智能",
+  "营销增长",
+  "内容创作",
+  "销售商务",
+  "运营人力",
+  "项目质量",
+  "法务安全",
+  "行业顾问",
+  "健康生活",
+  "出行旅行",
+  "职场成长",
+  "科研学术",
+  "创意设计",
+] as const;
+
+export type ExpertCat = (typeof EXPERT_CATS)[number];
+
+const CAT_OF: Record<string, ExpertCat> = {
+  "board-coach": "OPC·一人公司",
+  tutor: "开学季·高校新生攻略",
+  "interviewer-tech": "腾讯专家",
+  pm: "产品设计",
+  "code-reviewer": "技术工程",
+  "pitch-coach": "金融投资",
+  translator: "全球发展",
+  english: "教育学习",
+  "game-coach": "游戏空间",
+  "data-analyst": "数据智能",
+  "marketing-strategist": "营销增长",
+  copywriter: "内容创作",
+  "sales-coach": "销售商务",
+  hr: "运营人力",
+  "weekly-coach": "运营人力",
+  "scqa-coach": "项目质量",
+  editor: "项目质量",
+  legal: "法务安全",
+  "industry-advisor": "行业顾问",
+  chef: "健康生活",
+  psychologist: "健康生活",
+  travel: "出行旅行",
+  "career-coach": "职场成长",
+  "research-coach": "科研学术",
+  writer: "创意设计",
+};
+
+export function catOf(id: string): ExpertCat {
+  return CAT_OF[id] ?? "行业顾问";
+}
+
 export const WEEKLY_DEFAULT = "board-coach";
 export const EXPERT_VERSION = "v3";
 

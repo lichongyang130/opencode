@@ -1,19 +1,22 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Dice5, Search, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Dice5, Search, X } from "lucide-react";
 import { Sidebar } from "@/components/workspace/Sidebar";
-import { PERSONAS, PERSONA_GROUPS, type Persona } from "@/lib/personas";
+import { PERSONAS, type Persona } from "@/lib/personas";
 import {
   biosOf,
   CARD_EXTRA,
+  catOf,
+  EXPERT_CATS,
   EXPERT_VERSION,
   faceOf,
   HERO_ART,
   metaOf,
   searchExperts,
   WEEKLY_DEFAULT,
+  type ExpertCat,
 } from "@/lib/expertsCatalog";
 import { useChatStore } from "@/lib/store/chat";
 import { toast } from "@/lib/store/toast";
@@ -40,7 +43,8 @@ function ExpertsStudio() {
   const router = useRouter();
   const sp = useSearchParams();
   const { newConversation, selectConversation, setPersona, conversations, activeId } = useChatStore();
-  const [group, setGroup] = useState<(typeof PERSONA_GROUPS)[number] | "全部" | "最近" | "收藏">("咨询");
+  const [group, setGroup] = useState<ExpertCat | "全部" | "最近" | "收藏">("OPC·一人公司");
+  const catRail = useRef<HTMLDivElement>(null);
   const [q, setQ] = useState("");
   const [picked, setPicked] = useState(WEEKLY_DEFAULT);
   const [fav, setFav] = useState<string[]>([]);
@@ -54,7 +58,10 @@ function ExpertsStudio() {
   const all = useMemo(() => PERSONAS.filter((p) => p.id !== "none"), []);
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
-    for (const p of all) c[p.group] = (c[p.group] ?? 0) + 1;
+    for (const p of all) {
+      const cat = catOf(p.id);
+      c[cat] = (c[cat] ?? 0) + 1;
+    }
     return c;
   }, [all]);
 
@@ -167,27 +174,48 @@ function ExpertsStudio() {
           </button>
         </div>
 
-        <div className="mt-5 flex flex-wrap gap-2">
-          {(["全部", "最近", "收藏", ...PERSONA_GROUPS] as const).map((g) => {
-            const n = g === "全部" ? all.length : g === "收藏" ? fav.length : g === "最近" ? recent.length : counts[g] ?? 0;
-            const empty = n === 0 && g !== "全部";
-            return (
-              <button
-                key={g}
-                type="button"
-                disabled={empty}
-                onClick={() => {
-                  setGroup(g);
-                  if (g === "咨询") pick("board-coach");
-                }}
-                className={`rounded-full px-4 py-1.5 text-[13px] font-medium disabled:opacity-40 ${
-                  group === g ? "bg-[#c45c2a] text-white" : "bg-[#f3eee6] text-stone-600"
-                }`}
-              >
-                {g}
-              </button>
-            );
-          })}
+        <div className="mt-5 flex items-center gap-1.5">
+          <button
+            type="button"
+            aria-label="上一组分类"
+            className="shrink-0 rounded-full bg-white p-1.5 text-stone-600 ring-1 ring-stone-200 hover:bg-[#f3eee6]"
+            onClick={() => catRail.current?.scrollBy({ left: -240, behavior: "smooth" })}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <div ref={catRail} className="flex min-w-0 flex-1 gap-2 overflow-x-auto scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {(["全部", "最近", "收藏", ...EXPERT_CATS] as const).map((g) => {
+              const n = g === "全部" ? all.length : g === "收藏" ? fav.length : g === "最近" ? recent.length : counts[g] ?? 0;
+              const empty = n === 0 && g !== "全部";
+              return (
+                <button
+                  key={g}
+                  type="button"
+                  disabled={empty}
+                  onClick={() => {
+                    setGroup(g);
+                    if (g !== "全部" && g !== "最近" && g !== "收藏") {
+                      const first = all.find((p) => catOf(p.id) === g);
+                      if (first) pick(first.id);
+                    }
+                  }}
+                  className={`shrink-0 rounded-full px-4 py-1.5 text-[13px] font-medium disabled:opacity-40 ${
+                    group === g ? "bg-[#c45c2a] text-white" : "bg-[#f3eee6] text-stone-600"
+                  }`}
+                >
+                  {g}
+                </button>
+              );
+            })}
+          </div>
+          <button
+            type="button"
+            aria-label="下一组分类"
+            className="shrink-0 rounded-full bg-white p-1.5 text-stone-600 ring-1 ring-stone-200 hover:bg-[#f3eee6]"
+            onClick={() => catRail.current?.scrollBy({ left: 240, behavior: "smooth" })}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
 
         <div className="relative mt-5 grid min-h-[200px] overflow-hidden rounded-[24px] bg-[#f3ebe0] md:grid-cols-[1.05fr_1fr]">
