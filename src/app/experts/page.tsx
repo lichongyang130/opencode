@@ -84,7 +84,7 @@ function ExpertsStudio() {
     let list = all;
     if (group === "收藏") list = all.filter((p) => fav.includes(p.id));
     else if (group === "最近") list = recent.map((id) => all.find((p) => p.id === id)).filter(Boolean) as Persona[];
-    else if (group !== "全部") list = all.filter((p) => p.group === group);
+    else if (group !== "全部") list = all.filter((p) => catOf(p.id) === group);
     return searchExperts(q, list);
   }, [all, group, fav, recent, q]);
 
