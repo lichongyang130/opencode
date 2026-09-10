@@ -8,7 +8,7 @@ import { type Persona } from "@/lib/personas";
 import {
   allExperts,
   biosOf,
-  CARD_EXTRA,
+  extraOf,
   catOf,
   EXPERT_CATS,
   EXPERT_VERSION,
@@ -144,7 +144,7 @@ function ExpertsStudio() {
       <div className="mx-auto max-w-[1080px] px-6 py-6 lg:px-8">
         {guide && (
           <div className="mb-4 rounded-2xl bg-white px-4 py-3 text-[13px] text-stone-600 ring-1 ring-stone-200">
-            ① 选咨询分类 ② 看横幅与专家卡 ③ 预约咨询进入对话
+            ① 选分类 ② 看档案与头像 ③ 召唤专家进入对话
             <button
               type="button"
               className="ml-3 text-[#c45c2a]"
@@ -253,7 +253,7 @@ function ExpertsStudio() {
         <div className="mt-6 grid gap-4 pb-10 md:grid-cols-2">
           {rail.map((p) => {
             const m = metaOf(p.id);
-            const cx = CARD_EXTRA[p.id];
+            const cx = extraOf(p.id, p);
             const src = faceOf(p.id);
             const on = featured.id === p.id;
             return (
@@ -290,7 +290,7 @@ function ExpertsStudio() {
                     onClick={() => void start(p)}
                     className="rounded-full bg-[#c45c2a] px-4 py-1.5 text-[13px] font-medium text-white"
                   >
-                    预约咨询
+                    召唤专家
                   </button>
                   <button
                     type="button"
@@ -317,7 +317,7 @@ function ExpertsStudio() {
           const p = all.find((x) => x.id === detailId);
           if (!p) return null;
           const m = metaOf(p.id);
-          const cx = CARD_EXTRA[p.id];
+          const cx = extraOf(p.id, p);
           const src = faceOf(p.id);
           return (
             <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center" onClick={() => setDetailId(null)}>

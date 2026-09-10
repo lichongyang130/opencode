@@ -304,6 +304,47 @@ export function catOf(id: string): ExpertCat {
   return (CAT_OF[id] ?? (EXTRA_CAT[id] as ExpertCat) ?? "行业顾问");
 }
 
+const FACE_POOL = [
+  "/cases/experts/a01.jpg",
+  "/cases/experts/a02.jpg",
+  "/cases/experts/a03.jpg",
+  "/cases/experts/a04.jpg",
+  "/cases/experts/a05.jpg",
+  "/cases/experts/a06.jpg",
+  "/cases/experts/a07.jpg",
+  "/cases/experts/a08.jpg",
+  "/cases/experts/a09.jpg",
+  "/cases/experts/a10.jpg",
+  "/cases/experts/p-board.jpg",
+  "/cases/experts/p-weekly.jpg",
+  "/cases/experts/p-pitch.jpg",
+  "/cases/experts/p-scqa.jpg",
+  "/cases/experts/p-code.jpg",
+  "/cases/experts/p-pm.jpg",
+  "/cases/experts/p-copy.jpg",
+  "/cases/experts/p-travel.jpg",
+  "/cases/experts/p-chef.jpg",
+];
+
+function hashId(id: string) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 33 + id.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+const ALIAS = ["顾衡", "沈岚", "江屿", "林知夏", "韩乔", "许晚", "程予", "苏南", "梁秋", "方澄", "赵野", "唐意"];
+
+export function extraOf(id: string, p?: Persona): CardExtra {
+  if (CARD_EXTRA[id]) return CARD_EXTRA[id];
+  const h = hashId(id);
+  return {
+    alias: ALIAS[h % ALIAS.length],
+    title: p?.desc?.split("、")[0] || catOf(id),
+    rating: (4.4 + (h % 6) / 10).toFixed(1),
+    skills: (p?.desc ?? catOf(id)).split(/[、，,/]/).map((x) => x.trim()).filter(Boolean).slice(0, 3),
+  };
+}
+
 export function allExperts(): Persona[] {
   const seen = new Set<string>();
   const out: Persona[] = [];
@@ -319,7 +360,7 @@ export const WEEKLY_DEFAULT = "board-coach";
 export const EXPERT_VERSION = "v3";
 
 export function faceOf(id: string) {
-  return FACE[id];
+  return FACE[id] || FACE_POOL[hashId(id) % FACE_POOL.length];
 }
 
 export function metaOf(id: string): ExpertMeta {
@@ -328,16 +369,19 @@ export function metaOf(id: string): ExpertMeta {
   if (base) {
     return { id, official: true, face: FACE[id], ...base };
   }
+  const cat = catOf(id);
   return {
     id,
     official: false,
-    face: FACE[id],
-    pitch: p?.desc ?? "",
-    starters: p?.starter ? s(p.starter, p.starter, p.starter) : [],
-    suited: [],
-    notSuited: [],
-    bans: [],
-    works: "",
+    face: faceOf(id),
+    pitch: p ? `${p.desc}。按「${cat}」场景给可执行结构，未知项标待核实。` : "",
+    starters: p?.starter
+      ? s(p.starter, `把「${p.desc}」拆成一页清单`, `按一周节奏落地「${p.name}」会怎么排`)
+      : [],
+    suited: [cat, p?.group ?? "通用"],
+    notSuited: ["要编造证据", "要官方背书"],
+    bans: ["编造未提供的数据", "冒充真实机构员工"],
+    works: "先问目标与约束，再给结构、清单和下一步。",
     tone: p?.group ?? "",
   };
 }
@@ -369,11 +413,18 @@ const DETAIL: Record<string, string[]> = {
 
 export function biosOf(p: Persona): string[] {
   if (DETAIL[p.id]) return DETAIL[p.id];
-  return (p.system || p.desc)
+  const cat = catOf(p.id);
+  const sys = (p.system || "")
     .split(/(?<=。)/)
     .map((x) => x.trim())
-    .filter(Boolean)
-    .slice(0, 6);
+    .filter(Boolean);
+  return [
+    `${p.name}是「${cat}」方向的专家人设：${p.desc}。`,
+    sys[0] || "会先问清目标和约束，再给可执行结构。",
+    sys[1] || "输出通常包括：一页地图、清单、示例提问与下一步。",
+    `适合：需要把「${p.desc}」说清楚、能对照执行的人。不适合：只要捧场、或要未提供的真实数据。`,
+    "协作方式：一次只攻一个问题；未知数字写待核实；人设是提示词，不是真人执业，也不代表真实机构。",
+  ];
 }
 
 export function searchExperts(q: string, list: Persona[]) {
