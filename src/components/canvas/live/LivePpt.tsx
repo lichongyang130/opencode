@@ -476,7 +476,8 @@ function SlideFace({ s, index, total }: { s: Slide; index: number; total: number
     <Plate>
       <p className={`text-[11px] tracking-[0.36em] ${gold}`}>{s.kicker}</p>
       <h1 className="mt-3 max-w-3xl text-[clamp(22px,2.8vw,34px)] font-semibold leading-[1.2] text-white">{s.title}</h1>
-      <div className={`mt-8 grid gap-5 ${cols}`}>
+      {s.body && <p className="mt-2 max-w-3xl text-[13px] leading-6 text-white/65">{s.body}</p>}
+      <div className={`mt-6 grid gap-5 ${cols}`}>
         {s.items?.map((it) => (
           <div key={it.h} className="border-t border-[#e2c48a]/50 pt-4">
             <p className="text-[13px] tracking-[0.2em] text-[#e2c48a]">{it.h}</p>
@@ -488,15 +489,12 @@ function SlideFace({ s, index, total }: { s: Slide; index: number; total: number
   );
 }
 
-function Plate({ children }: { children: React.ReactNode }) {
+function Plate({ children }: { children: ReactNode }) {
   return (
-    <div className="absolute inset-0 bg-[#0c1220] px-[7%] py-[7%]">
+    <div className="absolute inset-0 overflow-y-auto bg-[#0c1220] px-[7%] py-[7%]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={P.navy} alt="" className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-40" />
       <div className="relative">{children}</div>
     </div>
-  );
-}
-div>
   );
 }
