@@ -114,6 +114,15 @@ export function PersonaPicker({ onStarter }: { onStarter?: (text: string) => voi
                               {active && <Check className="h-3.5 w-3.5 text-violet-600" />}
                             </span>
                             <span className="block truncate text-xs text-stone-400">{p.desc}</span>
+                          {p.id !== "none" && (
+                            <a
+                              href={`/experts?id=${p.id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="mt-0.5 inline-block text-[10px] text-violet-500"
+                            >
+                              在专家页查看档案
+                            </a>
+                          )}
                           </span>
                         </button>
                         {p.starter && p.id !== "none" && (

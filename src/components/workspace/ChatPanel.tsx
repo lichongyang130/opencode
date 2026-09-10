@@ -61,6 +61,7 @@ import { cn } from "@/lib/utils";
 import { buildDetailedPrompt } from "@/lib/promptStudio";
 import { TPL_ART } from "@/lib/tplArt";
 import { LiveCaseBody } from "@/components/canvas/live/LiveCaseBody";
+import { getPersona } from "@/lib/personas";
 
 const IMAGE_SIZES = [
   { id: "1024x1024", label: "方形 1:1" },
@@ -1195,6 +1196,15 @@ export function ChatPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingInput?.nonce]);
 
+  useEffect(() => {
+    const launch = readJSON<{ text?: string; ts?: number }>("oc:experts.launch", {});
+    if (launch.text && launch.ts && Date.now() - launch.ts < 30_000) {
+      setInput(launch.text);
+      removeKey("oc:experts.launch");
+      inputRef.current?.focus();
+    }
+  }, [activeId]);
+
   const applyChip = (chip: PromptChip) => {
     setInput((v) => {
       const has = v.includes(chip.suffix);
@@ -1646,6 +1656,19 @@ export function ChatPanel() {
             </div>
           ) : (
             <div className="space-y-5">
+              {mode === "chat" && convo?.personaId && convo.personaId !== "none" && (
+                <div className="flex flex-wrap items-center justify-center gap-2 text-[12px]">
+                  <span className="rounded-full bg-[#fbf3ec] px-3 py-1 text-[#c45c2a]">
+                    正在与 {getPersona(convo.personaId)?.name ?? "专家"} 对话
+                  </span>
+                  <a href={`/experts?id=${convo.personaId}`} className="text-stone-500 underline">
+                    查看档案
+                  </a>
+                  <button type="button" className="text-stone-400" onClick={() => useChatStore.getState().setPersona(null)}>
+                    换专家
+                  </button>
+                </div>
+              )}
               {mode === "chat" && (
                 <div className="flex justify-center">
                   <PersonaPicker
