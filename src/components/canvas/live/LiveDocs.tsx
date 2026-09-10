@@ -45,11 +45,10 @@ export function LiveLampBrief() {
       <p className="mt-1 text-[15px] text-stone-500">磁悬浮氛围灯 · 商业产品摄影简报</p>
       <p className="mt-2 text-[12px] text-stone-400">文档编号 LB-2026-091 · 机密 · 仅供拍摄与电商主图使用</p>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
-        <figure className="overflow-hidden rounded-sm bg-stone-950 shadow-[0_20px_50px_-24px_rgba(0,0,0,0.55)]">
-          <LiveLamp3D />
-        </figure>
-        <div>
+      <div className="mt-8 overflow-hidden rounded-sm bg-stone-950 shadow-[0_20px_50px_-24px_rgba(0,0,0,0.55)]">
+        <LiveWideCarousel images={LAMP_WIDE} alt="Saturn Lamp 主视觉" />
+      </div>
+      <div className="mt-8">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-800/80">产品叙事</p>
           <p className="mt-3 text-[13.5px] leading-7 text-stone-700">
             SATURN LAMP 不是一盏「会亮的摆件」，而是一颗被磁场托住的土星。胡桃木底座压住桌面的重量感，黄铜环给出珠宝级细节；球体在深海蓝与暖琥珀之间缓慢呼吸。雾气只存在于镜头里——现场用极薄的雾机扫过一次，避免糊成科幻海报。
@@ -63,7 +62,7 @@ export function LiveLampBrief() {
               ["价格带", "¥1,280 – 1,680"],
               ["材质", "胡桃木 · 黄铜 · 树脂球"],
               ["光源", "可调 RGBW 8W"],
-              ["比例", "3:4 主图 · 16:9 场景"],
+              ["比例", "16:9 宽屏主图"],
               ["引擎", "Octane / 实拍混渲"],
             ].map(([k, v]) => (
               <div key={k} className="border-t border-stone-200 pt-2">
@@ -72,7 +71,6 @@ export function LiveLampBrief() {
               </div>
             ))}
           </dl>
-        </div>
       </div>
 
       <H>01  提示词（原文，不可改语气）</H>
@@ -1066,15 +1064,6 @@ function Section({ n, children }: { n: string; children: ReactNode }) {
         <span className="inline-block h-4 w-1 rounded bg-sky-500" />
         {n}
       </p>
-      {children}
-    </section>
-  );
-}
-
-function H({ children }: { children: ReactNode }) {
-  return <h2 className="mb-2 mt-5 text-[14px] font-bold text-stone-800">{children}</h2>;
-}
-
       {children}
     </section>
   );
