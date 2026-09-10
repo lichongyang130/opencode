@@ -305,25 +305,18 @@ export function catOf(id: string): ExpertCat {
 }
 
 const FACE_POOL = [
-  "/cases/experts/a01.jpg",
-  "/cases/experts/a02.jpg",
-  "/cases/experts/a03.jpg",
-  "/cases/experts/a04.jpg",
-  "/cases/experts/a05.jpg",
-  "/cases/experts/a06.jpg",
-  "/cases/experts/a07.jpg",
-  "/cases/experts/a08.jpg",
-  "/cases/experts/a09.jpg",
-  "/cases/experts/a10.jpg",
-  "/cases/experts/p-board.jpg",
-  "/cases/experts/p-weekly.jpg",
-  "/cases/experts/p-pitch.jpg",
-  "/cases/experts/p-scqa.jpg",
-  "/cases/experts/p-code.jpg",
-  "/cases/experts/p-pm.jpg",
-  "/cases/experts/p-copy.jpg",
-  "/cases/experts/p-travel.jpg",
-  "/cases/experts/p-chef.jpg",
+  "/cases/experts/r01.webp",
+  "/cases/experts/r02.webp",
+  "/cases/experts/r03.webp",
+  "/cases/experts/r04.webp",
+  "/cases/experts/r05.webp",
+  "/cases/experts/r06.jpg",
+  "/cases/experts/r07.jpg",
+  "/cases/experts/r08.webp",
+  "/cases/experts/r09.jpg",
+  "/cases/experts/r10.jpg",
+  "/cases/experts/r11.jpg",
+  "/cases/experts/r12.jpg",
 ];
 
 function hashId(id: string) {
