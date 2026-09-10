@@ -53,6 +53,8 @@ const DICT: Record<string, { zh: string; en: string }> = {
   "nav.home": { zh: "首页", en: "Home" },
   "nav.chat": { zh: "AI 对话", en: "AI Chat" },
   "nav.agents": { zh: "智能体", en: "Agents" },
+  "nav.experts": { zh: "专家", en: "Experts" },
+  "nav.skills": { zh: "技能", en: "Skills" },
   "nav.knowledge": { zh: "知识库", en: "Knowledge" },
   "nav.docs": { zh: "文档中心", en: "Documents" },
   "nav.templates": { zh: "模板中心", en: "Templates" },

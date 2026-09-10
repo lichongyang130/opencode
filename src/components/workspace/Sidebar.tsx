@@ -4,10 +4,11 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Bot,
   Database,
-  FileText,
+  GraduationCap,
   Lightbulb,
   MessageSquare,
   Sparkles,
+  Wand2,
   Wrench,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -18,8 +19,9 @@ import { cn } from "@/lib/utils";
  *  知识库 / 智能体 / 工具 = 各自独立模块页；底部固定会员中心。 */
 const NAV: { key: string; label: string; icon: LucideIcon; href: string }[] = [
   { key: "chat", label: "AI 对话", icon: MessageSquare, href: "/chat" },
-  { key: "canvas", label: "画布", icon: FileText, href: "/canvas" },
   { key: "ideas", label: "灵感", icon: Lightbulb, href: "/templates" },
+  { key: "experts", label: "专家", icon: GraduationCap, href: "/experts" },
+  { key: "skills", label: "技能", icon: Wand2, href: "/skills" },
   { key: "knowledge", label: "知识库", icon: Database, href: "/knowledge" },
   { key: "agents", label: "智能体", icon: Bot, href: "/agents" },
   { key: "tools", label: "工具", icon: Wrench, href: "/tools" },
@@ -30,6 +32,8 @@ function sectionOf(pathname: string | null): string | null {
   if (pathname.startsWith("/chat")) return "chat";
   if (pathname.startsWith("/canvas")) return "canvas";
   if (pathname.startsWith("/templates")) return "ideas";
+  if (pathname.startsWith("/experts")) return "experts";
+  if (pathname.startsWith("/skills")) return "skills";
   if (pathname.startsWith("/knowledge")) return "knowledge";
   if (pathname.startsWith("/agents")) return "agents";
   if (pathname.startsWith("/tools")) return "tools";

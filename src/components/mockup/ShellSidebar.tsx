@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Database,
   FileText,
+  GraduationCap,
   Home,
   LayoutGrid,
   LayoutTemplate,
@@ -20,6 +21,7 @@ import {
   Settings,
   Sparkles,
   Sun,
+  Wand2,
   Wrench,
 } from "lucide-react";
 import { useChatStore } from "@/lib/store/chat";
@@ -67,6 +69,8 @@ const NAV = [
   { label: "nav.home", icon: Home, route: "/" },
   { label: "nav.chat", icon: MessageSquare, route: "/chat" },
   { label: "nav.agents", icon: Bot, route: "/agents" },
+  { label: "nav.experts", icon: GraduationCap, route: "/experts" },
+  { label: "nav.skills", icon: Wand2, route: "/skills" },
   { label: "nav.knowledge", icon: Database, route: "/knowledge" },
   { label: "nav.docs", icon: FileText, route: "/docs" },
   { label: "nav.templates", icon: LayoutTemplate, route: "/templates" },
@@ -113,6 +117,8 @@ export function ShellSidebar({ active }: { active: ShellActive }) {
 
   const go = (route: string, expand = false) => {
     if (route.startsWith("/agents")) router.push("/agents");
+    else if (route.startsWith("/experts")) router.push("/experts");
+    else if (route.startsWith("/skills")) router.push("/skills");
     else if (route.startsWith("/knowledge")) router.push("/knowledge");
     else if (route.startsWith("/docs")) router.push("/docs");
     else if (route.startsWith("/templates")) router.push("/templates");
