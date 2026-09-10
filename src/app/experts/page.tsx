@@ -380,7 +380,7 @@ function ExpertsStudio() {
                   >
                     预约咨询
                   </button>
-                  <button type="button" onClick={continueLast} className="rounded-full border border-stone-200 px-4 py-2 text-[13px] text-stone-600">
+                  <button type="button" onClick={() => continueLast(p.id)} className="rounded-full border border-stone-200 px-4 py-2 text-[13px] text-stone-600">
                     继续上次
                   </button>
                   <button type="button" onClick={() => setDetailId(null)} className="rounded-full px-4 py-2 text-[13px] text-stone-500">
