@@ -236,7 +236,7 @@ function SlideFace({ s, index, total }: { s: Slide; index: number; total: number
     return (
       <div className="absolute inset-0 bg-[#0c1220]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/cases/ppt/bg-navy.jpg" alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
+        <img src="/cases/ppt/bg-gold.jpg" alt="" className="absolute inset-0 h-full w-full object-cover opacity-55" />
         <div className="relative flex h-full flex-col justify-center px-[9%]">
           <p className={`text-[11px] tracking-[0.36em] ${gold}`}>{s.kicker}</p>
           <h1 className="mt-6 max-w-3xl text-[clamp(26px,3.6vw,44px)] font-semibold leading-[1.18] text-white">{s.title}</h1>
@@ -250,6 +250,9 @@ function SlideFace({ s, index, total }: { s: Slide; index: number; total: number
     const [head, ...body] = s.rows;
     return (
       <div className="absolute inset-0 bg-[#0c1220] px-[7%] py-[7%]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/cases/ppt/bg-navy.jpg" alt="" className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-35" />
+        <div className="relative">
         <p className={`text-[11px] tracking-[0.36em] ${gold}`}>{s.kicker}</p>
         <h1 className="mt-3 text-[clamp(22px,2.8vw,34px)] font-semibold text-white">{s.title}</h1>
         <table className="mt-8 w-full border-collapse text-left text-[14px] text-white/80">
@@ -275,12 +278,16 @@ function SlideFace({ s, index, total }: { s: Slide; index: number; total: number
           </tbody>
         </table>
         <p className="mt-4 text-[11px] text-white/35">规划对照，不是承诺的工时减少百分比。</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="absolute inset-0 bg-[#0c1220] px-[7%] py-[7%]">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/cases/ppt/bg-navy.jpg" alt="" className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-40" />
+      <div className="relative">
       <p className={`text-[11px] tracking-[0.36em] ${gold}`}>{s.kicker}</p>
       <h1 className="mt-3 max-w-3xl text-[clamp(22px,2.8vw,34px)] font-semibold leading-[1.2] text-white">{s.title}</h1>
       <div className={`mt-8 grid gap-4 ${s.items && s.items.length > 3 ? "grid-cols-4" : "grid-cols-3"}`}>
@@ -290,6 +297,7 @@ function SlideFace({ s, index, total }: { s: Slide; index: number; total: number
             <p className="mt-3 whitespace-pre-line text-[14px] leading-7 text-white/75">{it.b}</p>
           </div>
         ))}
+      </div>
       </div>
     </div>
   );
