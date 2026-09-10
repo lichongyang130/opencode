@@ -1,4 +1,5 @@
 import { PERSONAS, type Persona } from "@/lib/personas";
+import { EXTRA_CAT, EXTRA_EXPERTS } from "@/lib/expertRoster";
 
 export type ExpertMeta = {
   id: string;
@@ -300,7 +301,18 @@ const CAT_OF: Record<string, ExpertCat> = {
 };
 
 export function catOf(id: string): ExpertCat {
-  return CAT_OF[id] ?? "行业顾问";
+  return (CAT_OF[id] ?? (EXTRA_CAT[id] as ExpertCat) ?? "行业顾问");
+}
+
+export function allExperts(): Persona[] {
+  const seen = new Set<string>();
+  const out: Persona[] = [];
+  for (const p of [...PERSONAS, ...EXTRA_EXPERTS]) {
+    if (p.id === "none" || seen.has(p.id)) continue;
+    seen.add(p.id);
+    out.push(p);
+  }
+  return out;
 }
 
 export const WEEKLY_DEFAULT = "board-coach";
@@ -312,7 +324,7 @@ export function faceOf(id: string) {
 
 export function metaOf(id: string): ExpertMeta {
   const base = META[id];
-  const p = PERSONAS.find((x) => x.id === id);
+  const p = PERSONAS.find((x) => x.id === id) ?? EXTRA_EXPERTS.find((x) => x.id === id);
   if (base) {
     return { id, official: true, face: FACE[id], ...base };
   }

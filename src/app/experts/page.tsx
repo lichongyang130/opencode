@@ -4,8 +4,9 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, Dice5, Search, X } from "lucide-react";
 import { Sidebar } from "@/components/workspace/Sidebar";
-import { PERSONAS, type Persona } from "@/lib/personas";
+import { type Persona } from "@/lib/personas";
 import {
+  allExperts,
   biosOf,
   CARD_EXTRA,
   catOf,
@@ -55,7 +56,7 @@ function ExpertsStudio() {
   const [goal, setGoal] = useState("");
   const [guide, setGuide] = useState(false);
 
-  const all = useMemo(() => PERSONAS.filter((p) => p.id !== "none"), []);
+  const all = useMemo(() => allExperts(), []);
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
     for (const p of all) {
