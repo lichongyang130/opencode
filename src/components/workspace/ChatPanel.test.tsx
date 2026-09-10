@@ -104,7 +104,7 @@ describe("ChatPanel 空态", () => {
     expect(screen.getByTitle("更多技能")).toBeDefined();
     expect(screen.getByText("文档 · 示例模板")).toBeDefined();
     expect(screen.getByText(/点卡片预览/)).toBeDefined();
-    expect(container.querySelector('img[src="/cases/astra/cover.jpg"]')).not.toBeNull();
+    expect(container.querySelector('img[src="/cases/aura/cover.jpg"]')).not.toBeNull();
   });
 
   it("图片技能模板卡显示真实 AI 成品图（d-* 图库）", () => {
@@ -203,7 +203,7 @@ describe("ChatPanel 空态", () => {
     fireEvent.click(screen.getByRole("button", { name: "换一批" }));
     fireEvent.click(screen.getByRole("button", { name: "换一批" }));
     expect(screen.getByRole("button", { name: "立项提案" })).toBeDefined();
-    expect(screen.getByRole("button", { name: "新闻稿" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "制度手册" })).toBeDefined();
   });
 
   it("空消息态不渲染角色选择器", () => {

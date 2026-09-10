@@ -127,6 +127,14 @@ const SKILL_TEMPLATES: Record<string, TemplateCard[]> = {
   ],
   "docs": [
     {
+      title: "曜界 AURA ONE 产品手册",
+      desc: "14 页旗舰空间计算眼镜 · 概念规划稿",
+      author: "开帆工坊 · 林予安",
+      verbatim: true,
+      prompt:
+        "你是消费电子品牌策略与工业设计叙事创意总监。为虚构产品「曜界 AURA ONE｜旗舰级空间计算眼镜」写 14 页高端产品手册。品牌主张：视界之外，自有新境。定位：轻量化眼镜形态，将个人影音、移动办公与情境信息融入眼前空间。计算与供电由兼容手机、电脑或独立配件承担，不默认独立运行。交互：镜腿触控、主机输入、可选控制器；不默认眼动或全场景手势。规划能力：空间显示、随身影音、移动工作空间、情境智能辅助、个性化适配。均为概念规划。气质：精密、克制、轻盈、未来感。禁止零延迟、永不眩晕、全天无感、完全替代手机。不编造实测、销量、奖项、认证。缺失参数写「待工程验证」。页序 01 封面 02 产品理念 03 工业设计 04 显示体验 05 空间体验 06 个人影音 07 移动办公 08 智能辅助 09 交互 10 佩戴 11 系统架构 12 参数与兼容性 13 产品配置三套装 14 封底。每页：标题、一句话观点、正文 150–250 字、重点模块、视觉建议、条件脚注。开头注明概念产品介绍稿。界面示意不代表实际视场与画质。",
+    },
+    {
       title: "启衡 ASTRA 产品手册",
       desc: "12 页企业智能工作系统介绍 · 概念规划稿",
       author: "开帆工坊 · 林予安",
@@ -165,7 +173,6 @@ const SKILL_TEMPLATES: Record<string, TemplateCard[]> = {
     { title: "营销方案", desc: "目标人群到落地节奏", prompt: "为新品耳机写一份营销推广方案" },
     { title: "制度手册", desc: "清晰简洁的团队制度", prompt: "制定一份远程办公管理制度手册" },
     { title: "立项提案", desc: "背景目标与资源预算", prompt: "写一份「数据中台」立项提案" },
-    { title: "新闻稿", desc: "正式有新闻感的企业稿", prompt: "写一篇融资成功的企业新闻稿" },
   ],
   "slides": [
     { title: "制作 PPT", desc: "输入主题生成整套幻灯片", prompt: "为产品发布会生成一套 10 页 PPT" },
@@ -1044,7 +1051,9 @@ function TemplateCard({
   const author = card.author ?? "开帆画布官方";
   const promptText = card.prompt?.trim() || `请帮我完成「${card.title}」：${skillLabel}相关的任务，给出可直接使用的成品。`;
   const intro =
-    card.title.includes("ASTRA") || card.title.includes("启衡")
+    card.title.includes("AURA") || card.title.includes("曜界")
+      ? "14 页旗舰眼镜手册：深色封面与浅色参数页，产品图与模块卡对照。外观、功能与规格均为规划设定。"
+      : card.title.includes("ASTRA") || card.title.includes("启衡")
       ? "12 页概念产品手册：深色科技版式，从定位、流程、架构到安全与实施路径，可滚动阅读。功能为规划设定。"
       : card.title.includes("磁悬浮")
       ? "按商业摄影提示词落地的产品拍摄简报：主视觉、镜头表、色板与交付清单都在左侧纸页里，可滚动阅读。"
