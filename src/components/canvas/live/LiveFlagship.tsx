@@ -20,6 +20,15 @@ export function LiveFlagship({ pack }: { pack: FlagshipPack }) {
           <h1 className="text-[28px] font-semibold tracking-tight text-stone-900 sm:text-[34px]">{pack.name}</h1>
           <p className="mt-2 text-[16px] text-stone-600">{pack.claim}</p>
           <Shot src={pack.hero.src} cap={pack.hero.cap} />
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {(pack.gallery ?? []).slice(0, 4).map((g) => (
+              <figure key={g.src + g.cap} className="overflow-hidden border border-stone-200 bg-stone-100">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={g.src} alt={g.cap} className="aspect-[4/3] w-full object-cover" />
+                <figcaption className="px-2 py-1 text-[10px] text-stone-500">{g.cap}</figcaption>
+              </figure>
+            ))}
+          </div>
           <p className="mt-2 text-[11px] text-stone-400">{pack.nav}</p>
         </section>
 

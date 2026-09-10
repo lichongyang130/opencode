@@ -18,6 +18,7 @@ export type FlagshipPack = {
   disclaimer: string;
   nav: string;
   hero: { src: string; cap: string };
+  gallery: { src: string; cap: string }[];
   values: [string, string][];
   scenes: [string, string][];
   sections: FlagshipSection[];
@@ -37,6 +38,12 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
     disclaimer: D + " 空间显示画面为示意，不是无边界全息。",
     nav: "主视觉 → 定位 → 三项价值 → 场景 → 显示 / 设计 / 交互 / 佩戴 → 参数与兼容",
     hero: { src: "/cases/aura/p01-cover.jpg", cap: "四分之三侧面 · 镜片折射与金属边缘" },
+    gallery: [
+      { src: "/cases/aura/p01-cover.jpg", cap: "主视觉" },
+      { src: "/cases/aura/p03-design.jpg", cap: "铰链与鼻托" },
+      { src: "/cases/aura/p07-office.jpg", cap: "桌面工作" },
+      { src: "/cases/aura/p06-cinema.jpg", cap: "观影示意" },
+    ],
     values: [
       ["空间显示", "在视野内展开数字画面；范围受光学限制。"],
       ["随身影音", "连接兼容设备观看；内容来自主机应用。"],
@@ -117,6 +124,12 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
     disclaimer: D + " 不承诺完全隔绝噪声、零漏音或听力保护医疗功效。",
     nav: "特写 → 聆听价值 → 三种场景 → 声音与降噪 → 佩戴连接 → 参数",
     hero: { src: "/cases/silence/cover.jpg", cap: "耳罩织物、金属支架、头梁 · 侧光" },
+    gallery: [
+      { src: "/cases/silence/cover.jpg", cap: "特写" },
+      { src: "/cases/silence/s1.jpg", cap: "耳罩与支架" },
+      { src: "/cases/silence/s2.jpg", cap: "书房佩戴" },
+      { src: "/cases/silence/s3.jpg", cap: "收纳" },
+    ],
     values: [
       ["主动降噪", "降低连续低频环境声；效果随环境变化。"],
       ["通透模式", "需要交谈或留意环境时切换。"],
@@ -133,6 +146,7 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
         title: "四种聆听条件",
         thesis: "先分清模式，再谈体验。",
         body: "主动降噪、通透、通话、有线直通是四套条件，不是互相叠加的魔法。有线使用时部分无线功能不可用。",
+        shot: { src: "/cases/silence/s1.jpg", cap: "耳罩织物与金属支架 · 示意" },
         cards: [
           ["ANC", "连续低频更有效"],
           ["通透", "保留环境声"],
@@ -144,6 +158,7 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
         title: "声波图不是实测曲线",
         thesis: "图形帮助理解，不能代替实验室。",
         body: "调音方向为清晰人声与克制低频。频响、隔声量待工程验证。概念声波线不得标成实测。",
+        shot: { src: "/cases/silence/s2.jpg", cap: "书房佩戴 · 示意，非隔音实测" },
         vis: "细线波形，留白，无霓虹。",
       },
       {
@@ -151,12 +166,14 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
         title: "调节结构与收纳",
         thesis: "夹持力与耳罩转角决定时长。",
         body: "头梁滑动、耳罩开合位置规划可调。收纳为折叠入盒（规划）。配色切换须对应真实照片，不得只改色块。",
+        shot: { src: "/cases/silence/s3.jpg", cap: "折叠收纳规划" },
       },
       {
         n: "连接",
         title: "设备切换有顺序",
         thesis: "多点连接视固件与主机而定。",
         body: "规划蓝牙与有线。多设备切换逻辑待验证。续航须按降噪开/关、通透、有线分列，未测不写小时数。",
+        shot: { src: "/cases/silence/cover.jpg", cap: "连接与佩戴总览" },
         rows: [
           ["单元 / 频率响应", "待工程验证"],
           ["续航（ANC 开 / 关）", "待工程验证"],
@@ -176,6 +193,12 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
     disclaimer: D + " 暗室效果图不是白天强光下的实际效果。型号名不证明已验证 4K。",
     nav: "客厅主视觉 → 体验 → 安装预览 → 画质 → 距离与幕布 → 接口",
     hero: { src: "/cases/lumen/cover.jpg", cap: "午夜蓝客厅 · 光束与墙面画面为示意" },
+    gallery: [
+      { src: "/cases/lumen/cover.jpg", cap: "客厅主视觉" },
+      { src: "/cases/lumen/s1.jpg", cap: "关灯观影示意" },
+      { src: "/cases/lumen/s2.jpg", cap: "镜头特写" },
+      { src: "/cases/lumen/s3.jpg", cap: "接口" },
+    ],
     values: [
       ["融入空间", "低柜摆放，光束克制。"],
       ["家庭观影", "画质随环境光变化。"],
@@ -192,18 +215,21 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
         title: "投射方案与供电",
         thesis: "先放得下，再谈画面。",
         body: "规划桌面或低柜正投。供电为室内插座。距离与画面尺寸相关，无可靠数据时不提供精确计算器。",
+        shot: { src: "/cases/lumen/s2.jpg", cap: "低柜摆放 · 示意" },
       },
       {
         n: "画质",
         title: "分辨率、色彩、环境光绑在一起",
         thesis: "示意不是实测。",
         body: "「4K」为产品命名方向，面板与镜头组合待工程验证。对比度随幕布与环境光变化。",
+        shot: { src: "/cases/lumen/s1.jpg", cap: "关灯观影示意 · 不是白天效果" },
         note: "不把暗室图写成白天效果。",
       },
       {
         n: "接口",
         title: "内容从哪来",
         thesis: "接口相同 ≠ 全部片源可播。",
+        shot: { src: "/cases/lumen/s3.jpg", cap: "接口特写 · 示意" },
         rows: [
           ["分辨率 / 亮度 / 对比度", "待工程验证（须标口径）"],
           ["投射比 / 偏移", "待工程验证"],
@@ -223,6 +249,12 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
     disclaimer: D + " 不虚构跑分、续航小时或「不降频」。",
     nav: "整机 → 定位 → 屏幕 → 性能概览 → 配置对比",
     hero: { src: "/cases/edgebook/cover.jpg", cap: "冷银切面与开合 · 无跑车灯带" },
+    gallery: [
+      { src: "/cases/edgebook/cover.jpg", cap: "整机" },
+      { src: "/cases/edgebook/s1.jpg", cap: "开合键盘" },
+      { src: "/cases/edgebook/s2.jpg", cap: "铰链与接口" },
+      { src: "/cases/edgebook/s3.jpg", cap: "差旅桌面" },
+    ],
     values: [
       ["屏幕", "全系规划高刷新或高色准之一，以配置表为准。"],
       ["输入", "键盘行程与触控板为全系能力。"],
@@ -239,6 +271,7 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
         title: "全系 vs 版本",
         thesis: "先写清什么是全系，什么要勾选。",
         body: "机身、键盘为全系。内存、存储、独显/核显、部分接口因配置而异。未知项标待确认。",
+        shot: { src: "/cases/edgebook/s1.jpg", cap: "开合与键盘 · 全系方向" },
         cards: [
           ["全系", "外观、输入、摄像头规划"],
           ["分版本", "内存 / 存储 / GPU"],
@@ -250,11 +283,13 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
         title: "屏幕、散热、扩展",
         thesis: "装饰曲线不是性能测试。",
         body: "散热为规划风道，噪声与功耗曲线待测。接口带宽不可简单相加。",
+        shot: { src: "/cases/edgebook/s2.jpg", cap: "铰链与侧口 · 带宽不可相加" },
       },
       {
         n: "配置",
         title: "对比用同一套维度",
         thesis: "咨询表单与所选版本一致。",
+        shot: { src: "/cases/edgebook/s3.jpg", cap: "差旅桌面" },
         rows: [
           ["屏幕", "待工程验证"],
           ["续航", "待工程验证（须标亮度与负载）"],
@@ -274,6 +309,12 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
     disclaimer: D + " 健康数据仅供日常参考，不能用于诊断。导航不是专业救援。",
     nav: "腕表主视觉 → 价值 → 外观 → 运动 / 健康 → 户外与手机",
     hero: { src: "/cases/pulse/cover.jpg", cap: "表壳、表冠、表带微距" },
+    gallery: [
+      { src: "/cases/pulse/cover.jpg", cap: "表壳微距" },
+      { src: "/cases/pulse/s1.jpg", cap: "腕上" },
+      { src: "/cases/pulse/s2.jpg", cap: "外观" },
+      { src: "/cases/pulse/s3.jpg", cap: "户外" },
+    ],
     values: [
       ["运动记录", "轨迹与配速依赖定位与算法估算。"],
       ["日常趋势", "睡眠、心率等为估算，非诊断。"],
@@ -290,6 +331,7 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
         title: "传感器、算法、手机",
         thesis: "三件事不要写成一件。",
         body: "光学传感器记录生理信号；算法给出估算；地图、语音、支付等可能依赖手机与网络。",
+        shot: { src: "/cases/pulse/s1.jpg", cap: "腕上佩戴 · 示意" },
         cards: [
           ["手表内", "显示、传感器、本地记录"],
           ["算法", "估算指标，有误差"],
@@ -301,12 +343,14 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
         title: "用途与局限写在一起",
         thesis: "趋势不是诊断。",
         body: "心率、血氧等若出现在规划中，须标明非医疗。异常提示不能替代就医。",
+        shot: { src: "/cases/pulse/cover.jpg", cap: "表盘示意 · 非诊断界面" },
       },
       {
         n: "户外",
         title: "定位依赖与使用限制",
         thesis: "不是救援信标。",
         body: "GNSS 规划支持，精度受环境遮挡。离线地图来源待确认。续航、防水等级待工程验证，不得先写事实。表壳表带切换须换图。",
+        shot: { src: "/cases/pulse/s3.jpg", cap: "户外记录 · 不是救援" },
         rows: [
           ["防水 / 续航", "待工程验证"],
           ["定位", "规划；精度待测"],
@@ -325,6 +369,12 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
     disclaimer: D + " 不承诺数据永不丢失。远程访问必须身份验证。",
     nav: "产品场景 → 归集 → 同步 / 照片 / 权限 / 版本 → 保护 → 首次配置",
     hero: { src: "/cases/ark/cover.jpg", cap: "陶瓷白桌面家电感 · 冰川蓝指示" },
+    gallery: [
+      { src: "/cases/ark/cover.jpg", cap: "桌面家电" },
+      { src: "/cases/ark/s1.jpg", cap: "整机" },
+      { src: "/cases/ark/s2.jpg", cap: "阵列示意" },
+      { src: "/cases/ark/s3.jpg", cap: "盘位" },
+    ],
     values: [
       ["本地存储", "数据先落在设备硬盘。"],
       ["局域网", "同一网络下的多端访问。"],
@@ -341,12 +391,14 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
         title: "本地、局域网、远程",
         thesis: "三层不要混成「云」。",
         body: "默认是家里的盒子。远程是可选服务。同步不是备份，冗余不是防误删的全部答案。",
+        shot: { src: "/cases/ark/s1.jpg", cap: "桌面存储中心 · 示意" },
       },
       {
         n: "保护",
         title: "误删与硬盘故障的前提",
         thesis: "没有完成的备份，就没有恢复。",
         body: "版本管理可找回部分误删（规划）。硬盘故障依赖第二块盘或外置备份是否已配置。",
+        shot: { src: "/cases/ark/s3.jpg", cap: "盘位示意 · 不承诺永不丢失" },
         cards: [
           ["备份", "另一份拷贝"],
           ["冗余", "盘间互备，仍怕同时故障"],
@@ -357,6 +409,7 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
         n: "规格",
         title: "容量口径与首次配置",
         thesis: "标称容量 ≠ 可用容量。",
+        shot: { src: "/cases/ark/s2.jpg", cap: "阵列外观 · 示意" },
         rows: [
           ["盘位 / 文件系统", "待确认"],
           ["可用容量", "扣除格式化与保护策略"],
@@ -376,6 +429,12 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
     disclaimer: D + " 不把端口理论带宽相加当整机吞吐。供电有分配条件。",
     nav: "整机 → 连接前后 → 端口详情 → 有效组合 → 选配方案",
     hero: { src: "/cases/gravity/cover.jpg", cap: "钛灰机身与琥珀色状态灯" },
+    gallery: [
+      { src: "/cases/gravity/cover.jpg", cap: "整机" },
+      { src: "/cases/gravity/s1.jpg", cap: "端口" },
+      { src: "/cases/gravity/cover.jpg", cap: "状态灯" },
+      { src: "/cases/gravity/s3.jpg", cap: "接线" },
+    ],
     values: [
       ["显示扩展", "取决于主机 DP/HDMI 协议。"],
       ["供电", "受主机 PD 与坞内分配限制。"],
@@ -392,18 +451,21 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
         title: "端口用途与主机条件",
         thesis: "外形一样，能力不一定一样。",
         body: "每个口写清：功能、上限、线缆要求。不能只看口型判断 8K 或 100W。",
+        shot: { src: "/cases/gravity/s1.jpg", cap: "端口特写 · 能力看主机条件" },
       },
       {
         n: "组合",
         title: "只允许有效配置",
         thesis: "选择器不出现做不到的拼装。",
         body: "模块之间若争抢带宽或供电，界面应阻止并说明。",
+        shot: { src: "/cases/gravity/s3.jpg", cap: "接线组合 · 仅有效配置" },
         note: "输出：连接方案、所需配件、待确认事项。",
       },
       {
         n: "供电",
         title: "分配是有条件的",
         thesis: "标注主机输入与下电设备。",
+        shot: { src: "/cases/gravity/cover.jpg", cap: "整机与状态灯" },
         rows: [
           ["主机 PD 输入", "待工程验证"],
           ["下电口", "待工程验证"],
@@ -422,6 +484,12 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
     disclaimer: D + " 不宣称预防疾病、治疗过敏或清除所有污染物。",
     nav: "家居主视觉 → 价值 → 模式 → 原理 → 维护 → 耗材",
     hero: { src: "/cases/air/cover.jpg", cap: "暖瓷白机身融入住宅" },
+    gallery: [
+      { src: "/cases/air/cover.jpg", cap: "家居" },
+      { src: "/cases/air/s1.jpg", cap: "整机" },
+      { src: "/cases/air/cover.jpg", cap: "融入空间" },
+      { src: "/cases/air/s1.jpg", cap: "维护入口" },
+    ],
     values: [
       ["过滤", "按规划滤材分层，对象有限。"],
       ["检测", "传感器只覆盖其设计对象。"],
@@ -438,12 +506,14 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
         title: "空气怎么走",
         thesis: "分层示意不是效果证明。",
         body: "进风、滤材、出风。传感器测不了的项目必须写「不检测」。",
+        shot: { src: "/cases/air/s1.jpg", cap: "机身示意 · 不是净化效果证明" },
       },
       {
         n: "维护",
         title: "模式、状态、更换",
         thesis: "提醒逻辑可预期。",
         body: "滤芯入口指向明确型号。适用面积、噪声、CADR 类指标须带测试条件；没有条件就不写数字。",
+        shot: { src: "/cases/air/cover.jpg", cap: "家居摆放 · 不宣称防病" },
         rows: [
           ["适用面积 / 噪声 / 净化能力", "待工程验证（含条件）"],
           ["滤芯型号", "规划编号待公布"],
@@ -462,6 +532,12 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
     disclaimer: D + " 不等于纸张，不承诺零延迟，无未验证护眼宣传。",
     nav: "书写场景 → 阅读批注 → 整理导出 → 同步隐私 → 格式表",
     hero: { src: "/cases/frame/cover.jpg", cap: "纸白屏幕、金属边、手写笔" },
+    gallery: [
+      { src: "/cases/frame/cover.jpg", cap: "书写" },
+      { src: "/cases/frame/s1.jpg", cap: "笔与屏" },
+      { src: "/cases/frame/s2.jpg", cap: "阅读" },
+      { src: "/cases/frame/s3.jpg", cap: "手写" },
+    ],
     values: [
       ["书写", "本地笔记，刷新有残影边界。"],
       ["阅读批注", "导入文档后的图层。"],
@@ -478,12 +554,14 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
         title: "黑白方案与刷新边界",
         thesis: "残影与刷新是体验的一部分。",
         body: "规划电子墨水黑白屏。快速翻页可能残影。彩色不是本方案默认。",
+        shot: { src: "/cases/frame/s1.jpg", cap: "墨水屏与笔 · 不等于纸" },
       },
       {
         n: "隐私",
         title: "本地与联网分开写",
         thesis: "识别与云同步需授权。",
         body: "默认本地保存。手写识别、云同步为可选联网服务。",
+        shot: { src: "/cases/frame/s2.jpg", cap: "阅读批注" },
         cards: [
           ["本地", "笔记本体"],
           ["授权后", "识别 / 同步"],
@@ -494,6 +572,7 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
         n: "格式",
         title: "导入、编辑、导出",
         thesis: "三列不要写成「全支持」。",
+        shot: { src: "/cases/frame/s3.jpg", cap: "手写导出示意" },
         rows: [
           ["导入", "规划 PDF / 文稿，名单待确认"],
           ["编辑", "批注层；原文件是否改写待确认"],
@@ -512,6 +591,12 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
     disclaimer: D + " 内部结构图须与规划配置一致。不默认所有版本适合高强度渲染。",
     nav: "整机 → 定位 → 场景 → 结构 → 散热 → 扩展与配置咨询",
     hero: { src: "/cases/orbit/cover.jpg", cap: "深空灰机身与散热格栅" },
+    gallery: [
+      { src: "/cases/orbit/cover.jpg", cap: "格栅" },
+      { src: "/cases/orbit/s1.jpg", cap: "整机" },
+      { src: "/cases/orbit/s2.jpg", cap: "接口" },
+      { src: "/cases/orbit/cover.jpg", cap: "散热" },
+    ],
     values: [
       ["创作负载", "版本对应不同任务，见配置表。"],
       ["散热", "规划风道；噪声待测。"],
@@ -528,6 +613,7 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
         title: "场景与配置对应",
         thesis: "不要让入门款承担旗舰渲染。",
         body: "规划 Creator / Studio 等版本。高强度 3D 或多路 4K 不作为全系默认。",
+        shot: { src: "/cases/orbit/s1.jpg", cap: "整机 · 版本对应负载" },
         cards: [
           ["入门创作", "剪辑预览、办公"],
           ["Studio", "更长导出、更多存储"],
@@ -539,6 +625,7 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
         title: "散热与扩展限制",
         thesis: "图上没有的口，文案也不能有。",
         body: "格栅、盘位、显示输出条件与维护开盖方式按规划绘制。未经测试不写性能倍数或噪声分贝。",
+        shot: { src: "/cases/orbit/s2.jpg", cap: "接口与结构须一致" },
         rows: [
           ["显示输出", "待确认（口数与协议）"],
           ["存储扩展", "待确认"],
