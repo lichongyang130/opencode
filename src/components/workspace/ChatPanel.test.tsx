@@ -104,8 +104,7 @@ describe("ChatPanel 空态", () => {
     expect(screen.getByTitle("更多技能")).toBeDefined();
     expect(screen.getByText("文档 · 示例模板")).toBeDefined();
     expect(screen.getByText(/点卡片预览/)).toBeDefined();
-    // 模板卡用真实预览图（首屏文档卡「磁悬浮氛围灯拍摄简报」）
-    expect(container.querySelector('img[src="/cases/lamp-levitation.jpg"]')).not.toBeNull();
+    expect(container.querySelector('img[src="/cases/astra/cover.jpg"]')).not.toBeNull();
   });
 
   it("图片技能模板卡显示真实 AI 成品图（d-* 图库）", () => {
@@ -183,7 +182,7 @@ describe("ChatPanel 空态", () => {
     it("默认技能（文档）第 1 批渲染 4 张示例卡", () => {
     seed();
     render(<ChatPanel />);
-    for (const name of ["磁悬浮氛围灯拍摄简报", "火焰香薰机氛围拍摄简报", "透明机甲蓝牙音箱拍摄简报", "PRD 文档"]) {
+    for (const name of ["启衡 ASTRA 产品手册", "磁悬浮氛围灯拍摄简报", "火焰香薰机氛围拍摄简报", "透明机甲蓝牙音箱拍摄简报"]) {
       expect(screen.getByRole("button", { name })).toBeDefined();
     }
     expect(screen.queryByRole("button", { name: "制作 PPT" })).toBeNull();
@@ -196,7 +195,7 @@ describe("ChatPanel 空态", () => {
     render(<ChatPanel />);
     fireEvent.click(screen.getByRole("tab", { name: "文档" }));
     expect(screen.getByText("文档 · 示例模板")).toBeDefined();
-    for (const name of ["磁悬浮氛围灯拍摄简报", "火焰香薰机氛围拍摄简报", "透明机甲蓝牙音箱拍摄简报", "PRD 文档"]) {
+    for (const name of ["启衡 ASTRA 产品手册", "磁悬浮氛围灯拍摄简报", "火焰香薰机氛围拍摄简报", "透明机甲蓝牙音箱拍摄简报"]) {
       expect(screen.getByRole("button", { name })).toBeDefined();
     }
     expect(screen.queryByRole("button", { name: "制作 PPT" })).toBeNull();
