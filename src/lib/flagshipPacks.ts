@@ -229,6 +229,7 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
         n: "接口",
         title: "内容从哪来",
         thesis: "接口相同 ≠ 全部片源可播。",
+        body: "HDMI 口型相同，不代表全部片源、HDR 与音频回传都可用。名单待公布。",
         shot: { src: "/cases/lumen/s3.jpg", cap: "接口特写 · 示意" },
         rows: [
           ["分辨率 / 亮度 / 对比度", "待工程验证（须标口径）"],
@@ -289,6 +290,7 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
         n: "配置",
         title: "对比用同一套维度",
         thesis: "咨询表单与所选版本一致。",
+        body: "屏幕、续航、重量、接口都按同一口径列表。未测项写待工程验证，不填宣传数字。",
         shot: { src: "/cases/edgebook/s3.jpg", cap: "差旅桌面" },
         rows: [
           ["屏幕", "待工程验证"],
@@ -409,6 +411,7 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
         n: "规格",
         title: "容量口径与首次配置",
         thesis: "标称容量 ≠ 可用容量。",
+        body: "可用容量扣除格式化与保护策略。远程访问必须鉴权，不是默认打开。",
         shot: { src: "/cases/ark/s2.jpg", cap: "阵列外观 · 示意" },
         rows: [
           ["盘位 / 文件系统", "待确认"],
@@ -465,6 +468,7 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
         n: "供电",
         title: "分配是有条件的",
         thesis: "标注主机输入与下电设备。",
+        body: "多口同时工作不可按理论带宽或瓦数相加。先看主机 PD 输入，再看下电口上限。",
         shot: { src: "/cases/gravity/cover.jpg", cap: "整机与状态灯" },
         rows: [
           ["主机 PD 输入", "待工程验证"],
@@ -572,6 +576,7 @@ export const FLAGSHIP_PACKS: FlagshipPack[] = [
         n: "格式",
         title: "导入、编辑、导出",
         thesis: "三列不要写成「全支持」。",
+        body: "导入、批注、导出是三张名单。未列入的格式不承诺。原文件是否被改写待确认。",
         shot: { src: "/cases/frame/s3.jpg", cap: "手写导出示意" },
         rows: [
           ["导入", "规划 PDF / 文稿，名单待确认"],

@@ -56,7 +56,7 @@ export default function ExpertsPage() {
             <img
               src="/cases/experts/hero-week.jpg"
               alt=""
-              className="absolute inset-0 h-full w-full object-cover object-[center_22%]"
+              className="absolute inset-0 h-full w-full object-cover object-[68%_30%]"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/35 to-transparent" />
             <div className="relative z-[1] flex h-full max-w-xl flex-col justify-end px-8 py-8">
