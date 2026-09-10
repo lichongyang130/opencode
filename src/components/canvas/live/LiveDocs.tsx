@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { LiveLamp3D } from "./LiveLamp3D";
 
 /** 画布文档案例：可划词复制的 HTML 成品，版式对齐设计稿 */
 
@@ -45,8 +46,7 @@ export function LiveLampBrief() {
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
         <figure className="overflow-hidden rounded-sm bg-stone-950 shadow-[0_20px_50px_-24px_rgba(0,0,0,0.55)]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/cases/lamp-levitation.jpg" alt="Saturn Lamp 主视觉" className="h-full w-full object-cover" />
+          <LiveLamp3D />
         </figure>
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-800/80">产品叙事</p>
