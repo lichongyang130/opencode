@@ -9,7 +9,16 @@
 export const TPL_ART: Record<string, Record<string, string>> = {
   // 文档：复用画布栏目真实图（同主题成品文档）
   docs: {
-    "曜界 AURA ONE 产品手册": "/cases/aura/cover.jpg",
+    "曜界 AURA ONE 产品手册": "/cases/aura/p01-cover.jpg",
+    "静域 SILENCE PRO 产品手册": "/cases/silence/cover.jpg",
+    "澄光 LUMEN 4K 产品手册": "/cases/lumen/cover.jpg",
+    "锋境 EDGEBOOK X 产品手册": "/cases/edgebook/cover.jpg",
+    "脉序 PULSE TITAN 产品手册": "/cases/pulse/cover.jpg",
+    "方舟 ARK STATION 产品手册": "/cases/ark/cover.jpg",
+    "引力 GRAVITY DOCK 产品手册": "/cases/gravity/cover.jpg",
+    "净界 AIR SCULPT 产品手册": "/cases/air/cover.jpg",
+    "映刻 FRAME ONE 产品手册": "/cases/frame/cover.jpg",
+    "星舱 ORBIT MINI 产品手册": "/cases/orbit/cover.jpg",
     "启衡 ASTRA 产品手册": "/cases/astra/cover.jpg",
     磁悬浮氛围灯拍摄简报: "/cases/lamp-levitation.jpg",
     火焰香薰机氛围拍摄简报: "/cases/diffuser/w01.jpg",

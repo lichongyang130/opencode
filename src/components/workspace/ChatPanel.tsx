@@ -126,53 +126,18 @@ const SKILL_TEMPLATES: Record<string, TemplateCard[]> = {
     { title: "合同要点", desc: "把合同讲成人话", prompt: "用大白话解释这份合同里我需要重点关注的条款" },
   ],
   "docs": [
-    {
-      title: "曜界 AURA ONE 产品手册",
-      desc: "14 页旗舰空间计算眼镜 · 概念规划稿",
-      author: "开帆工坊 · 林予安",
-      verbatim: true,
-      prompt:
-        "你是消费电子品牌策略与工业设计叙事创意总监。为虚构产品「曜界 AURA ONE｜旗舰级空间计算眼镜」写 14 页高端产品手册。品牌主张：视界之外，自有新境。定位：轻量化眼镜形态，将个人影音、移动办公与情境信息融入眼前空间。计算与供电由兼容手机、电脑或独立配件承担，不默认独立运行。交互：镜腿触控、主机输入、可选控制器；不默认眼动或全场景手势。规划能力：空间显示、随身影音、移动工作空间、情境智能辅助、个性化适配。均为概念规划。气质：精密、克制、轻盈、未来感。禁止零延迟、永不眩晕、全天无感、完全替代手机。不编造实测、销量、奖项、认证。缺失参数写「待工程验证」。页序 01 封面 02 产品理念 03 工业设计 04 显示体验 05 空间体验 06 个人影音 07 移动办公 08 智能辅助 09 交互 10 佩戴 11 系统架构 12 参数与兼容性 13 产品配置三套装 14 封底。每页：标题、一句话观点、正文 150–250 字、重点模块、视觉建议、条件脚注。开头注明概念产品介绍稿。界面示意不代表实际视场与画质。",
-    },
-    {
-      title: "启衡 ASTRA 产品手册",
-      desc: "12 页企业智能工作系统介绍 · 概念规划稿",
-      author: "开帆工坊 · 林予安",
-      verbatim: true,
-      prompt:
-        "撰写一份 12 页企业智能工作系统产品介绍手册（概念产品，可直接进入设计排版）。产品名：启衡 ASTRA。定位：面向管理决策、销售支持、客户服务与研发知识管理的企业智能工作系统。语气克制、高端、科技感，不堆砌时髦名词。文档开头注明：概念产品介绍稿，功能与方案为规划设定。不编造客户案例、标志、合作伙伴、性能数据或行业排名。指标须标为「示例数据」或「待验证目标」。每页输出：1. 页面标题 2. 一句话核心观点 3. 可直接排版的正文（短段落与信息卡片）4. 重点信息模块 5. 视觉与版式建议。页序：01 开篇 02 产品定位（是什么、不是什么）03 能力全景 04 人机协作与职责边界 05 知识与检索 06 把重复工作交给有序流程（接收需求—提取信息—生成草稿—人工审核—输出归档；异常回退或转交人工）07 决策辅助：事实 / 推断 / 建议分开，不替代管理决策 08 技术架构：数据连接层—知识与检索层—模型与智能体层—应用编排层，安全治理贯穿 09 安全治理：身份、最小权限、访问控制、审计、敏感操作确认、数据生命周期；不虚构认证与绝对安全 10 应用场景四则各写痛点—使用方式—预期价值—适用边界 11 实施路径四阶段，不虚构交付周期 12 结语与预约演示 / 申请评估，联系方式用占位符。",
-    },
-    {
-      title: "磁悬浮氛围灯拍摄简报",
-      desc: "商业产品摄影文档 · 主视觉 + 提示词",
-      author: "开帆工坊 · 林予安",
-      verbatim: true,
-      prompt:
-        "Commercial product photography of a futuristic magnetic levitation ambient lamp, a glowing Saturn-like sphere floating above a minimalist walnut wood base with brass ring detail, gradient light shifting from deep ocean blue to warm amber, delicate mist surrounding the sphere, dark studio background with dramatic rim lighting, ultra-realistic, 8K render, octane render, premium industrial design, cinematic lighting --ar 3:4 --v 6.1 --style raw",
-    },
-    {
-      title: "火焰香薰机氛围拍摄简报",
-      desc: "北欧桌角场景摄影 · 主视觉 + 提示词",
-      author: "开帆工坊 · 林予安",
-      verbatim: true,
-      prompt:
-        "Cozy product photography of a flame-effect aroma diffuser humidifier, matte white rounded body with realistic warm orange flame light rising from the top, delicate water mist swirling upward like silk ribbons, placed on a natural oak desk corner beside an open book and a steaming cup of coffee, warm ambient night lighting, shallow depth of field, Nordic minimalist interior, ultra-realistic render, 8K, soft cinematic lighting --ar 3:4 --v 6.1 --style raw",
-    },
-    {
-      title: "透明机甲蓝牙音箱拍摄简报",
-      desc: "赛博朋克产品摄影 · 主视觉 + 提示词",
-      author: "开帆工坊 · 林予安",
-      verbatim: true,
-      prompt:
-        "Cyberpunk transparent mecha Bluetooth speaker product photography, crystal-clear acrylic shell revealing intricate circuit boards, precision audio drivers and metallic diaphragm inside, ice-blue LED strips glowing with breathing rhythm, angular mechanical armor lines, visible screws and wiring details, placed on black volcanic rock surface, blue-purple neon glow in dark background, ultra-futuristic tech aesthetic, hyper-realistic product render, 8K, octane render, cinematic lighting --ar 3:4 --v 6.1 --style raw",
-    },
+    { title: "曜界 AURA ONE 产品手册", desc: "空间计算眼镜 · 旗舰发布方案", author: "开帆工坊 · 林予安", verbatim: true, prompt: "将文档改版为曜界 AURA ONE 空间计算眼镜旗舰方案。依赖兼容主机计算与供电；划分基础观影与空间窗口。首页：主视觉—一句话定位—三项价值—场景预览—了解产品。详情：显示、工业设计、交互、佩戴。参数与兼容性未知项占位。空间画面必须标注示意，禁止无边界全息。配色深曜黑/钛银/极光青，主背景用米色纸页。" },
+    { title: "静域 SILENCE PRO 产品手册", desc: "旗舰降噪耳机 · 专注聆听", author: "开帆工坊 · 林予安", verbatim: true, prompt: "改版为静域 SILENCE PRO 头戴无线降噪耳机。区分 ANC、通透、通话、有线。首页特写+三种场景。声波图不得当实测。续航分模式口径。禁止完全隔绝噪声、零漏音、未验证听力保护。" },
+    { title: "澄光 LUMEN 4K 产品手册", desc: "家用激光投影 · 家庭影院", author: "开帆工坊 · 林予安", verbatim: true, prompt: "改版为澄光 LUMEN 4K 家用激光投影仪。明确摆放与供电。首页客厅主视觉。画质须区分示意与实测。无可靠数据不做距离计算器。暗室图不得写成白天效果。型号名不证明已验证 4K。" },
+    { title: "锋境 EDGEBOOK X 产品手册", desc: "旗舰轻薄本 · 移动创作", author: "开帆工坊 · 林予安", verbatim: true, prompt: "改版为锋境 EDGEBOOK X。先分全系与版本差异。首页：整机—定位—屏幕—性能概览—配置入口。禁止跑分、续航小时、不降频。无电竞风。" },
+    { title: "脉序 PULSE TITAN 产品手册", desc: "运动腕表 · 记录而非医疗", author: "开帆工坊 · 林予安", verbatim: true, prompt: "改版为脉序 PULSE TITAN。区分传感器、算法、手机能力。健康仅日常参考，不能诊断。导航不是救援。防水续航待验证。" },
+    { title: "方舟 ARK STATION 产品手册", desc: "桌面存储中心 · 进入保存访问恢复", author: "开帆工坊 · 林予安", verbatim: true, prompt: "改版为方舟 ARK STATION。区分本地、局域网、可选远程。讲清备份/冗余/同步差异。不承诺永不丢失。远程必须鉴权。" },
+    { title: "引力 GRAVITY DOCK 产品手册", desc: "模块化扩展坞 · 先会接", author: "开帆工坊 · 林予安", verbatim: true, prompt: "改版为引力 GRAVITY DOCK。端口用途与限制。选择器只允许有效组合。带宽不可相加。供电写分配条件。" },
+    { title: "净界 AIR SCULPT 产品手册", desc: "空气净化器 · 家居雕塑", author: "开帆工坊 · 林予安", verbatim: true, prompt: "改版为净界 AIR SCULPT。滤材与传感器覆盖及不检测项。原理图不是效果证明。滤芯入口对型号。不宣称治病或清除所有污染物。" },
+    { title: "映刻 FRAME ONE 产品手册", desc: "电子墨水办公本 · 专注", author: "开帆工坊 · 林予安", verbatim: true, prompt: "改版为映刻 FRAME ONE。黑白墨水方案。本地与联网分开。列出导入编辑导出格式。禁止完全等同纸张、零延迟、未验证护眼。" },
+    { title: "星舱 ORBIT MINI 产品手册", desc: "紧凑创作工作站 · 专业秩序", author: "开帆工坊 · 林予安", verbatim: true, prompt: "改版为星舱 ORBIT MINI。版本对应负载，不默认全系重渲染。结构图与配置一致。不写未测性能倍数。接通配置咨询清单。" },
+    { title: "启衡 ASTRA 产品手册", desc: "企业智能工作系统 · 概念规划稿", author: "开帆工坊 · 林予安", verbatim: true, prompt: "12 页企业智能工作系统手册。事实/推断/建议分开。不编客户与指标。" },
     { title: "PRD 文档", desc: "需求背景到验收标准", prompt: "为新功能「团队周报」写一份 PRD" },
-    { title: "竞品分析", desc: "优劣势与差异化建议", prompt: "对比 Notion 与飞书文档，输出竞品分析" },
-    { title: "SOP 手册", desc: "可执行的标准作业流程", prompt: "写一份「内容审核」标准作业流程 SOP" },
-    { title: "年终总结", desc: "成果量化、规划来年", prompt: "帮我写年终总结：业绩、成长、明年计划" },
-    { title: "营销方案", desc: "目标人群到落地节奏", prompt: "为新品耳机写一份营销推广方案" },
-    { title: "制度手册", desc: "清晰简洁的团队制度", prompt: "制定一份远程办公管理制度手册" },
-    { title: "立项提案", desc: "背景目标与资源预算", prompt: "写一份「数据中台」立项提案" },
   ],
   "slides": [
     { title: "制作 PPT", desc: "输入主题生成整套幻灯片", prompt: "为产品发布会生成一套 10 页 PPT" },
@@ -1051,10 +1016,10 @@ function TemplateCard({
   const author = card.author ?? "开帆画布官方";
   const promptText = card.prompt?.trim() || `请帮我完成「${card.title}」：${skillLabel}相关的任务，给出可直接使用的成品。`;
   const intro =
-    card.title.includes("AURA") || card.title.includes("曜界")
-      ? "14 页旗舰眼镜手册：深色封面与浅色参数页，产品图与模块卡对照。外观、功能与规格均为规划设定。"
+    card.title.includes("手册")
+      ? "概念旗舰手册：米色纸页图文，首页主视觉与三项价值，详情与参数分节。示意不是实测。"
       : card.title.includes("ASTRA") || card.title.includes("启衡")
-      ? "12 页概念产品手册：深色科技版式，从定位、流程、架构到安全与实施路径，可滚动阅读。功能为规划设定。"
+      ? "12 页概念产品手册。功能为规划设定。"
       : card.title.includes("磁悬浮")
       ? "按商业摄影提示词落地的产品拍摄简报：主视觉、镜头表、色板与交付清单都在左侧纸页里，可滚动阅读。"
       : card.title.includes("香薰")

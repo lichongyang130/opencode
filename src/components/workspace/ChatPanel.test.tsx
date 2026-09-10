@@ -104,7 +104,7 @@ describe("ChatPanel 空态", () => {
     expect(screen.getByTitle("更多技能")).toBeDefined();
     expect(screen.getByText("文档 · 示例模板")).toBeDefined();
     expect(screen.getByText(/点卡片预览/)).toBeDefined();
-    expect(container.querySelector('img[src="/cases/aura/cover.jpg"]')).not.toBeNull();
+    expect(container.querySelector('img[src="/cases/aura/p01-cover.jpg"]')).not.toBeNull();
   });
 
   it("图片技能模板卡显示真实 AI 成品图（d-* 图库）", () => {
@@ -182,7 +182,7 @@ describe("ChatPanel 空态", () => {
     it("默认技能（文档）第 1 批渲染 4 张示例卡", () => {
     seed();
     render(<ChatPanel />);
-    for (const name of ["启衡 ASTRA 产品手册", "磁悬浮氛围灯拍摄简报", "火焰香薰机氛围拍摄简报", "透明机甲蓝牙音箱拍摄简报"]) {
+    for (const name of ["曜界 AURA ONE 产品手册", "静域 SILENCE PRO 产品手册", "澄光 LUMEN 4K 产品手册", "锋境 EDGEBOOK X 产品手册"]) {
       expect(screen.getByRole("button", { name })).toBeDefined();
     }
     expect(screen.queryByRole("button", { name: "制作 PPT" })).toBeNull();
@@ -195,15 +195,14 @@ describe("ChatPanel 空态", () => {
     render(<ChatPanel />);
     fireEvent.click(screen.getByRole("tab", { name: "文档" }));
     expect(screen.getByText("文档 · 示例模板")).toBeDefined();
-    for (const name of ["启衡 ASTRA 产品手册", "磁悬浮氛围灯拍摄简报", "火焰香薰机氛围拍摄简报", "透明机甲蓝牙音箱拍摄简报"]) {
+    for (const name of ["曜界 AURA ONE 产品手册", "静域 SILENCE PRO 产品手册", "澄光 LUMEN 4K 产品手册", "锋境 EDGEBOOK X 产品手册"]) {
       expect(screen.getByRole("button", { name })).toBeDefined();
     }
     expect(screen.queryByRole("button", { name: "制作 PPT" })).toBeNull();
-    // 12/4=3 批，换两次到最后一批
     fireEvent.click(screen.getByRole("button", { name: "换一批" }));
     fireEvent.click(screen.getByRole("button", { name: "换一批" }));
-    expect(screen.getByRole("button", { name: "立项提案" })).toBeDefined();
-    expect(screen.getByRole("button", { name: "制度手册" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "映刻 FRAME ONE 产品手册" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "启衡 ASTRA 产品手册" })).toBeDefined();
   });
 
   it("空消息态不渲染角色选择器", () => {

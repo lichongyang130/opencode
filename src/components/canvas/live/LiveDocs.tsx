@@ -2,13 +2,14 @@
 
 import type { ReactNode } from "react";
 import { LiveAstraHandbook } from "./LiveAstraHandbook";
-import { LiveAuraOne } from "./LiveAuraOne";
+import { LiveFlagshipByTitle } from "./LiveFlagship";
 import { DIFFUSER_WIDE, LAMP_WIDE, SPEAKER_WIDE, LiveWideCarousel } from "./LiveWideCarousel";
 
 /** 画布文档案例：可划词复制的 HTML 成品，版式对齐设计稿 */
 
 export function LiveDocByTitle({ title }: { title: string }) {
-  if (title.includes("AURA") || title.includes("曜界")) return <LiveAuraOne />;
+  const flag = LiveFlagshipByTitle({ title });
+  if (flag) return flag;
   if (title.includes("ASTRA") || title.includes("启衡")) return <LiveAstraHandbook />;
   if (title.includes("磁悬浮") || title.includes("氛围灯") || title.includes("Saturn")) return <LiveLampBrief />;
   if (title.includes("香薰") || title.includes("火焰") || title.includes("diffuser")) return <LiveDiffuserBrief />;
