@@ -378,10 +378,7 @@ function ExpertsStudio() {
                     onClick={() => void start(p)}
                     className="rounded-full bg-[#c45c2a] px-5 py-2 text-[13px] font-semibold text-white"
                   >
-                    预约咨询
-                  </button>
-                  <button type="button" onClick={() => continueLast(p.id)} className="rounded-full border border-stone-200 px-4 py-2 text-[13px] text-stone-600">
-                    继续上次
+                    召唤专家
                   </button>
                   <button type="button" onClick={() => setDetailId(null)} className="rounded-full px-4 py-2 text-[13px] text-stone-500">
                     返回列表
