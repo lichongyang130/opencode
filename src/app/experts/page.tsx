@@ -267,7 +267,7 @@ function ExpertsStudio() {
                     type="button"
                     onClick={() => {
                       pick(p.id);
-                      setPreview(true);
+                      setDetailId(p.id);
                     }}
                     className="rounded-full border border-stone-200 px-4 py-1.5 text-[13px] text-stone-600"
                   >
