@@ -271,12 +271,38 @@ export function metaOf(id: string): ExpertMeta {
   };
 }
 
+const DETAIL: Record<string, string[]> = {
+  "board-coach": [
+    "李明以董事会预审为日常工作：先写投票句，再把材料拆成「强攻 / 带过 / 砍掉」。",
+    "擅长把融资、预算、组织调整三类议题压成一页地图，标清未知数字待核实，避免把规划说成已发生。",
+    "咨询节奏通常是：先听你要投什么票 → 列三页必须讲透的证据 → 按 25 分钟切时间。",
+    "不接编造客户与营收、不接替你对董事会撒谎。人设是提示词，不是真人执业。",
+  ],
+  "weekly-coach": [
+    "张静只做执行层周报：完成、风险、求助、负责人，不写愿景页。",
+    "会把「推进中」拆成可检查的黄灯，并把求助写成一个真人名，避免无人认领。",
+    "适合周会前 20 分钟把材料压到五页以内。",
+    "不接品牌故事会、不接空话愿景。",
+  ],
+  "scqa-coach": [
+    "陈柯用 SCQA 过发布口径：情境、冲突、问题、答案各一句，再对照工程事实。",
+    "会标出哪些句子是示意、哪些会变成对外承诺，删掉无边界表述。",
+    "适合产品发布、手册与路演词的会签，不适合要无边界全息或未测小时数。",
+  ],
+  "pitch-coach": [
+    "周南走故事弧：世界—冲突—方案—Ask。尽调只看证据，不编 ARR。",
+    "会帮你写一句话冲突和 12 页弧线，Ask 写清用途与里程碑，不堆客户墙。",
+    "不接假客户、不接未签港口名。",
+  ],
+};
+
 export function biosOf(p: Persona): string[] {
+  if (DETAIL[p.id]) return DETAIL[p.id];
   return (p.system || p.desc)
     .split(/(?<=。)/)
     .map((x) => x.trim())
     .filter(Boolean)
-    .slice(0, 4);
+    .slice(0, 6);
 }
 
 export function searchExperts(q: string, list: Persona[]) {

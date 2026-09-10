@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Dice5, Search, Star } from "lucide-react";
+import { Dice5, Search, X } from "lucide-react";
 import { Sidebar } from "@/components/workspace/Sidebar";
 import { PERSONAS, PERSONA_GROUPS, type Persona } from "@/lib/personas";
 import {
@@ -40,12 +40,12 @@ function ExpertsStudio() {
   const router = useRouter();
   const sp = useSearchParams();
   const { newConversation, selectConversation, setPersona, conversations, activeId } = useChatStore();
-  const [group, setGroup] = useState<(typeof PERSONA_GROUPS)[number] | "全部" | "最近" | "收藏">("全部");
+  const [group, setGroup] = useState<(typeof PERSONA_GROUPS)[number] | "全部" | "最近" | "收藏">("咨询");
   const [q, setQ] = useState("");
   const [picked, setPicked] = useState(WEEKLY_DEFAULT);
   const [fav, setFav] = useState<string[]>([]);
   const [recent, setRecent] = useState<string[]>([]);
-  const [preview, setPreview] = useState(false);
+  const [detailId, setDetailId] = useState<string | null>(null);
   const [strict, setStrict] = useState(false);
   const [teach, setTeach] = useState(false);
   const [goal, setGoal] = useState("");
@@ -118,8 +118,8 @@ function ExpertsStudio() {
     pick(rail[Math.floor(Math.random() * rail.length)].id);
   };
 
-  const continueLast = () => {
-    const hit = conversations.find((c) => c.personaId === featured?.id);
+  const continueLast = (id?: string) => {
+    const hit = conversations.find((c) => c.personaId === (id ?? featured?.id));
     if (hit) {
       void selectConversation(hit.id);
       router.push("/chat");
@@ -196,7 +196,7 @@ function ExpertsStudio() {
             <p className="mt-3 max-w-md text-[15px] leading-7 text-stone-600">{meta.pitch}</p>
             <button
               type="button"
-              onClick={() => void start(featured)}
+              onClick={() => setDetailId(featured.id)}
               className="mt-6 w-fit rounded-full bg-[#c45c2a] px-5 py-2 text-[13px] font-semibold text-white"
             >
               了解更多
@@ -208,11 +208,7 @@ function ExpertsStudio() {
           </div>
         </div>
 
-        {preview && featured.id && (
-          <pre className="mt-3 max-h-40 overflow-auto whitespace-pre-wrap rounded-2xl bg-stone-900 p-4 text-[12px] leading-6 text-amber-50">
-            {featured.system}
-          </pre>
-        )}
+
 
         {rail.length === 0 && (
           <p className="mt-6 text-[13px] text-stone-500">
@@ -286,6 +282,115 @@ function ExpertsStudio() {
           人设是提示词，不是真人执业。{EXPERT_VERSION} · 预约咨询即进入对话。
         </p>
       </div>
+
+      {detailId &&
+        (() => {
+          const p = all.find((x) => x.id === detailId);
+          if (!p) return null;
+          const m = metaOf(p.id);
+          const cx = CARD_EXTRA[p.id];
+          const src = faceOf(p.id);
+          return (
+            <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center" onClick={() => setDetailId(null)}>
+              <div
+                className="max-h-[88vh] w-full max-w-[640px] overflow-y-auto rounded-[24px] bg-[#fbf8f2] p-6 shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-start gap-4">
+                  <span className="h-20 w-20 shrink-0 overflow-hidden rounded-full bg-[#f3ebe0]">
+                    {src ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={src} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="flex h-full w-full items-center justify-center text-3xl">{p.emoji}</span>
+                    )}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[22px] font-bold text-stone-900">{cx?.alias ?? p.name}</p>
+                    <p className="text-[13px] text-stone-500">
+                      {p.name} · {cx?.title ?? p.group}
+                    </p>
+                    <p className="mt-1 text-[13px] text-amber-700">★ {cx?.rating ?? "—"} · {p.group}</p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {(cx?.skills ?? m.suited).map((s) => (
+                        <span key={s} className="rounded-full bg-[#f3ebe0] px-2.5 py-0.5 text-[11px] text-[#c45c2a]">
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <button type="button" className="rounded-full p-1 text-stone-400" onClick={() => setDetailId(null)} aria-label="关闭">
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <h3 className="mt-6 text-[13px] font-semibold tracking-wide text-[#c45c2a]">详细介绍</h3>
+                <div className="mt-2 space-y-3 text-[14px] leading-7 text-stone-700">
+                  {biosOf(p).map((para) => (
+                    <p key={para}>{para}</p>
+                  ))}
+                </div>
+
+                <div className="mt-5 grid gap-3 rounded-2xl bg-white p-4 text-[13px] leading-6 text-stone-600 sm:grid-cols-2">
+                  <p>
+                    <span className="font-semibold text-stone-800">擅长</span>
+                    <br />
+                    {m.suited.join("、") || "通用"}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-stone-800">不接</span>
+                    <br />
+                    {m.notSuited.join("、") || "—"}
+                  </p>
+                  <p className="sm:col-span-2">
+                    <span className="font-semibold text-stone-800">工作方式</span>
+                    <br />
+                    {m.works}
+                  </p>
+                  <p className="sm:col-span-2">
+                    <span className="font-semibold text-stone-800">禁用</span>
+                    <br />
+                    {m.bans.join("；") || "—"}
+                  </p>
+                </div>
+                {m.warning && <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-[12px] text-amber-900">{m.warning}</p>}
+
+                <h3 className="mt-5 text-[13px] font-semibold tracking-wide text-[#c45c2a]">可以这样开始</h3>
+                <div className="mt-2 space-y-2">
+                  {m.starters.map((st) => (
+                    <button
+                      key={st.text}
+                      type="button"
+                      onClick={() => void start(p, st.text)}
+                      className="block w-full rounded-xl bg-white px-3 py-2.5 text-left text-[13px] leading-6 text-stone-700 ring-1 ring-stone-100"
+                    >
+                      <span className="text-[11px] text-[#c45c2a]">
+                        {st.lv} · {st.out}
+                      </span>
+                      <span className="mt-0.5 block">{st.text}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mt-6 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void start(p)}
+                    className="rounded-full bg-[#c45c2a] px-5 py-2 text-[13px] font-semibold text-white"
+                  >
+                    预约咨询
+                  </button>
+                  <button type="button" onClick={continueLast} className="rounded-full border border-stone-200 px-4 py-2 text-[13px] text-stone-600">
+                    继续上次
+                  </button>
+                  <button type="button" onClick={() => setDetailId(null)} className="rounded-full px-4 py-2 text-[13px] text-stone-500">
+                    返回列表
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
     </main>
   );
 }
