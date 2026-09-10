@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { LiveLamp3D } from "./LiveLamp3D";
+import { DIFFUSER_WIDE, LAMP_WIDE, LiveWideCarousel } from "./LiveWideCarousel";
 
 /** 画布文档案例：可划词复制的 HTML 成品，版式对齐设计稿 */
 
@@ -158,12 +158,10 @@ export function LiveDiffuserBrief() {
       <p className="mt-1 text-[15px] text-stone-500">火焰香薰加湿器 · 北欧桌角氛围拍摄简报</p>
       <p className="mt-2 text-[12px] text-stone-400">文档编号 EM-2026-092 · 机密 · 仅供场景主图与详情页使用</p>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
-        <figure className="overflow-hidden rounded-sm bg-stone-950 shadow-[0_20px_50px_-24px_rgba(0,0,0,0.55)]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/cases/diffuser-flame.jpg" alt="EMBER MIST 主视觉" className="aspect-[3/4] h-auto w-full object-cover object-center" />
-        </figure>
-        <div>
+      <div className="mt-8 overflow-hidden rounded-sm bg-stone-950 shadow-[0_20px_50px_-24px_rgba(0,0,0,0.55)]">
+        <LiveWideCarousel images={DIFFUSER_WIDE} alt="EMBER MIST 主视觉" />
+      </div>
+      <div className="mt-8">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-800/80">产品叙事</p>
           <p className="mt-3 text-[13.5px] leading-7 text-stone-700">
             EMBER MIST 不是一台上桌的「小家电」，而是一簇被托住的炉火。哑光白圆身压在橡木桌角，顶口升起暖橙火焰灯效，水雾像丝带绕着夜色往上走。旁边是摊开的书和还在冒热气的咖啡——生活先入画，产品后被记住。
@@ -171,13 +169,13 @@ export function LiveDiffuserBrief() {
           <p className="mt-3 text-[13.5px] leading-7 text-stone-700">
             本简报按你提供的提示词直出主视觉，并补齐景深、色温、道具纪律与电商裁切，方便摄影与详情页共用同一口径。
           </p>
-          <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 text-[12px]">
+          <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 text-[12px] sm:grid-cols-3">
             {[
               ["定位", "北欧家居 / 夜间仪式"],
               ["价格带", "¥268 – 398"],
               ["材质", "哑光白 ABS · 雾化芯"],
               ["光效", "仿真火焰 LED"],
-              ["比例", "3:4 主图 · 16:9 窗边"],
+              ["比例", "16:9 宽屏主图"],
               ["景深", "f/1.8–2.2 浅景深"],
             ].map(([k, v]) => (
               <div key={k} className="border-t border-stone-200 pt-2">
@@ -186,7 +184,6 @@ export function LiveDiffuserBrief() {
               </div>
             ))}
           </dl>
-        </div>
       </div>
 
       <H>01  提示词（原文，不可改语气）</H>
@@ -1069,6 +1066,15 @@ function Section({ n, children }: { n: string; children: ReactNode }) {
         <span className="inline-block h-4 w-1 rounded bg-sky-500" />
         {n}
       </p>
+      {children}
+    </section>
+  );
+}
+
+function H({ children }: { children: ReactNode }) {
+  return <h2 className="mb-2 mt-5 text-[14px] font-bold text-stone-800">{children}</h2>;
+}
+
       {children}
     </section>
   );
