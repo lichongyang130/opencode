@@ -369,7 +369,7 @@ export function searchExperts(q: string, list: Persona[]) {
   if (!s) return list;
   return list.filter((p) => {
     const m = metaOf(p.id);
-    const blob = [p.name, p.desc, p.group, m.pitch, ...m.starters.map((x) => x.text), ...m.suited].join(" ").toLowerCase();
+    const blob = [p.name, p.desc, p.group, catOf(p.id), m.pitch, ...m.starters.map((x) => x.text), ...m.suited].join(" ").toLowerCase();
     return blob.includes(s);
   });
 }
