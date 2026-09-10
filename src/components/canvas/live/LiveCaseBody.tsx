@@ -1,6 +1,7 @@
 "use client";
 
 import { LiveDocByTitle } from "./LiveDocs";
+import { LivePpt } from "./LivePpt";
 
 /** 模板卡弹层左侧成品：文档走纸页 Live，其它技能先出预览图。 */
 export function LiveCaseBody({
