@@ -13,7 +13,16 @@ type Slide = {
   title: string;
   note?: string;
   body: ReactNode;
+  layout?: "cover" | "split";
+  photo?: string;
 };
+
+function coverOf(title?: string) {
+  if (title?.includes("汇报")) return "/cases/ppt/work-report.jpg";
+  if (title?.includes("路演") || title?.includes("融资")) return "/cases/ppt/pitch.jpg";
+  if (title?.includes("提案")) return "/cases/ppt/proposal.jpg";
+  return "/cases/ppt/cover-hero.jpg";
+}
 
 const BRIEF = {
   theme: "开帆画布 · 对话即成品",
@@ -37,7 +46,9 @@ function LivePptDeck({ kickerTitle }: { kickerTitle?: string }) {
   const slides: Slide[] = [
     {
       kicker: "PRODUCT BRIEFING · 15′",
-      title: BRIEF.theme,
+      title: kickerTitle || BRIEF.theme,
+      layout: "cover",
+      photo: coverOf(kickerTitle),
       note: "封面 · 30″",
       body: (
         <div className="mt-10 grid gap-8 sm:grid-cols-[1.2fr_0.8fr]">
@@ -82,6 +93,8 @@ function LivePptDeck({ kickerTitle }: { kickerTitle?: string }) {
     {
       kicker: "S · 情境",
       title: "团队并不缺模型，缺的是能上会的页。",
+      layout: "split",
+      photo: "/cases/ppt/scene-board.jpg",
       note: "情境 · 60″",
       body: (
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -125,6 +138,8 @@ function LivePptDeck({ kickerTitle }: { kickerTitle?: string }) {
     {
       kicker: "A · 答案",
       title: "对话即成品：同一会话，三种栏目。",
+      layout: "split",
+      photo: "/cases/ppt/scene-data.jpg",
       note: "答案 · 强攻 2′",
       body: (
         <div className="mt-8 grid gap-3 sm:grid-cols-3">
@@ -284,11 +299,36 @@ function LivePptDeck({ kickerTitle }: { kickerTitle?: string }) {
         onClick={() => go(1)}
         className="flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-[#1a1c22] p-4 text-left"
       >
-        <div className="aspect-video w-full max-h-full overflow-y-auto rounded-sm bg-[#12141a] px-8 py-7 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.8)]">
-          <p className="text-[11px] tracking-[0.28em] text-amber-200/80">{s.kicker}</p>
-          <h1 className="mt-3 max-w-3xl text-[24px] font-semibold leading-snug tracking-tight sm:text-[28px]">{s.title}</h1>
-          {s.body}
-          {s.note && <p className="mt-8 text-[11px] text-stone-600">{s.note}</p>}
+        <div className="relative aspect-video w-full max-h-full overflow-hidden rounded-sm shadow-[0_24px_80px_-24px_rgba(0,0,0,0.8)]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={s.layout === "cover" || s.layout === "split" ? s.photo : "/cases/ppt/bg-navy.jpg"}
+            alt=""
+            className={`absolute inset-0 h-full w-full object-cover ${s.layout === "split" ? "w-[46%] right-auto" : ""}`}
+          />
+          {s.layout === "split" && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src="/cases/ppt/bg-navy.jpg" alt="" className="absolute inset-0 left-[46%] h-full w-[54%] object-cover" />
+          )}
+          {s.layout !== "split" && (
+            <div
+              className={`absolute inset-0 ${
+                s.layout === "cover"
+                  ? "bg-gradient-to-t from-[#07090e] via-[#07090e]/55 to-transparent"
+                  : "bg-[#0b1220]/72"
+              }`}
+            />
+          )}
+          <div
+            className={`relative z-[1] h-full overflow-y-auto ${
+              s.layout === "split" ? "ml-[46%] px-8 py-7" : "px-10 py-8"
+            }`}
+          >
+            <p className="text-[11px] tracking-[0.28em] text-amber-200/90">{s.kicker}</p>
+            <h1 className="mt-3 max-w-3xl text-[24px] font-semibold leading-snug tracking-tight text-white sm:text-[30px]">{s.title}</h1>
+            {s.body}
+            {s.note && <p className="mt-8 text-[11px] text-stone-400">{s.note}</p>}
+          </div>
         </div>
       </button>
       <div className="flex items-center justify-between border-t border-white/10 px-4 py-2">
