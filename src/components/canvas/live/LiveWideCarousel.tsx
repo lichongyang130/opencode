@@ -73,6 +73,8 @@ export function LiveWideCarousel({
   );
 }
 
-export const LAMP_WIDE = Array.from({ length: 10 }, (_, i) => `/cases/lamp/w${String(i + 1).padStart(2, "0")}.jpg`);
+export const LAMP_WIDE = Array.from({ length: 4 }, (_, i) => `/cases/lamp/w${String(i + 1).padStart(2, "0")}.jpg`);
 
-export const DIFFUSER_WIDE = Array.from({ length: 10 }, (_, i) => `/cases/diffuser/w${String(i + 1).padStart(2, "0")}.jpg`);
+export const DIFFUSER_WIDE = Array.from({ length: 4 }, (_, i) => `/cases/diffuser/w${String(i + 1).padStart(2, "0")}.jpg`);
+
+export const SPEAKER_WIDE = Array.from({ length: 4 }, (_, i) => `/cases/speaker/w${String(i + 1).padStart(2, "0")}.jpg`);

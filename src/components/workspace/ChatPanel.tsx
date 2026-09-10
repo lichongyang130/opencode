@@ -144,7 +144,14 @@ const SKILL_TEMPLATES: Record<string, TemplateCard[]> = {
       prompt:
         "Cozy product photography of a flame-effect aroma diffuser humidifier, matte white rounded body with realistic warm orange flame light rising from the top, delicate water mist swirling upward like silk ribbons, placed on a natural oak desk corner beside an open book and a steaming cup of coffee, warm ambient night lighting, shallow depth of field, Nordic minimalist interior, ultra-realistic render, 8K, soft cinematic lighting --ar 3:4 --v 6.1 --style raw",
     },
-    { title: "公司介绍", desc: "企业简介与亮点提炼", prompt: "写一份 800 字公司介绍，突出技术壁垒" },
+    {
+      title: "透明机甲蓝牙音箱拍摄简报",
+      desc: "赛博朋克产品摄影 · 主视觉 + 提示词",
+      author: "开帆工坊 · 林予安",
+      verbatim: true,
+      prompt:
+        "Cyberpunk transparent mecha Bluetooth speaker product photography, crystal-clear acrylic shell revealing intricate circuit boards, precision audio drivers and metallic diaphragm inside, ice-blue LED strips glowing with breathing rhythm, angular mechanical armor lines, visible screws and wiring details, placed on black volcanic rock surface, blue-purple neon glow in dark background, ultra-futuristic tech aesthetic, hyper-realistic product render, 8K, octane render, cinematic lighting --ar 3:4 --v 6.1 --style raw",
+    },
     { title: "PRD 文档", desc: "需求背景到验收标准", prompt: "为新功能「团队周报」写一份 PRD" },
     { title: "竞品分析", desc: "优劣势与差异化建议", prompt: "对比 Notion 与飞书文档，输出竞品分析" },
     { title: "SOP 手册", desc: "可执行的标准作业流程", prompt: "写一份「内容审核」标准作业流程 SOP" },
@@ -1036,7 +1043,9 @@ function TemplateCard({
       ? "按商业摄影提示词落地的产品拍摄简报：主视觉、镜头表、色板与交付清单都在左侧纸页里，可滚动阅读。"
       : card.title.includes("香薰")
         ? "按场景摄影提示词落地的香薰机简报：橡木桌角、火焰灯效与丝带水雾都在左侧纸页，可滚动阅读。"
-        : card.desc || `${skillLabel}示例。左侧是可交互成品，右侧可复制提示词后做同款。`;
+        : card.title.includes("音箱") || card.title.includes("机甲")
+          ? "按赛博朋克提示词落地的透明机甲音箱简报：亚克力内构、冰蓝灯带与火山岩台面都在左侧宽屏轮播。"
+          : card.desc || `${skillLabel}示例。左侧是可交互成品，右侧可复制提示词后做同款。`;
 
   const show = () => setOpen(true);
   const close = () => setOpen(false);

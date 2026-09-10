@@ -1,13 +1,14 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { DIFFUSER_WIDE, LAMP_WIDE, LiveWideCarousel } from "./LiveWideCarousel";
+import { DIFFUSER_WIDE, LAMP_WIDE, SPEAKER_WIDE, LiveWideCarousel } from "./LiveWideCarousel";
 
 /** 画布文档案例：可划词复制的 HTML 成品，版式对齐设计稿 */
 
 export function LiveDocByTitle({ title }: { title: string }) {
   if (title.includes("磁悬浮") || title.includes("氛围灯") || title.includes("Saturn")) return <LiveLampBrief />;
   if (title.includes("香薰") || title.includes("火焰") || title.includes("diffuser")) return <LiveDiffuserBrief />;
+  if (title.includes("音箱") || title.includes("机甲") || title.includes("speaker")) return <LiveSpeakerBrief />;
   if (title.includes("会议纪要") || title.includes("会议")) return <LiveMinutes />;
   if (title.includes("营销") || title.includes("Campaign") || title.includes("活动")) return <LiveMarketing />;
   if (title.includes("商业模式画布")) return <LiveMindmap />;
@@ -257,6 +258,103 @@ export function LiveDiffuserBrief() {
   );
 }
 
+const SPEAKER_PROMPT = `Cyberpunk transparent mecha Bluetooth speaker product photography, crystal-clear acrylic shell revealing intricate circuit boards, precision audio drivers and metallic diaphragm inside, ice-blue LED strips glowing with breathing rhythm, angular mechanical armor lines, visible screws and wiring details, placed on black volcanic rock surface, blue-purple neon glow in dark background, ultra-futuristic tech aesthetic, hyper-realistic product render, 8K, octane render, cinematic lighting --ar 3:4 --v 6.1 --style raw`;
+
+export function LiveSpeakerBrief() {
+  return (
+    <Paper>
+      <p className="text-[11px] tracking-[0.22em] text-stone-400">LOOKBOOK · CYBERPUNK PRODUCT PHOTOGRAPHY</p>
+      <h1 className="mt-3 text-[28px] font-extrabold leading-tight text-stone-900">AEGIS CORE</h1>
+      <p className="mt-1 text-[15px] text-stone-500">透明机甲蓝牙音箱 · 赛博朋克产品摄影简报</p>
+      <p className="mt-2 text-[12px] text-stone-400">文档编号 AC-2026-093 · 机密 · 仅供科技主图与详情页使用</p>
+      <div className="mt-8 overflow-hidden rounded-sm bg-stone-950 shadow-[0_20px_50px_-24px_rgba(0,0,0,0.55)]">
+        <LiveWideCarousel images={SPEAKER_WIDE} alt="AEGIS CORE 主视觉" />
+      </div>
+      <div className="mt-8">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-800/80">产品叙事</p>
+        <p className="mt-3 text-[13.5px] leading-7 text-stone-700">
+          AEGIS CORE 把机甲拆开给你看。水晶亚克力外壳里，电路板、驱动单元和金属振膜一览无余；冰蓝灯带按呼吸节奏亮灭，螺丝与走线故意留在画面里。底座是黑色火山岩——暗的，是为了让内部更亮。
+        </p>
+        <p className="mt-3 text-[13.5px] leading-7 text-stone-700">
+          本简报按你提供的提示词直出 16:9 四张轮播，并补齐霓虹、内构可读性与电商裁切纪律。
+        </p>
+        <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 text-[12px] sm:grid-cols-3">
+          {[
+            ["定位", "极客桌面 / 潮玩"],
+            ["价格带", "¥899 – 1,280"],
+            ["材质", "光学亚克力 · 铝合金"],
+            ["灯效", "冰蓝呼吸 LED"],
+            ["比例", "16:9 宽屏 · 4 张轮播"],
+            ["台面", "黑色火山岩"],
+          ].map(([k, v]) => (
+            <div key={k} className="border-t border-stone-200 pt-2">
+              <dt className="text-[10px] uppercase tracking-wider text-stone-400">{k}</dt>
+              <dd className="mt-0.5 font-medium text-stone-800">{v}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+      <H>01  提示词（原文，不可改语气）</H>
+      <pre className="mt-2 whitespace-pre-wrap rounded-xl bg-[#16120e] px-4 py-4 font-mono text-[11.5px] leading-6 text-sky-100/90">{SPEAKER_PROMPT}</pre>
+      <p className="mt-2 text-[11px] text-stone-400">参数：--ar 3:4 --v 6.1 --style raw。出图按 16:9 宽屏交付。禁止磨砂外壳，内构必须可读。</p>
+      <H>02  镜头与灯光</H>
+      <table className="w-full border-collapse text-[12px]">
+        <thead>
+          <tr className="bg-stone-900 text-sky-50">
+            {["镜号", "用途", "机位", "光", "备注"].map((h) => (
+              <th key={h} className="px-2 py-2 text-left font-medium">{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="text-stone-700">
+          {[
+            ["C1", "宽屏主图", "平视略俯", "冰蓝轮廓 + 紫霓虹", "火山岩台面完整"],
+            ["C2", "3/4 机甲", "45°", "内部补光可读电路", "螺丝与走线入画"],
+            ["C3", "内构特写", "微距", "压环境、留灯带", "振膜金属高光"],
+            ["C4", "影棚英雄", "低机位", "蓝紫对打", "16:9 留黑"],
+          ].map((r) => (
+            <tr key={r[0]} className="border-b border-stone-100">
+              {r.map((c) => (
+                <td key={c} className="px-2 py-2">{c}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <H>03  色彩纪律</H>
+      <div className="grid gap-3 sm:grid-cols-3">
+        {[
+          ["Ice Blue", "#4CC9F0", "灯带，禁止品红"],
+          ["Neon Purple", "#7B5CFF", "环境轮廓"],
+          ["Volcanic", "#1A1410", "台面"],
+          ["Acrylic", "#E8F4FF", "外壳高光"],
+          ["PCB Green", "#1F6B4A", "板层可读"],
+          ["Metal", "#C9D2DC", "振膜"],
+        ].map(([n, hex, d]) => (
+          <div key={n} className="rounded-xl border border-stone-200 p-3">
+            <div className="flex items-center gap-2">
+              <span className="h-6 w-6 rounded-full border border-stone-200" style={{ background: hex }} />
+              <p className="text-[13px] font-semibold text-stone-800">{n}</p>
+            </div>
+            <p className="mt-1 font-mono text-[11px] text-stone-400">{hex}</p>
+            <p className="mt-1 text-[11px] text-stone-500">{d}</p>
+          </div>
+        ))}
+      </div>
+      <H>04  交付清单</H>
+      <ul className="list-disc pl-5 text-[13px] leading-7 text-stone-600">
+        <li>宽屏主图 16:9 四张轮播，长边 4000px，sRGB，无水印。</li>
+        <li>内构特写一张，电路与螺丝可读。</li>
+        <li>PSD 分层：背景 / 岩石 / 外壳 / 内构 / 灯带。</li>
+      </ul>
+      <blockquote className="mt-6 border-l-2 border-sky-700/70 pl-4 text-[13.5px] leading-7 text-stone-700">
+        把机甲拆开，声音还在里面。
+      </blockquote>
+      <p className="mt-8 text-[10px] text-stone-400">AEGIS CORE · 拍摄简报 v1.0 · 提示词由需求方提供</p>
+    </Paper>
+  );
+}
+
 /** 灵感主卡：折角纸页会议纪要 */
 export function LiveMinutes() {
   return (
@@ -282,9 +380,6 @@ export function LiveMinutes() {
               <td colSpan={2} className="border border-stone-800 px-3 py-2 font-medium">
                 讨论要点
               </td>
-            </tr>
-            <tr>
-              <td colSpan={2} className="h-28 border border-stone-800" />
             </tr>
             <tr>
               <td colSpan={2} className="border border-stone-800 px-3 py-2 font-medium">
@@ -1050,7 +1145,7 @@ export function LiveOffice({ title }: { title: string }) {
 function Paper({ children }: { children: ReactNode }) {
   return (
     <div className="h-full overflow-y-auto bg-[#d9d2c5] px-3 py-6 sm:px-10">
-      <article className="mx-auto max-w-[920px] bg-[#fffcf7] px-8 py-8 shadow-[0_18px_60px_-20px_rgba(28,25,23,0.45)] sm:px-14 sm:py-12">
+      <article className="mx-auto max-w-[1100px] bg-[#fffcf7] px-6 py-8 shadow-[0_18px_60px_-20px_rgba(28,25,23,0.45)] sm:px-10 sm:py-12">
         {children}
       </article>
     </div>

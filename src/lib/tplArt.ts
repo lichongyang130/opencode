@@ -10,7 +10,8 @@ export const TPL_ART: Record<string, Record<string, string>> = {
   // 文档：复用画布栏目真实图（同主题成品文档）
   docs: {
     磁悬浮氛围灯拍摄简报: "/cases/lamp-levitation.jpg",
-    火焰香薰机氛围拍摄简报: "/cases/diffuser-flame.jpg",
+    火焰香薰机氛围拍摄简报: "/cases/diffuser/w01.jpg",
+    透明机甲蓝牙音箱拍摄简报: "/cases/speaker/w01.jpg",
     "PRD 文档": "/canvas-art/docs-4.jpg",
     营销方案: "/canvas-art/docs-3.jpg",
   },

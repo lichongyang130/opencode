@@ -183,7 +183,7 @@ describe("ChatPanel 空态", () => {
   it("默认技能（文档）第 1 页渲染 3 张示例卡", () => {
     seed();
     render(<ChatPanel />);
-    for (const name of ["磁悬浮氛围灯拍摄简报", "火焰香薰机氛围拍摄简报", "公司介绍"]) {
+    for (const name of ["磁悬浮氛围灯拍摄简报", "火焰香薰机氛围拍摄简报", "透明机甲蓝牙音箱拍摄简报"]) {
       expect(screen.getByRole("button", { name })).toBeDefined();
     }
     expect(screen.queryByRole("button", { name: "制作 PPT" })).toBeNull();
@@ -195,7 +195,7 @@ describe("ChatPanel 空态", () => {
     fireEvent.click(screen.getByRole("tab", { name: "文档" }));
     expect(screen.getByText("文档 · 示例模板")).toBeDefined();
     // 第 1 页：文档模板前 3 张
-    for (const name of ["磁悬浮氛围灯拍摄简报", "火焰香薰机氛围拍摄简报", "公司介绍"]) {
+    for (const name of ["磁悬浮氛围灯拍摄简报", "火焰香薰机氛围拍摄简报", "透明机甲蓝牙音箱拍摄简报"]) {
       expect(screen.getByRole("button", { name })).toBeDefined();
     }
     expect(screen.queryByRole("button", { name: "制作 PPT" })).toBeNull();
