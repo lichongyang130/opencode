@@ -180,27 +180,29 @@ describe("ChatPanel 空态", () => {
     expect((screen.getByTitle("输入内容后可优化提示词") as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it("默认技能（文档）第 1 页渲染 3 张示例卡", () => {
+    it("默认技能（文档）第 1 批渲染 4 张示例卡", () => {
     seed();
     render(<ChatPanel />);
-    for (const name of ["磁悬浮氛围灯拍摄简报", "火焰香薰机氛围拍摄简报", "透明机甲蓝牙音箱拍摄简报"]) {
+    for (const name of ["磁悬浮氛围灯拍摄简报", "火焰香薰机氛围拍摄简报", "透明机甲蓝牙音箱拍摄简报", "PRD 文档"]) {
       expect(screen.getByRole("button", { name })).toBeDefined();
     }
     expect(screen.queryByRole("button", { name: "制作 PPT" })).toBeNull();
+    expect(screen.queryByText(/共 \d+ 个/)).toBeNull();
+    expect(screen.queryByTitle("下一个示例")).toBeNull();
   });
 
-  it("选中技能后 12 个模板轮播展示，箭头可翻到最后一页", () => {
+  it("选中技能后一行 4 张，「换一批」可翻到下一批", () => {
     seed();
     render(<ChatPanel />);
     fireEvent.click(screen.getByRole("tab", { name: "文档" }));
     expect(screen.getByText("文档 · 示例模板")).toBeDefined();
-    // 第 1 页：文档模板前 3 张
-    for (const name of ["磁悬浮氛围灯拍摄简报", "火焰香薰机氛围拍摄简报", "透明机甲蓝牙音箱拍摄简报"]) {
+    for (const name of ["磁悬浮氛围灯拍摄简报", "火焰香薰机氛围拍摄简报", "透明机甲蓝牙音箱拍摄简报", "PRD 文档"]) {
       expect(screen.getByRole("button", { name })).toBeDefined();
     }
     expect(screen.queryByRole("button", { name: "制作 PPT" })).toBeNull();
-    // 翻 3 次到最后一页（12/3=4 页）
-    for (let i = 0; i < 3; i++) fireEvent.click(screen.getByTitle("下一个示例"));
+    // 12/4=3 批，换两次到最后一批
+    fireEvent.click(screen.getByRole("button", { name: "换一批" }));
+    fireEvent.click(screen.getByRole("button", { name: "换一批" }));
     expect(screen.getByRole("button", { name: "立项提案" })).toBeDefined();
     expect(screen.getByRole("button", { name: "新闻稿" })).toBeDefined();
   });

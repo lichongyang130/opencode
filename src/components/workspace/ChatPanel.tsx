@@ -7,8 +7,6 @@ import {
   Box,
   Check,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   ChevronUp,
   Code,
   Copy,
@@ -77,8 +75,8 @@ const IMAGE_COUNTS = [
 ];
 
 /** ── 首页技能体系与模板库 ───────────────────────────────
- * 顶部技能条收纳：可见 5 项 + 「更多」下拉；每技能展示 12 张模板卡
- * （每行 3 个，先显示 9 张，箭头展开隐藏 3 张）。点击模板卡会把该卡主题
+ * 顶部技能条收纳：可见 5 项 + 「更多」下拉；每技能 12 张模板卡，
+ * 每行 4 个，点「换一批」循环下一批。点击模板卡会把该卡主题
  * 组合成详细提示词填入输入框。
  */
 type TemplateCard = { title: string; desc: string; prompt?: string; verbatim?: boolean; author?: string };
@@ -1176,7 +1174,7 @@ export function ChatPanel() {
   const [homeFilter, setHomeFilter] = useState("docs");
   // 「更多」下拉开关
   const [moreOpen, setMoreOpen] = useState(false);
-  // 示例模板轮播：当前页（每页 3 张、共 12 张 4 页，左右箭头循环翻页）
+  // 示例模板：当前批（每批 4 张，点「换一批」循环）
   const [tplPage, setTplPage] = useState(0);
 
   const slashMatches = matchSlash(input);
@@ -1258,13 +1256,12 @@ export function ChatPanel() {
   const templateSkill = homeFilter === "ppt" ? "ppt" : templateKey;
   const templates: { skill: string; card: TemplateCard }[] =
     (SKILL_TEMPLATES[templateKey] ?? []).map((card) => ({ skill: templateSkill, card }));
-  // 轮播：一行 3 张 / 页，左右箭头翻页（首尾循环）
-  const PER_PAGE = 3;
+  // 一行 4 张 / 批，「换一批」循环
+  const PER_PAGE = 4;
   const totalPages = Math.max(1, Math.ceil(templates.length / PER_PAGE));
   const curPage = Math.min(tplPage, totalPages - 1);
   const shownTemplates = templates.slice(curPage * PER_PAGE, curPage * PER_PAGE + PER_PAGE);
-  const goTplPrev = () => setTplPage((p) => (p - 1 + totalPages) % totalPages);
-  const goTplNext = () => setTplPage((p) => (p + 1) % totalPages);
+  const shuffleTpl = () => setTplPage((p) => (p + 1) % totalPages);
   // d5：PPT 生成中（对话内顶部阶段条）
   const deckLoading = mode === "slides" && convo?.deckStatus === "loading";
   // 助手身份行小标签：当前模型名（Codex 每条消息头部同款）
@@ -1478,7 +1475,7 @@ export function ChatPanel() {
         ref={scrollRef}
         className={cn("flex-1 overflow-y-auto px-6", messages.length === 0 ? "bg-white py-12" : "bg-white py-10")}
       >
-        <div className="mx-auto w-full max-w-[760px]">
+        <div className="mx-auto w-full max-w-[920px]">
           {/* d5：PPT 生成时，阶段条显示在对话流顶部 */}
           {deckLoading && <SlidesProgressStrip message={convo?.deckMessage ?? ""} />}
           {messages.length === 0 ? (
@@ -1620,41 +1617,26 @@ export function ChatPanel() {
               </div>
               <p className="mt-2 text-xs text-stone-400">回车发送 · Shift+回车换行 · 上方技能条选择文档 / PPT / 图片 / 更多</p>
 
-              {/* 示例模板：一行轮播（每页 3 张，右上角左右箭头循环翻页） */}
+              {/* 示例模板：一行 4 张，右上角「换一批」 */}
                 <div className="mt-5 flex items-center justify-between gap-3 px-1 text-left">
                   <div className="flex min-w-0 items-baseline gap-2">
                     <h2 className="text-sm font-semibold tracking-wide text-stone-500">
                       {activeSkill.label} · 示例模板
                     </h2>
-                    <span className="truncate text-xs text-stone-400">
-                      {`共 ${templates.length} 个 · 点卡片预览，再做同款`}
-                    </span>
+                    <span className="truncate text-xs text-stone-400">点卡片预览，再做同款</span>
                   </div>
-                  <div className="flex shrink-0 items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={goTplPrev}
-                      title="上一个示例"
-                      aria-label="上一个示例"
-                      className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-500 transition hover:border-stone-300 hover:text-violet-600"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </button>
-                    <span className="min-w-[2.5rem] text-center text-xs tabular-nums text-stone-400">
-                      {curPage + 1} / {totalPages}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={goTplNext}
-                      title="下一个示例"
-                      aria-label="下一个示例"
-                      className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-500 transition hover:border-stone-300 hover:text-violet-600"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={shuffleTpl}
+                    title="换一批"
+                    aria-label="换一批"
+                    className="flex shrink-0 items-center gap-1 rounded-full border border-stone-200 bg-white px-2.5 py-1 text-xs text-stone-500 transition hover:border-stone-300 hover:text-violet-600"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    换一批
+                  </button>
                 </div>
-                <div className="mt-2.5 grid grid-cols-3 gap-2.5 text-left">
+                <div className="mt-2.5 grid grid-cols-4 gap-2.5 text-left">
                   {shownTemplates.map((item) => {
                     const curSkill = HOME_SKILLS.find((x) => x.key === item.skill) ?? activeSkill;
                     const q = item.card;
