@@ -31,10 +31,24 @@ const FACE: Record<string, string> = {
   english: "/cases/experts/p-travel.jpg",
   chef: "/cases/experts/p-chef.jpg",
   tutor: "/cases/experts/p-chef.jpg",
-  "board-coach": "/cases/experts/hero-week.jpg",
-  "pitch-coach": "/cases/experts/p-pm.jpg",
-  "weekly-coach": "/cases/experts/p-code.jpg",
-  "scqa-coach": "/cases/experts/hero-week.jpg",
+  "board-coach": "/cases/experts/p-board.jpg",
+  "pitch-coach": "/cases/experts/p-pitch.jpg",
+  "weekly-coach": "/cases/experts/p-weekly.jpg",
+  "scqa-coach": "/cases/experts/p-scqa.jpg",
+};
+
+export const HERO_ART: Record<string, string> = {
+  咨询: "/cases/experts/hero-board.jpg",
+  营销: "/cases/experts/hero-week.jpg",
+};
+
+export type CardExtra = { alias: string; title: string; rating: string; skills: string[] };
+
+export const CARD_EXTRA: Record<string, CardExtra> = {
+  "board-coach": { alias: "李明", title: "战略咨询总监", rating: "4.9", skills: ["路演教练", "融资顾问"] },
+  "weekly-coach": { alias: "张静", title: "战略咨询总监", rating: "4.5", skills: ["周报教练", "执行力"] },
+  "scqa-coach": { alias: "陈柯", title: "战略咨询总监", rating: "4.9", skills: ["SCQA 教练", "逻辑表达"] },
+  "pitch-coach": { alias: "周南", title: "战略咨询总监", rating: "4.2", skills: ["董事会辅导", "企业战略"] },
 };
 
 function s(a: string, b: string, c: string): ExpertMeta["starters"] {
@@ -230,7 +244,7 @@ const META: Record<string, Omit<ExpertMeta, "id" | "face" | "official">> = {
   },
 };
 
-export const WEEKLY_DEFAULT = "marketing-strategist";
+export const WEEKLY_DEFAULT = "board-coach";
 export const EXPERT_VERSION = "v3";
 
 export function faceOf(id: string) {
