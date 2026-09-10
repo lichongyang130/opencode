@@ -333,3 +333,13 @@ function Vis({ children }: { children: ReactNode }) {
     </p>
   );
 }
+
+function Shot({ src, cap }: { src: string; cap: string }) {
+  return (
+    <figure className="mt-6 overflow-hidden rounded-sm border border-white/10 bg-black">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt={cap} className="aspect-video w-full object-cover" />
+      <figcaption className="px-3 py-2 text-[11px] tracking-wide text-stone-500">{cap}</figcaption>
+    </figure>
+  );
+}
