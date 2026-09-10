@@ -25,20 +25,20 @@ export { ASTRA_PROMPT };
 
 export function LiveAstraHandbook() {
   return (
-    <div className="h-full overflow-y-auto bg-[#07090d] text-[#e8edf5]">
-      <article className="mx-auto max-w-[920px] px-6 py-10 sm:px-12 sm:py-14">
-        <p className="text-[11px] font-medium tracking-[0.28em] text-cyan-400/80">CONCEPT BRIEF · ASTRA HANDBOOK</p>
-        <p className="mt-3 rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-3 py-2 text-[12px] leading-6 text-cyan-100/80">
+    <div className="h-full overflow-y-auto bg-[#d9d2c5] px-3 py-6 sm:px-10 text-stone-800">
+      <article className="mx-auto max-w-[1100px] bg-[#fffcf7] px-6 py-8 shadow-[0_18px_60px_-20px_rgba(28,25,23,0.45)] sm:px-12 sm:py-12">
+        <p className="text-[11px] font-medium tracking-[0.28em] text-teal-700">CONCEPT BRIEF · ASTRA HANDBOOK</p>
+        <p className="mt-3 rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-[12px] leading-6 text-stone-600">
           概念产品介绍稿，功能与方案为规划设定。本文不构成交付承诺。
         </p>
-        <h1 className="mt-8 text-[34px] font-semibold tracking-tight text-white">启衡 ASTRA</h1>
-        <p className="mt-2 text-[16px] text-stone-400">企业智能工作系统 · 12 页产品手册</p>
+        <h1 className="mt-8 text-[34px] font-semibold tracking-tight text-stone-900">启衡 ASTRA</h1>
+        <p className="mt-2 text-[16px] text-stone-500">企业智能工作系统 · 12 页产品手册</p>
         <p className="mt-1 text-[12px] text-stone-500">文档编号 AH-2026-001 · 规划稿 · 供设计排版</p>
         <Shot src="/cases/astra/p01-hero.jpg" cap="工作台概念静帧 · 示意，非已上线界面" />
 
         <Page n="01" title="开篇：工作，正在被重新定义">
           <Thesis>真正的升级，不是更快地完成旧流程，而是让复杂工作以更清晰的方式发生。</Thesis>
-          <p className="mt-4 text-[13.5px] leading-7 text-stone-300">
+          <p className="mt-4 text-[13.5px] leading-7 text-stone-600">
             企业并不缺工具。缺的是把需求、知识、判断与归档串成一条可治理路径的能力。启衡 ASTRA 被设定为一套工作系统：人提出意图，系统组织信息，关键节点仍由人确认。
           </p>
           <Cards
@@ -82,9 +82,9 @@ export function LiveAstraHandbook() {
               ["起草", "生成可审阅草稿，而不是终稿伪装"],
               ["洞察", "汇总异常与关联，供人判断"],
             ].map(([k, v]) => (
-              <div key={k} className="border border-white/10 bg-white/[0.03] px-4 py-3">
-                <p className="text-[11px] tracking-[0.16em] text-cyan-400/90">{k}</p>
-                <p className="mt-1 text-[13px] text-stone-200">{v}</p>
+              <div key={k} className="border border-stone-200 bg-white px-4 py-3">
+                <p className="text-[11px] tracking-[0.16em] text-teal-700/90">{k}</p>
+                <p className="mt-1 text-[13px] text-stone-700">{v}</p>
               </div>
             ))}
           </div>
@@ -97,7 +97,7 @@ export function LiveAstraHandbook() {
           <Shot src="/cases/astra/p02-workbench.jpg" cap="职责写在同一屏：草稿可改、可退、可签" />
           <table className="mt-5 w-full border-collapse text-[12px]">
             <thead>
-              <tr className="border-b border-white/15 text-left text-cyan-200/80">
+              <tr className="border-b border-stone-200 text-left text-teal-800/80">
                 {["环节", "系统", "人"].map((h) => (
                   <th key={h} className="py-2 pr-3 font-medium">
                     {h}
@@ -105,7 +105,7 @@ export function LiveAstraHandbook() {
                 ))}
               </tr>
             </thead>
-            <tbody className="text-stone-300">
+            <tbody className="text-stone-600">
               {[
                 ["接收需求", "结构化字段、缺项提示", "确认意图与优先级"],
                 ["提取信息", "权限内检索与引用", "补充未入库事实"],
@@ -113,7 +113,7 @@ export function LiveAstraHandbook() {
                 ["审核输出", "检查清单与差异高亮", "签字或退回"],
                 ["归档", "版本、权限、留痕", "指定可见范围"],
               ].map((r) => (
-                <tr key={r[0]} className="border-b border-white/8">
+                <tr key={r[0]} className="border-b border-stone-200">
                   {r.map((c) => (
                     <td key={c} className="py-2 pr-3">
                       {c}
@@ -129,7 +129,7 @@ export function LiveAstraHandbook() {
         <Page n="05" title="知识底座：企业记忆可被调用">
           <Thesis>没有权限与出处的「聪明」，只是不可用的聪明。</Thesis>
           <Shot src="/cases/astra/p05-knowledge.jpg" cap="权限内召回：被点亮的才可进入上下文" />
-          <p className="mt-4 text-[13.5px] leading-7 text-stone-300">
+          <p className="mt-4 text-[13.5px] leading-7 text-stone-600">
             ASTRA 将制度、项目纪要、产品说明与经授权的业务记录纳入可检索层。每次引用在草稿旁给出出处卡片；无权限的内容既不出现在结果里，也不进入模型上下文。
           </p>
           <Cards
@@ -145,7 +145,7 @@ export function LiveAstraHandbook() {
         <Page n="06" title="把重复工作，交给有序流程">
           <Thesis>一条可回退的流水线，比一次惊艳的生成更重要。</Thesis>
           <Shot src="/cases/astra/p06-flow.jpg" cap="接收 → 提取 → 草稿 → 审核 → 归档" />
-          <ol className="mt-5 space-y-2 text-[13px] text-stone-200">
+          <ol className="mt-5 space-y-2 text-[13px] text-stone-700">
             {[
               "接收需求：表单或会话采集目标、对象、截止与约束",
               "提取信息：在授权范围内召回制度、历史稿与数据摘要",
@@ -154,7 +154,7 @@ export function LiveAstraHandbook() {
               "输出归档：写入指定空间，锁定版本，通知相关人",
             ].map((t, i) => (
               <li key={t} className="flex gap-3 border-l-2 border-cyan-500/50 pl-3">
-                <span className="font-mono text-[11px] text-cyan-400">0{i + 1}</span>
+                <span className="font-mono text-[11px] text-teal-700">0{i + 1}</span>
                 {t}
               </li>
             ))}
@@ -174,13 +174,13 @@ export function LiveAstraHandbook() {
               ["推断", "基于事实的关联与缺口，标明假设"],
               ["建议", "可选动作及适用条件，供人取舍"],
             ].map(([h, b]) => (
-              <div key={h} className="border border-white/10 p-3">
-                <p className="text-[12px] font-semibold text-white">{h}</p>
-                <p className="mt-2 text-[12px] leading-6 text-stone-400">{b}</p>
+              <div key={h} className="border border-stone-200 p-3">
+                <p className="text-[12px] font-semibold text-stone-900">{h}</p>
+                <p className="mt-2 text-[12px] leading-6 text-stone-500">{b}</p>
               </div>
             ))}
           </div>
-          <p className="mt-4 text-[13px] leading-7 text-stone-300">
+          <p className="mt-4 text-[13px] leading-7 text-stone-600">
             异常以「偏离基线 / 来源冲突 / 缺失字段」提示，而不是红色警报恐吓。ASTRA 不承诺自动替代管理决策。
           </p>
           <p className="mt-2 text-[11px] text-stone-500">示例数据（待验证目标）：试点团队将「找材料」时间减少，具体比例在评估阶段测量，本文不预填。</p>
@@ -197,20 +197,20 @@ export function LiveAstraHandbook() {
               ["知识与检索层", "索引、密级、出处回链、过期降权"],
               ["数据连接层", "经授权的系统连接器，最小字段同步"],
             ].map(([h, b]) => (
-              <div key={h} className="flex gap-4 border border-white/10 px-4 py-3">
-                <p className="w-36 shrink-0 text-[12px] font-semibold text-cyan-200">{h}</p>
-                <p className="text-[12px] text-stone-300">{b}</p>
+              <div key={h} className="flex gap-4 border border-stone-200 px-4 py-3">
+                <p className="w-36 shrink-0 text-[12px] font-semibold text-teal-800">{h}</p>
+                <p className="text-[12px] text-stone-600">{b}</p>
               </div>
             ))}
           </div>
-          <p className="mt-3 text-[12px] text-stone-400">安全治理不是第五层摆件，而是贯穿身份、权限、审计与密钥的竖切能力。</p>
+          <p className="mt-3 text-[12px] text-stone-500">安全治理不是第五层摆件，而是贯穿身份、权限、审计与密钥的竖切能力。</p>
           <Vis>四层横条自上而下；左侧一条贯穿的「治理」竖轨。可直接绘制架构图。</Vis>
         </Page>
 
         <Page n="09" title="安全治理：让智能运行在边界之内">
           <Thesis>智能只在被允许的范围内工作，并且留下证据。</Thesis>
           <Shot src="/cases/astra/p09-secure.jpg" cap="默认关闭，按角色打开" />
-          <ul className="mt-4 list-disc space-y-2 pl-5 text-[13px] leading-7 text-stone-300">
+          <ul className="mt-4 list-disc space-y-2 pl-5 text-[13px] leading-7 text-stone-600">
             <li>身份认证：对接企业身份源；未认证不进入任何空间。</li>
             <li>最小权限：按角色、空间、密级授权；默认无权限。</li>
             <li>访问控制：检索、生成、导出分权；高密内容禁止进入模型上下文。</li>
@@ -232,9 +232,9 @@ export function LiveAstraHandbook() {
               ["客户服务", "答复依赖个人记忆", "工单进入流程：检索制度 → 草稿 → 坐席确认", "口径更一致，升级路径更清楚", "情绪安抚与例外赔付必须人工"],
               ["研发知识", "设计讨论留在聊天里", "纪要入库、接口说明可检索、变更需审核", "减少重复问答，设计决策可追溯", "源代码与密钥不入库、不进模型"],
             ].map(([name, pain, use, value, bound]) => (
-              <div key={name} className="border border-white/10 p-4">
-                <p className="text-[13px] font-semibold text-white">{name}</p>
-                <dl className="mt-2 grid gap-1 text-[12px] text-stone-400 sm:grid-cols-2">
+              <div key={name} className="border border-stone-200 p-4">
+                <p className="text-[13px] font-semibold text-stone-900">{name}</p>
+                <dl className="mt-2 grid gap-1 text-[12px] text-stone-500 sm:grid-cols-2">
                   <div>痛点：{pain}</div>
                   <div>使用：{use}</div>
                   <div>预期价值：{value}</div>
@@ -256,9 +256,9 @@ export function LiveAstraHandbook() {
               ["3 效果评估", "对照「找材料 / 出草稿 / 审核耗时」的示例基线。验收：书面评估，指标标为待验证。"],
               ["4 逐步推广", "按空间复制，不默认全员开通。验收：培训与回退预案齐备。"],
             ].map(([h, b]) => (
-              <div key={h} className="border border-white/10 p-3">
-                <p className="text-[12px] font-semibold text-cyan-200">{h}</p>
-                <p className="mt-1 text-[12px] leading-6 text-stone-400">{b}</p>
+              <div key={h} className="border border-stone-200 p-3">
+                <p className="text-[12px] font-semibold text-teal-800">{h}</p>
+                <p className="mt-1 text-[12px] leading-6 text-stone-500">{b}</p>
               </div>
             ))}
           </div>
@@ -282,7 +282,7 @@ export function LiveAstraHandbook() {
           <Vis>大字结语居中；两个 CTA 胶囊按钮；页脚仅占位联系方式，无二维码伪作。</Vis>
         </Page>
 
-        <p className="mt-12 border-t border-white/10 pt-4 text-[10px] tracking-wide text-stone-600">
+        <p className="mt-12 border-t border-stone-200 pt-4 text-[10px] tracking-wide text-stone-600">
           启衡 ASTRA · 产品手册 v0.1 · 概念设定 · 提示词见右侧栏
         </p>
       </article>
@@ -292,25 +292,25 @@ export function LiveAstraHandbook() {
 
 function Page({ n, title, children }: { n: string; title: string; children: ReactNode }) {
   return (
-    <section className="mt-14 border-t border-white/10 pt-8">
-      <p className="font-mono text-[11px] tracking-[0.3em] text-cyan-500/80">{n}</p>
-      <h2 className="mt-2 text-[22px] font-semibold text-white">{title}</h2>
+    <section className="mt-14 border-t border-stone-200 pt-8">
+      <p className="font-mono text-[11px] tracking-[0.3em] text-teal-700">{n}</p>
+      <h2 className="mt-2 text-[22px] font-semibold text-stone-900">{title}</h2>
       {children}
     </section>
   );
 }
 
 function Thesis({ children }: { children: ReactNode }) {
-  return <p className="mt-3 text-[14px] font-medium leading-7 text-cyan-100/90">{children}</p>;
+  return <p className="mt-3 text-[14px] font-medium leading-7 text-teal-800">{children}</p>;
 }
 
 function Cards({ items }: { items: [string, string][] }) {
   return (
     <div className="mt-5 grid gap-3 sm:grid-cols-3">
       {items.map(([h, b]) => (
-        <div key={h} className="border border-white/10 bg-white/[0.03] p-3">
-          <p className="text-[11px] tracking-wide text-cyan-400/80">{h}</p>
-          <p className="mt-1.5 text-[12px] leading-6 text-stone-300">{b}</p>
+        <div key={h} className="border border-stone-200 bg-white p-3">
+          <p className="text-[11px] tracking-wide text-teal-700">{h}</p>
+          <p className="mt-1.5 text-[12px] leading-6 text-stone-600">{b}</p>
         </div>
       ))}
     </div>
@@ -319,9 +319,9 @@ function Cards({ items }: { items: [string, string][] }) {
 
 function Box({ h, children }: { h: string; children: ReactNode }) {
   return (
-    <div className="mt-4 border border-white/10 p-4">
-      <p className="text-[12px] font-semibold text-white">{h}</p>
-      <p className="mt-2 text-[13px] leading-7 text-stone-300">{children}</p>
+    <div className="mt-4 border border-stone-200 p-4">
+      <p className="text-[12px] font-semibold text-stone-900">{h}</p>
+      <p className="mt-2 text-[13px] leading-7 text-stone-600">{children}</p>
     </div>
   );
 }
@@ -336,7 +336,7 @@ function Vis({ children }: { children: ReactNode }) {
 
 function Shot({ src, cap }: { src: string; cap: string }) {
   return (
-    <figure className="mt-6 overflow-hidden rounded-sm border border-white/10 bg-black">
+    <figure className="mt-6 overflow-hidden rounded-sm border border-stone-200 bg-stone-100">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={src} alt={cap} className="aspect-video w-full object-cover" />
       <figcaption className="px-3 py-2 text-[11px] tracking-wide text-stone-500">{cap}</figcaption>
