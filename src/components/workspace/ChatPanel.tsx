@@ -62,6 +62,7 @@ import { buildDetailedPrompt } from "@/lib/promptStudio";
 import { TPL_ART } from "@/lib/tplArt";
 import { LiveCaseBody } from "@/components/canvas/live/LiveCaseBody";
 import { getPersona } from "@/lib/personas";
+import { SKILL_CHANGE_EVENT, SKILL_LAUNCH_KEY, clearSkillCtx, readSkillCtx, type SkillCtx } from "@/lib/skillsHub";
 
 const IMAGE_SIZES = [
   { id: "1024x1024", label: "方形 1:1" },
@@ -480,6 +481,7 @@ function SplitComposer({
   onRecallUp,
   canRecall,
   conversing,
+  onAddItem,
 }: {
   input: string;
   setInput: (v: string | ((prev: string) => string)) => void;
@@ -526,6 +528,7 @@ function SplitComposer({
    * 窄图标栏，把输入空间还给打字；空态（没消息）才展示完整能力区。
    */
   conversing?: boolean;
+  onAddItem?: (label: string) => boolean;
 }) {
   // 「+」添加菜单（点击其它处 / Esc 关闭）
   const [addOpen, setAddOpen] = useState(false);
@@ -547,7 +550,7 @@ function SplitComposer({
   }, [addOpen]);
   const runAddItem = (label: string) => {
     setAddOpen(false);
-    // 演示版暂无对应后端能力：统一提示，避免假装已支持
+    if (onAddItem?.(label)) return;
     toast(`「${label}」即将支持，先把想法写下来试试 AI 生成`, "info");
   };
 
@@ -1162,6 +1165,20 @@ export function ChatPanel() {
   const [moreOpen, setMoreOpen] = useState(false);
   // 示例模板：当前批（每批 4 张，点「换一批」循环）
   const [tplPage, setTplPage] = useState(0);
+  const [skillCtx, setSkillCtx] = useState<SkillCtx>({});
+  const attachRef = useRef<HTMLInputElement>(null);
+  const [pendingFile, setPendingFile] = useState<{ name: string; content: string } | null>(null);
+
+  useEffect(() => {
+    const sync = () => setSkillCtx(readSkillCtx());
+    sync();
+    window.addEventListener(SKILL_CHANGE_EVENT, sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener(SKILL_CHANGE_EVENT, sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
 
   const slashMatches = matchSlash(input);
   useEffect(() => setSlashIdx(0), [input]);
@@ -1203,10 +1220,10 @@ export function ChatPanel() {
       removeKey("oc:experts.launch");
       inputRef.current?.focus();
     }
-    const skill = readJSON<{ text?: string; label?: string; ts?: number }>("oc:skills.launch", {});
+    const skill = readJSON<{ text?: string; label?: string; ts?: number }>(SKILL_LAUNCH_KEY, {});
     if (skill.text && skill.ts && Date.now() - skill.ts < 30_000) {
       setInput(skill.text);
-      removeKey("oc:skills.launch");
+      removeKey(SKILL_LAUNCH_KEY);
       inputRef.current?.focus();
     }
   }, [activeId]);
@@ -1330,7 +1347,8 @@ export function ChatPanel() {
       setImgReference("");
       return;
     }
-    void send(text);
+    void send(text, pendingFile ? { attachment: pendingFile } : undefined);
+    setPendingFile(null);
   };
 
   // UX10: ↑ 逐级召回已发送内容；栈空返回 false 让按键走默认光标行为
@@ -1361,6 +1379,29 @@ export function ChatPanel() {
   /** 输入变更统一入口：手动编辑即退出 UX10 召回态（召回态下 ↑ 可继续前翻） */
   // 空态模板卡：点击不自动发送，而是生成一条「详细提示词」（同卡多次点击组合
   // 出不同变体）填入输入框，供用户查看 / 修改后回车发送。
+  const handleAddItem = (label: string) => {
+    if (label === "附加文件") {
+      attachRef.current?.click();
+      return true;
+    }
+    const starters: Record<string, string> = {
+      "引用其它项目": "请结合我下面粘贴的项目说明来回答：\n",
+      "关联本地代码": "下面是我粘贴的代码，请阅读后回答：\n```\n\n```",
+      "插件": "我想为当前任务加一个本地约定（当作插件说明）：",
+      "从 Figma 导入": "我无法直连 Figma。请根据我描述的画板结构给组件清单和状态表：",
+      "连接器": "请按「连接外部服务」的方式，列出需要的鉴权、字段和失败回退，不要假装已经连上。",
+      MCP: "请把下面能力当成 MCP 工具说明来调用（仅规划，不要伪造执行结果）：",
+      看板: "请把当前任务拆成看板：待办 / 进行中 / 阻塞 / 完成，每项含负责人和验收。",
+    };
+    const t = starters[label];
+    if (t) {
+      setInput((v) => (v.trim() ? `${v}\n${t}` : t));
+      toast(`已填入「${label}」草稿，可编辑后发送`, "success");
+      return true;
+    }
+    return false;
+  };
+
   const fillStarter = (skill: HomeSkill, q: TemplateCard) => {
     // 切换技能（输入框 placeholder 与后续发送通道跟随）；新形态技能无专有
     // 模式，落到 AI 对话先出方案；与当前相同则不动
@@ -1614,6 +1655,7 @@ export function ChatPanel() {
                   onRecallUp={recallUp}
                   canRecall={recallActive}
                   conversing={messages.length > 0}
+                  onAddItem={handleAddItem}
                 />
               </div>
               <p className="mt-2 text-xs text-stone-400">回车发送 · Shift+回车换行 · 上方技能条选择文档 / PPT / 图片 / 更多</p>
@@ -1662,12 +1704,26 @@ export function ChatPanel() {
             </div>
           ) : (
             <div className="space-y-5">
-              {readJSON<{ label?: string }>("oc:skills.context", {}).label && (
-                <div className="flex justify-center">
+              {skillCtx.label && (
+                <div className="flex justify-center gap-2">
                   <span className="rounded-full bg-[#fbf3ec] px-3 py-1 text-[12px] text-[#c45c2a]">
-                    技能 · {readJSON<{ label?: string }>("oc:skills.context", {}).label}
+                    技能 · {skillCtx.label}
                   </span>
+                  <button
+                    type="button"
+                    className="text-[12px] text-stone-400 underline"
+                    onClick={() => {
+                      clearSkillCtx();
+                      setSkillCtx({});
+                      toast("已退出技能", "info");
+                    }}
+                  >
+                    退出技能
+                  </button>
                 </div>
+              )}
+              {pendingFile && (
+                <p className="text-center text-[12px] text-stone-500">附件已就绪：{pendingFile.name}，下次发送会带上</p>
               )}
               {mode === "chat" && convo?.personaId && convo.personaId !== "none" && (
                 <div className="flex flex-wrap items-center justify-center gap-2 text-[12px]">
@@ -1775,10 +1831,27 @@ export function ChatPanel() {
               onRecallUp={recallUp}
               canRecall={recallActive}
               conversing={messages.length > 0}
+              onAddItem={handleAddItem}
             />
           </div>
         </div>
       )}
+      <input
+        ref={attachRef}
+        type="file"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          e.target.value = "";
+          if (!f) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            setPendingFile({ name: f.name, content: String(reader.result ?? "").slice(0, 12000) });
+            toast(`已读取 ${f.name}，下次发送会作为附件`, "success");
+          };
+          reader.readAsText(f);
+        }}
+      />
     </div>
   );
 }

@@ -14,6 +14,7 @@ import { buildImagePrompt, imageStyleById } from "@/lib/image/presets";
 import { pushPromptHistory } from "@/lib/image/history";
 import { formatDuration, totalDuration, type Storyboard, type StoryboardShot } from "@/lib/video/types";
 import { getPersona } from "@/lib/personas";
+import { bumpSkillUse, readSkillCtx, skillSystemExtra } from "@/lib/skillsHub";
 import { describeNetError, fetchJSON, fetchWithTimeout, FetchError } from "@/lib/fetcher";
 import {
   ABORT_TIMEOUT,
@@ -996,7 +997,8 @@ export const useChatStore = create<ChatState>((set, get) => {
 
       // IMG3: 风格词前置拼进提示词（不传风格时原样透传，保持旧行为不变）
       const style = imageStyleById(opts?.style);
-      const finalPrompt = buildImagePrompt(p, style);
+      const skillHint = skillSystemExtra();
+      const finalPrompt = buildImagePrompt(skillHint ? `${p}\n${skillHint}` : p, style);
       const size = opts?.size ?? "1024x1024";
       // IMG2: 张数钳制到 1~4；非法值按 1 处理
       const n = Math.max(1, Math.min(4, opts?.n ?? 1));
@@ -1239,8 +1241,12 @@ export const useChatStore = create<ChatState>((set, get) => {
       }
       // 能力开关 / 附件作为附加系统指令（不污染用户气泡里显示的原文）
       const extras: string[] = [];
-      const skillCtx = readJSON<{ system?: string }>("oc:skills.context", {});
-      if (skillCtx.system) extras.push(skillCtx.system);
+      const skillExtra = skillSystemExtra();
+      if (skillExtra) {
+        extras.push(skillExtra);
+        const k = readSkillCtx().key;
+        if (k) bumpSkillUse(k);
+      }
       if (opts?.deep) extras.push(DEEP_THINK_PROMPT);
       if (opts?.attachment?.content) {
         const body = opts.attachment.content.slice(0, 12000);
@@ -1357,7 +1363,9 @@ export const useChatStore = create<ChatState>((set, get) => {
         const persona = getPersona(convo.personaId);
         if (persona?.system) personaSystem = persona.system;
       }
-      const systemContent = [MODE_PROMPTS[convo.mode], personaSystem].filter(Boolean).join("\n\n");
+      const systemContent = [MODE_PROMPTS[convo.mode], personaSystem, skillSystemExtra()]
+        .filter(Boolean)
+        .join("\n\n");
       const apiMessages = [
         { role: "system" as const, content: systemContent },
         ...msgs.slice(0, -1).map((m) => ({ role: m.role, content: m.content })),
@@ -1475,7 +1483,7 @@ export const useChatStore = create<ChatState>((set, get) => {
             model: slidesModel.model,
             provider: slidesModel.provider,
             overrides: getOverrides(),
-            context: context ? context.slice(0, 6000) : undefined,
+            context: [skillSystemExtra(), context].filter(Boolean).join("\n\n").slice(0, 6000) || undefined,
           },
           signal: slidesController.signal,
           onEvent: (evt) => {
@@ -1583,7 +1591,7 @@ export const useChatStore = create<ChatState>((set, get) => {
           | { type: "error"; message: string }
         >("/api/research", {
           body: {
-            topic: trimmed,
+            topic: skillSystemExtra() ? `${skillSystemExtra()}\n\n主题：${trimmed}` : trimmed,
             model: researchModel.model,
             provider: researchModel.provider,
             overrides: getOverrides(),
@@ -2059,7 +2067,7 @@ export const useChatStore = create<ChatState>((set, get) => {
       }
 
       const messages = [
-        { role: "system" as const, content: MODE_PROMPTS.docs },
+        { role: "system" as const, content: [MODE_PROMPTS.docs, skillSystemExtra()].filter(Boolean).join("\n\n") },
         ...(seed ? [{ role: "assistant" as const, content: seed }] : []),
         { role: "user" as const, content: p || "请撰写文档" },
       ];

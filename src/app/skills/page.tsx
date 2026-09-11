@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   BarChart3,
@@ -9,6 +9,7 @@ import {
   Layout,
   Mic,
   PenLine,
+  Plus,
   Search,
   X,
   type LucideIcon,
@@ -17,133 +18,25 @@ import { Sidebar } from "@/components/workspace/Sidebar";
 import { useChatStore, type WorkspaceMode } from "@/lib/store/chat";
 import { toast } from "@/lib/store/toast";
 import { Toaster } from "@/components/Toaster";
-import { readJSON, writeJSON } from "@/lib/safe-storage";
+import {
+  SKILL_CHANGE_EVENT,
+  allSkills,
+  launchSkill,
+  progressOf,
+  removeCustomSkill,
+  saveCustomSkill,
+  type SkillCat,
+  type SkillDef,
+} from "@/lib/skillsHub";
 
-type Cat = "写作" | "演示" | "视觉";
-type Level = "精通" | "进阶" | "入门";
-
-const SKILLS: {
-  key: string;
-  label: string;
-  desc: string;
-  detail: string[];
-  cat: Cat;
-  mode: WorkspaceMode;
-  icon: LucideIcon;
-  level: Level;
-  pct: number;
-  system: string;
-  draft: string;
-}[] = [
-  {
-    key: "copy",
-    label: "文案写作",
-    desc: "标题、种草、方案与商务邮件。先钩子再结构，一次给多个版本。",
-    detail: [
-      "适合广告、社媒、邮件和方案里的文字。会先问对象与渠道，再给标题和正文。",
-      "输出：多版标题、钩子-利益-行动正文、禁用未验证功效。",
-      "不适合：把未测参数写成卖点。",
-    ],
-    cat: "写作",
-    mode: "docs",
-    icon: PenLine,
-    level: "精通",
-    pct: 92,
-    system:
-      "【技能：文案写作】你是爆款文案教练。先问对象与渠道，再给多版标题和钩子-利益-行动正文。禁止编造客户评价与未验证功效。",
-    draft: "帮我给一款降噪耳机写 3 个小红书标题，并选一条写成种草正文。",
-  },
-  {
-    key: "speech",
-    label: "演讲技巧",
-    desc: "开场、停顿、翻页与收束。把稿子改成能讲的节奏。",
-    detail: [
-      "适合发布、述职和路演。会标强攻页与带过页，控制时间。",
-      "输出：口播稿、时间切分、可能被追问的三题。",
-      "不适合：只要一张装饰封面。",
-    ],
-    cat: "演示",
-    mode: "slides",
-    icon: Mic,
-    level: "进阶",
-    pct: 68,
-    system:
-      "【技能：演讲技巧】你是演讲教练。把稿子改成能讲的节奏：开场、强攻页、带过页、收束与可能被追问的三题。控制时间，不堆装饰页。",
-    draft: "帮我把「对话即成品」改成 12 分钟路演口播，标出停顿和翻页。",
-  },
-  {
-    key: "ui",
-    label: "界面设计",
-    desc: "信息架构、状态与空态。先流程再视觉，不堆装饰。",
-    detail: [
-      "适合后台、工作台和活动页。会给关键路径与组件清单。",
-      "输出：页面清单、状态表、一页一意的示意。",
-      "不适合：要未提供的像素终稿冒充已开发。",
-    ],
-    cat: "视觉",
-    mode: "image",
-    icon: Layout,
-    level: "精通",
-    pct: 46,
-    system:
-      "【技能：界面设计】你是交互与界面顾问。先流程和状态，再视觉。输出页面清单与空态，不把未提供的像素稿当成已开发。",
-    draft: "帮我画「团队周报」后台的关键路径：列表、编辑、空态。",
-  },
-  {
-    key: "video",
-    label: "视频编辑",
-    desc: "分镜、时长、字幕与导出规格。先脚本再镜头。",
-    detail: [
-      "适合产品演示和短视频口播。会写镜头表和字幕节奏。",
-      "输出：分镜、旁白、B-roll 清单。",
-      "不适合：承诺未拍摄素材已成片。",
-    ],
-    cat: "视觉",
-    mode: "video",
-    icon: Clapperboard,
-    level: "精通",
-    pct: 58,
-    system:
-      "【技能：视频编辑】你是分镜与口播教练。先脚本再镜头：时长、画面、旁白、字幕。不承诺未拍摄素材已成片。",
-    draft: "为新款降噪耳机写一条 15 秒带货分镜，含字幕。",
-  },
-  {
-    key: "data",
-    label: "数据分析",
-    desc: "先口径再结论。漏斗、对比与可跑的汇总思路。",
-    detail: [
-      "适合运营周报和实验解读。未知数据标待核实，不编造显著。",
-      "输出：口径、假设、图表建议、SQL 示意。",
-      "不适合：要未提供数仓的真实结果。",
-    ],
-    cat: "写作",
-    mode: "research",
-    icon: BarChart3,
-    level: "进阶",
-    pct: 54,
-    system:
-      "【技能：数据分析】你是指标口径教练。先定义再结论。未知数据标待核实，禁止编造统计显著。",
-    draft: "帮我定义「周活跃」口径，并给三周对比该怎么画。",
-  },
-  {
-    key: "pm",
-    label: "项目管理",
-    desc: "里程碑、依赖、风险与负责人。会议要有产出。",
-    detail: [
-      "适合版本节奏和跨部门接口。缓冲公开，完成度不编造。",
-      "输出：里程碑、RACI、风险黄灯。",
-      "不适合：只要愿景海报。",
-    ],
-    cat: "演示",
-    mode: "docs",
-    icon: Calendar,
-    level: "进阶",
-    pct: 50,
-    system:
-      "【技能：项目管理】你是交付教练。里程碑、依赖、风险、负责人。缓冲公开，不编造完成度。",
-    draft: "把「技能页改版」切成 4 个里程碑，标黄灯风险。",
-  },
-];
+const ICONS: Record<string, LucideIcon> = {
+  copy: PenLine,
+  speech: Mic,
+  ui: Layout,
+  video: Clapperboard,
+  data: BarChart3,
+  pm: Calendar,
+};
 
 const CATS = ["全部", "写作", "演示", "视觉"] as const;
 
@@ -153,40 +46,78 @@ export default function SkillsPage() {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<(typeof CATS)[number]>("全部");
   const [open, setOpen] = useState<string | null>(null);
+  const [tick, setTick] = useState(0);
+  const [form, setForm] = useState(false);
+  const [draft, setDraft] = useState({ label: "", desc: "", system: "", task: "", cat: "写作" as SkillCat, mode: "docs" as WorkspaceMode });
+
+  useEffect(() => {
+    const on = () => setTick((n) => n + 1);
+    window.addEventListener(SKILL_CHANGE_EVENT, on);
+    window.addEventListener("storage", on);
+    return () => {
+      window.removeEventListener(SKILL_CHANGE_EVENT, on);
+      window.removeEventListener("storage", on);
+    };
+  }, []);
+
+  const skills = useMemo(() => allSkills(), [tick]);
 
   const list = useMemo(() => {
     const s = q.trim();
-    return SKILLS.filter((x) => {
+    return skills.filter((x) => {
       if (cat !== "全部" && x.cat !== cat) return false;
       if (!s) return true;
-      return `${x.label}${x.desc}${x.cat}`.includes(s);
+      return `${x.label}${x.desc}${x.cat}${x.system}`.includes(s);
     });
-  }, [q, cat]);
+  }, [q, cat, skills]);
 
-  const current = SKILLS.find((x) => x.key === open) ?? null;
-  const tried = readJSON<Record<string, boolean>>("oc:skills.tried", {});
+  const current = skills.find((x) => x.key === open) ?? null;
 
-  const start = async (s: (typeof SKILLS)[number]) => {
-    const tried = readJSON<Record<string, boolean>>("oc:skills.tried", {});
-    writeJSON("oc:skills.tried", { ...tried, [s.key]: true });
-    writeJSON("oc:skills.launch", {
-      text: s.draft,
-      system: s.system,
-      label: s.label,
-      ts: Date.now(),
-    });
-    writeJSON("oc:skills.context", { system: s.system, label: s.label, ts: Date.now() });
+  const start = async (s: SkillDef) => {
+    launchSkill(s);
     const id = await newConversation(s.mode);
     await selectConversation(id);
     toast(`已带上「${s.label}」技能提示词`, "success");
     router.push("/chat");
   };
 
+  const addCustom = () => {
+    const label = draft.label.trim();
+    if (!label || !draft.system.trim()) {
+      toast("请填写名称和系统提示", "error");
+      return;
+    }
+    const key = `custom-${Date.now()}`;
+    saveCustomSkill({
+      key,
+      label,
+      desc: draft.desc.trim() || "自定义技能",
+      detail: [draft.desc.trim() || "本地自定义技能，只保存在本机。"],
+      cat: draft.cat,
+      mode: draft.mode,
+      system: draft.system.trim(),
+      draft: draft.task.trim() || `请按「${label}」技能帮我完成任务。`,
+      custom: true,
+    });
+    setForm(false);
+    setDraft({ label: "", desc: "", system: "", task: "", cat: "写作", mode: "docs" });
+    toast("已添加自定义技能", "success");
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-[#fbf8f2] text-stone-800">
       <Sidebar />
       <main className="min-w-0 flex-1 overflow-y-auto px-6 py-7 lg:px-10">
-        <h1 className="text-[32px] font-extrabold tracking-tight text-stone-900">技能</h1>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <h1 className="text-[32px] font-extrabold tracking-tight text-stone-900">技能</h1>
+          <button
+            type="button"
+            onClick={() => setForm(true)}
+            className="inline-flex items-center gap-1 rounded-full bg-stone-800 px-4 py-1.5 text-[13px] text-white"
+          >
+            <Plus className="h-3.5 w-3.5" /> 自定义技能
+          </button>
+        </div>
 
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <div className="flex min-w-[240px] flex-1 items-center gap-2 rounded-full bg-white px-4 py-2.5 ring-1 ring-stone-200">
@@ -225,34 +156,35 @@ export default function SkillsPage() {
         {list.length === 0 && <p className="mt-8 text-[13px] text-stone-500">没有匹配的技能。</p>}
 
         <div className="mt-6 grid gap-4 pb-12 sm:grid-cols-2 xl:grid-cols-3">
-          {list.map((s) => (
-            <article key={s.key} className="flex flex-col rounded-[22px] border border-stone-200/80 bg-white p-5">
-              <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fbf3ec] text-[#e07a2f]">
-                  <s.icon className="h-5 w-5" />
-                </span>
-                <h2 className="text-[18px] font-semibold text-stone-900">{s.label}</h2>
-              </div>
-              <p className="mt-3 min-h-[72px] text-[13px] leading-6 text-stone-500">{s.desc}</p>
-              <div className="mt-3 flex items-center gap-3">
-                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-stone-100">
-                  <div
-                    className="h-full rounded-full bg-[#e07a2f]"
-                    style={{ width: `${tried[s.key] ? Math.max(s.pct, 20) : Math.round(s.pct * 0.35)}%` }}
-                  />
+          {list.map((s) => {
+            const prog = progressOf(s.key);
+            const Icon = ICONS[s.key] ?? PenLine;
+            return (
+              <article key={s.key} className="flex flex-col rounded-[22px] border border-stone-200/80 bg-white p-5">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fbf3ec] text-[#e07a2f]">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <h2 className="text-[18px] font-semibold text-stone-900">{s.label}</h2>
                 </div>
-                <span className="text-[12px] text-stone-500">示例完成度</span>
-              </div>
-              <p className="mt-1 text-[11px] text-stone-400">示意目录进度，不是真实熟练度{tried[s.key] ? " · 已试用" : ""}</p>
-              <button
-                type="button"
-                onClick={() => setOpen(s.key)}
-                className="mt-4 w-full rounded-full border border-stone-200 py-2 text-[13px] text-stone-700 hover:border-[#e07a2f]"
-              >
-                查看详情
-              </button>
-            </article>
-          ))}
+                <p className="mt-3 min-h-[72px] text-[13px] leading-6 text-stone-500">{s.desc}</p>
+                <div className="mt-3 flex items-center gap-3">
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-stone-100">
+                    <div className="h-full rounded-full bg-[#e07a2f]" style={{ width: `${prog.pct}%` }} />
+                  </div>
+                  <span className="text-[12px] text-stone-500">{prog.level}</span>
+                </div>
+                <p className="mt-1 text-[11px] text-stone-400">本机练习 {prog.uses} 次 · 按开始使用与发送次数累计</p>
+                <button
+                  type="button"
+                  onClick={() => setOpen(s.key)}
+                  className="mt-4 w-full rounded-full border border-stone-200 py-2 text-[13px] text-stone-700 hover:border-[#e07a2f]"
+                >
+                  查看详情
+                </button>
+              </article>
+            );
+          })}
         </div>
       </main>
 
@@ -261,12 +193,15 @@ export default function SkillsPage() {
           <div className="w-full max-w-[560px] rounded-[24px] bg-[#fbf8f2] p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start gap-3">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#fbf3ec] text-[#e07a2f]">
-                <current.icon className="h-6 w-6" />
+                {(() => {
+                  const Icon = ICONS[current.key] ?? PenLine;
+                  return <Icon className="h-6 w-6" />;
+                })()}
               </span>
               <div className="min-w-0 flex-1">
                 <p className="text-[20px] font-bold text-stone-900">{current.label}</p>
                 <p className="text-[13px] text-stone-500">
-                  {current.cat} · {current.level}
+                  {current.cat} · {progressOf(current.key).level}
                 </p>
               </div>
               <button type="button" onClick={() => setOpen(null)} aria-label="关闭">
@@ -281,14 +216,50 @@ export default function SkillsPage() {
             <div className="mt-5 flex gap-2">
               <button
                 type="button"
-                onClick={() => void start(current.mode, current.label)}
+                onClick={() => void start(current)}
                 className="rounded-full bg-[#c45c2a] px-5 py-2 text-[13px] font-semibold text-white"
               >
                 开始使用
               </button>
+              {current.custom && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    removeCustomSkill(current.key);
+                    setOpen(null);
+                    toast("已删除自定义技能", "info");
+                  }}
+                  className="rounded-full px-4 py-2 text-[13px] text-red-500"
+                >
+                  删除
+                </button>
+              )}
               <button type="button" onClick={() => setOpen(null)} className="rounded-full px-4 py-2 text-[13px] text-stone-500">
                 返回
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {form && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setForm(false)}>
+          <div className="w-full max-w-[480px] space-y-3 rounded-[24px] bg-white p-6" onClick={(e) => e.stopPropagation()}>
+            <p className="text-[18px] font-bold">自定义技能</p>
+            <input className="w-full rounded-xl border px-3 py-2 text-[13px]" placeholder="名称" value={draft.label} onChange={(e) => setDraft({ ...draft, label: e.target.value })} />
+            <input className="w-full rounded-xl border px-3 py-2 text-[13px]" placeholder="简介" value={draft.desc} onChange={(e) => setDraft({ ...draft, desc: e.target.value })} />
+            <textarea className="h-24 w-full rounded-xl border px-3 py-2 text-[13px]" placeholder="系统提示（必填）" value={draft.system} onChange={(e) => setDraft({ ...draft, system: e.target.value })} />
+            <input className="w-full rounded-xl border px-3 py-2 text-[13px]" placeholder="开始任务草稿" value={draft.task} onChange={(e) => setDraft({ ...draft, task: e.target.value })} />
+            <div className="flex gap-2">
+              {(["写作", "演示", "视觉"] as SkillCat[]).map((c) => (
+                <button key={c} type="button" onClick={() => setDraft({ ...draft, cat: c })} className={`rounded-full px-3 py-1 text-[12px] ${draft.cat === c ? "bg-stone-800 text-white" : "ring-1 ring-stone-200"}`}>
+                  {c}
+                </button>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={() => setForm(false)} className="text-[13px] text-stone-500">取消</button>
+              <button type="button" onClick={addCustom} className="rounded-full bg-[#c45c2a] px-4 py-1.5 text-[13px] text-white">保存</button>
             </div>
           </div>
         </div>
