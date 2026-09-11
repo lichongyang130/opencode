@@ -75,21 +75,11 @@ export default function KnowledgePage() {
 
   const selected = rows.find((r) => r.id === selectedId) ?? rows[0];
 
-  const navList = useMemo(() => {
-    if (nav === "fav") return rows.filter((r) => fav.includes(r.id));
-    if (nav === "team") return rows.filter((r) => r.owner === "team");
-    if (nav === "product") return rows.filter((r) => GROUPS[0].match(r));
-    if (nav === "rd") return rows.filter((r) => GROUPS[1].match(r));
-    if (q.trim()) {
-      const s = q.trim().toLowerCase();
-      return rows.filter((r) => `${r.name}${r.desc}${r.tags.join()}`.toLowerCase().includes(s));
-    }
-    return rows;
-  }, [rows, nav, fav, q]);
-
-  useEffect(() => {
-    if (navList.length && !navList.some((r) => r.id === selectedId)) setSelectedId(navList[0].id);
-  }, [nav, navList, selectedId]);
+  const shown = useMemo(() => {
+    if (!q.trim()) return rows;
+    const s = q.trim().toLowerCase();
+    return rows.filter((r) => `${r.name}${r.desc}${r.tags.join()}`.toLowerCase().includes(s));
+  }, [rows, q]);
 
   const folders = (selected ? FOLDERS[selected.id] ?? selected.docs.map((d) => ({ name: d.name, count: 1 })) : []).filter(
     (f) => !folderQ.trim() || f.name.includes(folderQ.trim()),
@@ -274,7 +264,7 @@ export default function KnowledgePage() {
                 </div>
                 <p className="mt-5 text-[12px] text-stone-400">标签</p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {(selected.tags.length ? selected.tags : ["未分类"]).map((t) => (
+                  {(selected.tags?.length ? selected.tags : ["未分类"]).map((t) => (
                     <span key={t} className="rounded-md bg-[#f3e6d8] px-2 py-1 text-[11px] text-stone-600">
                       {t}
                     </span>
