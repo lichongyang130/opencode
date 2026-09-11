@@ -7,10 +7,12 @@ import {
   BarChart3,
   Calendar,
   Clapperboard,
+  Heart,
   Layout,
   Mic,
   PenLine,
   Plus,
+  RotateCcw,
   Search,
   Sparkles,
   X,
@@ -25,8 +27,11 @@ import {
   allSkills,
   launchSkill,
   progressOf,
+  readFav,
+  readRecent,
   removeCustomSkill,
   saveCustomSkill,
+  toggleFav,
   type SkillCat,
   type SkillDef,
 } from "@/lib/skillsHub";
@@ -65,13 +70,23 @@ const CAT_TONE: Record<SkillCat | "全部", string> = {
   视觉: "text-amber-800 ring-1 ring-amber-300 bg-white",
 };
 
-const CATS = ["全部", "写作", "演示", "视觉"] as const;
+const CATS = ["全部", "写作", "演示", "视觉", "最近", "收藏"] as const;
+
+const MODE_TAG: Record<SkillDef["mode"], string> = {
+  docs: "文档",
+  slides: "PPT",
+  image: "图片",
+  video: "视频",
+  research: "研究",
+  chat: "对话",
+};
 
 export default function SkillsPage() {
   const router = useRouter();
   const { newConversation, selectConversation } = useChatStore();
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<(typeof CATS)[number]>("全部");
+  const [heroIdx, setHeroIdx] = useState(0);
   const [open, setOpen] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
   const [form, setForm] = useState(false);
@@ -95,19 +110,30 @@ export default function SkillsPage() {
   }, []);
 
   const skills = useMemo(() => allSkills(), [tick]);
+  const fav = useMemo(() => readFav(), [tick]);
+  const recent = useMemo(() => readRecent(), [tick]);
+
   const list = useMemo(() => {
     const s = q.trim();
     return skills.filter((x) => {
-      if (cat !== "全部" && x.cat !== cat) return false;
+      if (cat === "收藏") {
+        if (!fav.includes(x.key)) return false;
+      } else if (cat === "最近") {
+        if (!recent.includes(x.key)) return false;
+      } else if (cat !== "全部" && x.cat !== cat) return false;
       if (!s) return true;
       return `${x.label}${x.desc}${x.cat}${x.system}`.includes(s);
     });
-  }, [q, cat, skills]);
+  }, [q, cat, skills, fav, recent]);
 
-  const featured = useMemo(() => {
-    const ranked = [...skills].sort((a, b) => progressOf(b.key).uses - progressOf(a.key).uses);
-    return ranked[0] ?? skills[0];
-  }, [skills]);
+  const featured = skills[heroIdx % Math.max(skills.length, 1)] ?? skills[0];
+
+  const catCount = (c: (typeof CATS)[number]) => {
+    if (c === "全部") return skills.length;
+    if (c === "收藏") return fav.length;
+    if (c === "最近") return recent.length;
+    return skills.filter((x) => x.cat === c).length;
+  };
 
   const practiced = skills.filter((s) => progressOf(s.key).uses > 0).length;
   const current = skills.find((x) => x.key === open) ?? null;
@@ -173,7 +199,16 @@ export default function SkillsPage() {
             <section className="mt-7 overflow-hidden rounded-[28px] bg-[#2b2118] text-[#f6efe4] shadow-[0_24px_50px_-28px_rgba(43,33,24,0.7)]">
               <div className="grid md:grid-cols-[1.15fr_0.85fr]">
                 <div className="p-7 lg:p-8">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#e8a06a]">推荐上手</p>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#e8a06a]">推荐上手</p>
+                    <button
+                      type="button"
+                      onClick={() => setHeroIdx((n) => n + 1)}
+                      className="inline-flex items-center gap-1 text-[12px] text-stone-400 hover:text-white"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" /> 换一个
+                    </button>
+                  </div>
                   <h2 className="mt-2 text-[28px] font-bold tracking-tight">{featured.label}</h2>
                   <p className="mt-2 max-w-xl text-[14px] leading-7 text-stone-300">{featured.desc}</p>
                   <p className="mt-3 text-[12px] text-[#e8a06a]">{SAMPLES[featured.key] ?? "带系统提示进入对话"}</p>
@@ -224,14 +259,36 @@ export default function SkillsPage() {
                   type="button"
                   onClick={() => setCat(c)}
                   className={`rounded-full px-4 py-1.5 text-[13px] font-medium transition ${
-                    cat === c ? "bg-stone-900 text-white shadow-sm" : CAT_TONE[c]
+                    cat === c ? "bg-stone-900 text-white shadow-sm" : CAT_TONE[c as SkillCat | "全部"] ?? "bg-white text-stone-600 ring-1 ring-stone-200"
                   }`}
                 >
-                  {c}
+                  {c} {catCount(c)}
                 </button>
               ))}
             </div>
           </div>
+
+          {recent.length > 0 && cat === "全部" && !q && (
+            <div className="mt-6">
+              <p className="text-[12px] font-semibold tracking-wide text-stone-500">最近用过</p>
+              <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+                {recent.map((key) => {
+                  const s = skills.find((x) => x.key === key);
+                  if (!s) return null;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => void start(s)}
+                      className="shrink-0 rounded-full bg-white px-3 py-1.5 text-[12px] text-stone-700 ring-1 ring-stone-200 hover:border-[#e07a2f]"
+                    >
+                      {s.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {list.length === 0 && <p className="mt-10 text-[13px] text-stone-500">没有匹配的技能。</p>}
 

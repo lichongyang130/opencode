@@ -23,6 +23,8 @@ export const SKILL_CTX_KEY = "oc:skills.context";
 export const SKILL_LAUNCH_KEY = "oc:skills.launch";
 export const SKILL_STATS_KEY = "oc:skills.stats";
 export const SKILL_CUSTOM_KEY = "oc:skills.custom";
+export const SKILL_FAV_KEY = "oc:skills.fav";
+export const SKILL_RECENT_KEY = "oc:skills.recent";
 export const SKILL_CHANGE_EVENT = "oc:skills.change";
 
 export const BUILTIN_SKILLS: SkillDef[] = [
@@ -180,8 +182,31 @@ export function allSkills(): SkillDef[] {
   return [...BUILTIN_SKILLS, ...readCustomSkills()];
 }
 
+export function readFav(): string[] {
+  return readJSON<string[]>(SKILL_FAV_KEY, []);
+}
+
+export function toggleFav(key: string): string[] {
+  const cur = readFav();
+  const next = cur.includes(key) ? cur.filter((k) => k !== key) : [key, ...cur];
+  writeJSON(SKILL_FAV_KEY, next);
+  emit();
+  return next;
+}
+
+export function readRecent(): string[] {
+  return readJSON<string[]>(SKILL_RECENT_KEY, []);
+}
+
+export function pushRecent(key: string) {
+  const next = [key, ...readRecent().filter((k) => k !== key)].slice(0, 8);
+  writeJSON(SKILL_RECENT_KEY, next);
+  emit();
+}
+
 export function launchSkill(s: SkillDef) {
   bumpSkillUse(s.key);
+  pushRecent(s.key);
   writeJSON(SKILL_LAUNCH_KEY, {
     text: s.draft,
     system: s.system,
