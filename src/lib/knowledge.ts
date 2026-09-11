@@ -55,9 +55,11 @@ export interface KbRow {
   docs: KbDoc[];
   /** 协作权限：可编辑 / 仅查看 */
   perm?: "edit" | "view";
+  /** 封面图（知识库卡片 / 详情） */
+  cover?: string;
 }
 
-const KEY = "oc:knowledge-bases.v3";
+const KEY = "oc:knowledge-bases.v4";
 const ABILITY_KEY = "oc:kb-abilities.v1";
 
 /** 由文档名生成稳定伪大小，避免每次渲染数字乱跳 */
@@ -86,6 +88,7 @@ interface SeedDef {
   updatedAt: string;
   owner: KbOwner;
   docs: string[];
+  cover?: string;
 }
 
 const SEED_DEF: SeedDef[] = [
@@ -98,6 +101,7 @@ const SEED_DEF: SeedDef[] = [
     tags: ["产品", "需求", "设计", "PRD"],
     updatedAt: "2024-01-15 16:30",
     owner: "me",
+    cover: "/knowledge/cover-product.jpg",
     docs: ["产品需求文档PRD v2.1", "用户体验设计规范", "产品功能清单 v1.3"],
   },
   {
@@ -109,6 +113,7 @@ const SEED_DEF: SeedDef[] = [
     tags: ["市场", "竞品", "行业"],
     updatedAt: "2024-02-02 10:12",
     owner: "team",
+    cover: "/knowledge/cover-market.jpg",
     docs: ["2024 行业白皮书", "竞品功能对比表", "用户访谈纪要"],
   },
   {
@@ -120,6 +125,7 @@ const SEED_DEF: SeedDef[] = [
     tags: ["技术", "API", "开发"],
     updatedAt: "2024-03-05 09:50",
     owner: "me",
+    cover: "/knowledge/cover-tech.jpg",
     docs: ["服务端接口文档", "前端组件规范", "部署与运维手册"],
   },
   {
@@ -131,6 +137,7 @@ const SEED_DEF: SeedDef[] = [
     tags: ["培训", "课程", "手册"],
     updatedAt: "2024-03-18 14:22",
     owner: "shared",
+    cover: "/knowledge/cover-training.jpg",
     docs: ["新人入职手册", "产品操作培训 PPT", "常见问题 FAQ"],
   },
   {
@@ -153,6 +160,7 @@ const SEED_DEF: SeedDef[] = [
     tags: ["案例", "交付", "反馈"],
     updatedAt: "2024-04-22 17:31",
     owner: "me",
+    cover: "/knowledge/cover-case.jpg",
     docs: ["零售行业解决方案", "制造业客户案例集", "客户满意度调研"],
   },
   {
@@ -241,6 +249,7 @@ function buildSeed(): KbRow[] {
       updatedAt: d.updatedAt,
       owner: d.owner,
       docs: makeDocs(d.docs),
+      cover: d.cover,
     };
   });
 }

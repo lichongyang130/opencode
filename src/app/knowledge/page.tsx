@@ -569,9 +569,14 @@ export default function KnowledgePage() {
               <>
                 <div className="max-h-[45vh] overflow-y-auto px-5 pt-5">
                   <div className="flex items-start gap-3">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
-                      <Folder className="h-6 w-6" />
-                    </div>
+                    {selected.cover ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={selected.cover} alt="" className="h-12 w-12 shrink-0 rounded-xl object-cover" />
+                    ) : (
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
+                        <Folder className="h-6 w-6" />
+                      </div>
+                    )}
                     <div className="min-w-0 flex-1 pt-0.5">
                       <p className="flex items-center gap-1.5 text-[16px] font-semibold text-stone-800">
                         <span className="truncate">{selected.name}</span>{" "}
