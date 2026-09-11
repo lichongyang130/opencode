@@ -15,25 +15,17 @@ import {
 } from "@/lib/agents";
 import { PERSONAS, type Persona } from "@/lib/personas";
 import {
-  BookOpen,
-  Box,
-  Loader2,
-  ChevronDown,
-  ChevronRight,
-  Copy,
+  BarChart3,
   FileText,
   Folder,
-  MessageCircle,
-  MoreHorizontal,
-  PencilRuler,
-  Play,
+  Handshake,
+  Loader2,
+  Mail,
   Plus,
+  Scale,
   Search,
-  Share2,
-  SlidersHorizontal,
   Star,
-  Target,
-  Trash2,
+  Users,
   Workflow,
   X,
 } from "lucide-react";
@@ -78,7 +70,7 @@ const BUILTIN_META: Record<
   hr: { cat: "效率", avatar: AVATARS[4], count: "48 次", time: "08-13 09:30" },
 };
 
-const CATEGORY_TABS = ["全部智能体", "工作", "创作", "开发", "效率", "自定义", "市场"];
+const CATEGORY_TABS = ["全部", "工作", "创作", "开发", "效率"] as const;
 
 /* 收藏与排序的本地持久化 */
 const FAVS_KEY = "oc:agent-favs.v1";
@@ -163,13 +155,16 @@ interface AgentRow {
   count: string;
   time: string;
   custom?: boolean;
+  launchId?: string;
+  tags?: string[];
+  rating?: string;
 }
 
 export default function AgentsPage() {
   const router = useRouter();
   const { newConversation, selectConversation, setPersona, runAgentSequence } = useChatStore();
 
-  const [tab, setTab] = useState(CATEGORY_TABS[0]);
+  const [tab, setTab] = useState<(typeof CATEGORY_TABS)[number]>("工作");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"default" | "count" | "time">("default");
   const [filterOpen, setFilterOpen] = useState(false);
@@ -246,13 +241,28 @@ export default function AgentsPage() {
       id: a.id,
       name: a.name,
       desc: a.desc,
-      cat: "自定义",
+      cat: a.group || "工作",
       avatar: AVATARS[i % AVATARS.length],
       count: "0 次",
       time: new Date(a.createdAt).toLocaleDateString("zh-CN"),
       custom: true,
+      tags: [a.group || "工作", "自建"],
+      rating: "—",
     }));
-    const all = [...mine, ...builtin];
+    const extra: AgentRow[] = [
+      { id: "mail", launchId: "hr", name: "自动化邮件助手", desc: "整理收件箱、起草回复与跟进清单，不编造未发生的往来。", cat: "工作", avatar: AVATARS[4], count: "2.1k 使用", time: "", tags: ["工作", "团队"], rating: "4.8" },
+      { id: "crm", launchId: "pm", name: "客户跟进专家", desc: "管好跟进节奏、下次动作与风险，不编造客户承诺。", cat: "工作", avatar: AVATARS[0], count: "2.1k 使用", time: "", tags: ["工作", "团队"], rating: "4.8" },
+      { id: "minutes", launchId: "hr", name: "会议纪要生成器", desc: "结论、负责人、时间点；不确定处标待核实。", cat: "工作", avatar: AVATARS[4], count: "2.1k 使用", time: "", tags: ["工作", "团队"], rating: "4.8" },
+      { id: "legal", launchId: "code-reviewer", name: "合同审核员", desc: "标出风险条款与谈判点，不构成法律意见。", cat: "工作", avatar: AVATARS[3], count: "2.1k 使用", time: "", tags: ["工作", "团队"], rating: "4.8" },
+    ];
+    const named = builtin.map((a) =>
+      a.id === "pm"
+        ? { ...a, name: "项目经理 Pro", desc: "把目标拆成里程碑、负责人和风险。缓冲公开，不编造完成度。", tags: ["工作", "团队"], count: "2.1k 使用", rating: "4.8" }
+        : a.id === "data-analyst"
+          ? { ...a, name: "数据分析助手", desc: "先口径再结论。未知数据标待核实，禁止编造显著。", tags: ["工作", "团队"], count: "2.1k 使用", rating: "4.8" }
+          : { ...a, tags: [a.cat, "团队"], rating: "4.8", count: a.count.includes("使用") ? a.count : a.count.replace(" 次", "k 使用") },
+    );
+    const all = [...mine, ...extra, ...named];
     const q = query.trim().toLowerCase();
     let list = all.filter(
       (a) =>
@@ -298,7 +308,7 @@ export default function AgentsPage() {
     setCustom(loadCustomAgents());
     setSelected(created.id);
     setDetailOpen(true);
-    setTab("自定义");
+    setTab("工作");
     toast(`已安装「${p.name}」到我的智能体`, "success");
   };
 
@@ -309,11 +319,13 @@ export default function AgentsPage() {
 
   /** 开始对话：创建绑定该智能体的会话并跳到 /chat */
   const startChat = async (agentId: string) => {
+    const row = rows.find((r) => r.id === agentId);
+    const pid = personaOf(agentId)?.id ?? row?.launchId ?? (custom.some((c) => c.id === agentId) ? agentId : "pm");
     const name =
-      personaOf(agentId)?.name ?? custom.find((c) => c.id === agentId)?.name ?? "助手";
+      personaOf(pid)?.name ?? custom.find((c) => c.id === agentId)?.name ?? row?.name ?? "助手";
     const id = await newConversation("chat");
     await selectConversation(id);
-    setPersona(agentId);
+    setPersona(pid);
     toast(`已创建「${name}」智能体对话`, "success");
     router.push("/chat");
   };
@@ -359,547 +371,114 @@ export default function AgentsPage() {
     setCustom(loadCustomAgents());
     setSelected(created.id);
     setDetailOpen(true);
-    setTab("自定义");
+    setTab("工作");
     toast(`已派生「${created.name}」，可自由修改设定`, "success");
   };
 
+  const CARD_ICON = [Handshake, Folder, Users, FileText, Scale, BarChart3, Mail] as const;
+
   return (
-    <div className="flex h-screen overflow-hidden bg-[#fbf8f4] text-stone-800">
+    <div className="flex h-screen overflow-hidden bg-[#f7f1e8] text-stone-800">
       <ShellSidebar active="agents" />
 
       <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
-        {/* 顶栏 */}
-        <header className="flex shrink-0 items-center justify-between border-b border-[#f0eadf] bg-[#fbf8f4] px-6 py-4">
-          <div>
-            <h1 className="text-[18px] font-semibold text-stone-900">智能体</h1>
-            <p className="mt-0.5 text-[12.5px] text-stone-400">
-              创建、管理和使用你的 AI 智能体团队
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <NotificationBell />
-            <AppLauncherMenu />
-            <button
-              onClick={() => setPipelineOpen(true)}
-              title="多个智能体依次处理同一任务，产出接力传递"
-              className="ml-2 flex items-center gap-1.5 rounded-xl border border-[#f0c9a8] bg-white px-4 py-2 text-[13px] font-medium text-[#c05f3c] transition hover:bg-[#fdeee1]"
-            >
-              <Workflow className="h-4 w-4" /> 流水线
-            </button>
-            <button
-              onClick={() => setCreateOpen(true)}
-              className="ml-2 flex items-center gap-1.5 rounded-xl border border-[#f0c9a8] bg-white px-4 py-2 text-[13px] font-medium text-[#c05f3c] transition hover:bg-[#fdeee1]"
-            >
-              <Plus className="h-4 w-4" /> 创建智能体
-            </button>
-          </div>
-        </header>
-
-        {/* 内容 */}
-        <div className="flex min-h-0 flex-1 overflow-hidden px-6 pb-6 pt-5">
-          {/* 主区域 */}
-          <div className="min-w-0 flex-1 overflow-y-auto pr-4">
-            {/* 我的智能体 */}
-            <div className="flex items-center justify-between">
-              <h2 className="text-[15px] font-semibold text-stone-800">
-                我的智能体
-                <span className="ml-2 text-[12px] font-normal text-stone-400">
-                  {rows.length} 个
-                </span>
-              </h2>
-              <button
-                onClick={() => setShowAll((v) => !v)}
-                className="flex items-center gap-1 text-[12.5px] text-stone-400 transition hover:text-[#c05f3c]"
-              >
-                {showAll ? "收起" : "查看全部"} <ChevronRight className="h-3.5 w-3.5" />
-              </button>
+        <div className="min-h-0 flex-1 overflow-y-auto px-8 py-8">
+          <div className="mx-auto max-w-[1100px]">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h1 className="text-[32px] font-extrabold tracking-tight text-stone-900">智能体中心</h1>
+                <p className="mt-1 text-[14px] text-stone-500">探索、管理和部署您的 AI 助手</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPipelineOpen(true)}
+                  className="rounded-xl border border-[#e0b79c] bg-white px-4 py-2 text-[13px] text-[#c05f3c]"
+                >
+                  流水线
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCreateOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#c45c2a] px-4 py-2 text-[13px] font-medium text-white"
+                >
+                  <Plus className="h-4 w-4" /> 创建智能体
+                </button>
+              </div>
             </div>
 
-            {/* 市场可安装 */}
-            {tab === "市场" && (
-              marketAgents.length === 0 ? (
-                <p className="mt-6 rounded-2xl border border-dashed border-[#ece6db] bg-white/60 py-10 text-center text-[13px] text-stone-400">
-                  市场里的智能体都已安装完毕
-                </p>
-              ) : (
-                <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-5">
-                  {marketAgents.map((p) => (
-                    <div
-                      key={p.id}
-                      className="flex flex-col items-center rounded-2xl border border-dashed border-[#e0b79c] bg-white p-4 text-center"
-                    >
-                      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-orange-100 to-amber-100 text-[26px]">
-                        {p.emoji}
-                      </span>
-                      <p className="mt-2.5 truncate text-[13.5px] font-semibold text-stone-800">{p.name}</p>
-                      <p className="mt-1 line-clamp-2 text-center text-[11px] leading-4 text-stone-400">{p.desc}</p>
-                      <button
-                        onClick={() => installAgent(p)}
-                        className="mt-3 flex w-full items-center justify-center gap-1 rounded-xl bg-gradient-to-r from-orange-400 to-red-500 py-2 text-[12px] font-medium text-white shadow-sm transition hover:brightness-105"
-                      >
-                        <Plus className="h-3.5 w-3.5" /> 安装
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )
-            )}
-
-            {tab !== "市场" && (rows.length === 0 ? (
-              <p className="mt-6 rounded-2xl border border-dashed border-[#ece6db] bg-white/60 py-10 text-center text-[13px] text-stone-400">
-                没有匹配的智能体，试试换个分类或关键词
-              </p>
-            ) : (
-              <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-5">
-                {cards.map((a) => {
-                  const s = CAT_STYLE[a.cat] ?? CAT_STYLE.自定义;
-                  return (
-                    <div
-                      key={a.id}
-                      onClick={() => {
-                        setSelected(a.id);
-                        setDetailOpen(true);
-                      }}
-                      draggable
-                      onDragStart={() => setDragId(a.id)}
-                      onDragEnd={() => setDragId(null)}
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={() => onDropCard(a.id)}
-                      className={cn(
-                        "relative cursor-grab rounded-2xl border bg-white p-4 text-left shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition hover:shadow-md active:cursor-grabbing",
-                        selected === a.id ? "border-[#e0b79c]" : "border-[#ece6db]",
-                        dragId === a.id && "opacity-50",
-                      )}
-                    >
-                      <span className={cn("absolute right-3 top-3 h-2 w-2 rounded-full", s.dot)} />
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleFav(a.id);
-                        }}
-                        title={favs.includes(a.id) ? "取消收藏" : "收藏"}
-                        className={cn(
-                          "absolute left-3 top-2.5 rounded p-0.5 transition",
-                          favs.includes(a.id) ? "text-amber-400" : "text-stone-200 hover:text-stone-400",
-                        )}
-                      >
-                        <Star className={cn("h-3.5 w-3.5", favs.includes(a.id) && "fill-current")} />
-                      </button>
-                      <div className="mx-auto h-16 w-16 overflow-hidden rounded-full border border-stone-100">
-                        <Image
-                          src={a.avatar}
-                          alt={a.name}
-                          width={64}
-                          height={64}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                      <p className="mt-3 truncate text-center text-[14px] font-semibold text-stone-800">
-                        {a.name}
-                      </p>
-                      <div className="mt-1 flex justify-center">
-                        <span
-                          className={cn(
-                            "rounded-md px-2 py-0.5 text-[11px] font-medium",
-                            s.bg,
-                            s.text,
-                          )}
-                        >
-                          {a.cat}
-                        </span>
-                      </div>
-                      <p className="mt-2 line-clamp-2 text-center text-xs leading-5 text-stone-400">
-                        {a.desc}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
-
-            {/* 列表区 */}
-            <div
-              className={`mt-6 rounded-2xl border border-[#ece6db] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.03)] ${tab === "市场" ? "hidden" : ""}`}
-            >
-              {/* 标签栏 */}
-              <div className="flex flex-wrap items-center gap-1 border-b border-[#f0eadf] px-4 pt-3">
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap gap-2">
                 {CATEGORY_TABS.map((t) => (
                   <button
                     key={t}
+                    type="button"
                     onClick={() => setTab(t)}
                     className={cn(
-                      "relative px-3 pb-3 pt-1 text-[13px] transition",
-                      tab === t
-                        ? "font-medium text-[#c05f3c]"
-                        : "text-stone-500 hover:text-stone-800",
+                      "rounded-full px-4 py-1.5 text-[13px] font-medium transition",
+                      tab === t ? "bg-stone-900 text-white" : "bg-white text-stone-600 ring-1 ring-stone-200",
                     )}
                   >
                     {t}
-                    {tab === t && (
-                      <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-[#f07a3f]" />
-                    )}
                   </button>
                 ))}
-                <div className="ml-auto flex items-center gap-2 pb-2">
-                  <div className="flex items-center gap-2 rounded-lg border border-[#ece6db] bg-white px-3 py-1.5 text-stone-400">
-                    <Search className="h-4 w-4" />
-                    <input
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      placeholder="搜索智能体"
-                      className="w-36 bg-transparent text-[12.5px] text-stone-700 outline-none placeholder:text-stone-400"
-                    />
-                  </div>
-                  <div ref={filterRef} className="relative">
-                    <button
-                      onClick={() => setFilterOpen((v) => !v)}
-                      className="flex items-center gap-1 rounded-lg border border-[#ece6db] bg-white px-3 py-1.5 text-[12.5px] text-stone-500 transition hover:text-stone-700"
-                    >
-                      <SlidersHorizontal className="h-3.5 w-3.5" />
-                      {sort === "default" ? "筛选" : sort === "count" ? "按使用次数" : "按最近创建"}
-                      <ChevronDown className="h-3 w-3" />
-                    </button>
-                    {filterOpen && (
-                      <div className="absolute right-0 top-full z-20 mt-1.5 w-40 overflow-hidden rounded-xl border border-[#ece6db] bg-white p-1 shadow-lg">
-                        {[
-                          { id: "default", label: "默认排序" },
-                          { id: "count", label: "按使用次数" },
-                          { id: "time", label: "自建优先" },
-                        ].map((o) => (
-                          <button
-                            key={o.id}
-                            onClick={() => {
-                              setSort(o.id as typeof sort);
-                              setFilterOpen(false);
-                            }}
-                            className={cn(
-                              "flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-[12.5px] transition hover:bg-stone-50",
-                              sort === o.id ? "text-[#c05f3c]" : "text-stone-600",
-                            )}
-                          >
-                            {o.label}
-                            {sort === o.id && <ChevronDown className="h-3 w-3" />}
-                          </button>
+              </div>
+              <div className="flex min-w-[220px] items-center gap-2 rounded-full bg-white px-4 py-2 ring-1 ring-[#e0b79c]/80">
+                <Search className="h-4 w-4 text-stone-400" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="搜索智能体..."
+                  className="w-full bg-transparent text-[13px] outline-none"
+                />
+              </div>
+            </div>
+
+            {rows.length === 0 ? (
+              <p className="mt-16 text-center text-[13px] text-stone-400">没有匹配的智能体</p>
+            ) : (
+              <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {rows.map((a, i) => {
+                  const Icon = CARD_ICON[i % CARD_ICON.length];
+                  return (
+                    <article key={a.id} className="flex flex-col rounded-[22px] border border-stone-200/80 bg-white p-5">
+                      <div className="flex items-start gap-3">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#f4eadc] text-[#c45c2a]">
+                          <Icon className="h-5 w-5" />
+                        </span>
+                        <div className="min-w-0">
+                          <h2 className="text-[16px] font-semibold text-stone-900">{a.name}</h2>
+                          <p className="mt-1 line-clamp-2 text-[13px] leading-6 text-stone-500">{a.desc}</p>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {(a.tags ?? [a.cat, "团队"]).map((t) => (
+                          <span key={t} className="rounded-md bg-stone-100 px-2 py-0.5 text-[11px] text-stone-500">
+                            {t}
+                          </span>
                         ))}
                       </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* 表头 */}
-              <div className="flex items-center px-5 py-2.5 text-[12px] text-stone-400">
-                <span className="w-[42%]">名称</span>
-                <span className="w-[20%]">使用次数</span>
-                <span className="w-[24%]">更新时间</span>
-                <span className="flex-1 text-right">操作</span>
-              </div>
-
-              {rows.length === 0 && (
-                <p className="border-t border-[#f5f0e8] py-10 text-center text-[13px] text-stone-400">
-                  没有匹配的智能体
-                </p>
-              )}
-
-              {rows.map((r) => {
-                const s = CAT_STYLE[r.cat] ?? CAT_STYLE.自定义;
-                return (
-                  <div
-                    key={r.id}
-                    onClick={() => {
-                      setSelected(r.id);
-                      setDetailOpen(true);
-                    }}
-                    className={cn(
-                      "flex cursor-pointer items-center border-t border-[#f5f0e8] px-5 py-3.5 transition hover:bg-[#fdfaf5]",
-                      selected === r.id && "bg-[#fdf6ee]",
-                    )}
-                  >
-                    <div className="flex w-[42%] items-center gap-3 pr-2">
-                      <div className="h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-stone-100">
-                        <Image
-                          src={r.avatar}
-                          alt={r.name}
-                          width={44}
-                          height={44}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-[13.5px] font-semibold text-stone-800">
-                          {r.name}
+                      <div className="mt-4 flex items-end justify-between gap-2">
+                        <p className="text-[12px] text-stone-400">
+                          {a.count.includes("使用") ? a.count : a.count} | {a.rating ?? "4.8"}★
                         </p>
-                        <p className="mt-0.5 truncate text-xs text-stone-400">{r.desc}</p>
-                        <span
-                          className={cn(
-                            "mt-1 inline-block rounded-md px-1.5 py-0.5 text-[10px] font-medium",
-                            s.bg,
-                            s.text,
-                          )}
-                        >
-                          {r.cat}
-                        </span>
-                      </div>
-                    </div>
-                    <span className="w-[20%] text-[13px] text-stone-600">{r.count}</span>
-                    <span className="w-[24%] text-[13px] text-stone-500">{r.time}</span>
-                    <div className="relative flex flex-1 items-center justify-end gap-1">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleFav(r.id);
-                        }}
-                        title={favs.includes(r.id) ? "取消收藏" : "收藏"}
-                        className={cn(
-                          "flex h-8 w-8 items-center justify-center rounded-lg transition hover:bg-stone-100",
-                          favs.includes(r.id) ? "text-amber-400" : "text-stone-400 hover:text-stone-600",
-                        )}
-                      >
-                        <Star className={cn("h-4 w-4", favs.includes(r.id) && "fill-current")} />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          void startChat(r.id);
-                        }}
-                        title={`与 ${r.name} 开始对话`}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 transition hover:bg-stone-100 hover:text-stone-600"
-                      >
-                        <Play className="h-4 w-4" />
-                      </button>
-                      <div data-menu-open className="relative">
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setMenuFor(menuFor === r.id ? null : r.id);
-                          }}
-                          title="更多操作"
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 transition hover:bg-stone-100 hover:text-stone-600"
+                          type="button"
+                          onClick={() => void startChat(a.id)}
+                          className="rounded-full border border-[#e0b79c] px-3.5 py-1.5 text-[12px] font-medium text-[#c45c2a] hover:bg-[#fdeee1]"
                         >
-                          <MoreHorizontal className="h-4 w-4" />
+                          立即使用
                         </button>
-                        {menuFor === r.id && (
-                          <div className="absolute right-0 top-full z-30 mt-1 w-40 overflow-hidden rounded-xl border border-[#ece6db] bg-white p-1 text-left shadow-lg">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setMenuFor(null);
-                                void startChat(r.id);
-                              }}
-                              className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-stone-600 transition hover:bg-stone-50"
-                            >
-                              <Play className="h-3.5 w-3.5" /> 开始对话
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setMenuFor(null);
-                                shareAgent(r.id);
-                              }}
-                              className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-stone-600 transition hover:bg-stone-50"
-                            >
-                              <Share2 className="h-3.5 w-3.5" /> 分享智能体
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setMenuFor(null);
-                                forkAgent(r.id);
-                              }}
-                              className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-stone-600 transition hover:bg-stone-50"
-                            >
-                              <Copy className="h-3.5 w-3.5" /> 派生副本
-                            </button>
-                            {r.custom && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setMenuFor(null);
-                                  removeAgent(r.id);
-                                }}
-                                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-red-600 transition hover:bg-red-50"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" /> 删除
-                              </button>
-                            )}
-                          </div>
-                        )}
                       </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
           </div>
-
-          {/* 右侧详情面板 */}
-          {detailOpen && current && (
-            <aside className="hidden w-[340px] shrink-0 flex-col overflow-hidden rounded-2xl border border-[#ece6db] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.03)] xl:flex">
-              <div className="flex items-center justify-between px-4 pt-3">
-                <span className="text-[11px] text-stone-300">智能体详情</span>
-                <button
-                  onClick={() => setDetailOpen(false)}
-                  title="收起详情"
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 transition hover:bg-stone-100"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="flex items-start gap-3 px-5">
-                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-stone-100">
-                  <Image
-                    src={current.avatar}
-                    alt={current.name}
-                    width={64}
-                    height={64}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <div className="min-w-0 pt-1">
-                  <p className="flex items-center gap-1.5 text-[16px] font-semibold text-stone-800">
-                    {current.name} <PencilRuler className="h-3.5 w-3.5 text-stone-400" />
-                  </p>
-                  <p className="mt-1 flex items-center gap-1.5 text-[11px] text-emerald-600">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> 在线
-                  </p>
-                  <p className="mt-1 text-[12px] text-stone-400">
-                    {current.cat} · {current.custom ? "自建" : "v1.0"}
-                  </p>
-                </div>
-              </div>
-
-              <p className="mt-3 px-5 text-[12.5px] leading-6 text-stone-500">{current.desc}</p>
-
-              {/* 统计 */}
-              <div className="mx-5 mt-4 grid grid-cols-3 divide-x divide-[#f0eadf] rounded-xl border border-[#f0eadf] py-3 text-center">
-                <div>
-                  <p className="text-[18px] font-bold text-stone-800">
-                    {current.count.replace(" 次", "")}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-stone-400">使用次数</p>
-                </div>
-                <div>
-                  <p className="text-[18px] font-bold text-stone-800">
-                    {skills.filter((s) => (skillState[current.id]?.[s.label] ?? true)).length}/
-                    {skills.length}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-stone-400">已启用能力</p>
-                </div>
-                <div>
-                  <p className="text-[18px] font-bold text-stone-800">{current.time}</p>
-                  <p className="mt-0.5 text-[11px] text-stone-400">最近更新</p>
-                </div>
-              </div>
-
-              {/* 使用趋势 */}
-              <div className="mx-5 mt-4 rounded-xl border border-[#f0eadf] px-4 py-3">
-                <TrendChart id={current.id} />
-              </div>
-
-              {/* 能力设置 */}
-              <div className="mt-5 px-5">
-                <p className="text-[13.5px] font-semibold text-stone-800">能力设置</p>
-                <p className="mt-0.5 text-[11px] text-stone-400">
-                  关闭的能力会写进角色设定，下次对话生效
-                </p>
-                <div className="mt-2 space-y-1">
-                  {skills.map((s, i) => {
-                    const on = skillState[current.id]?.[s.label] ?? true;
-                    const Icon = [Target, Box, FileText, PencilRuler][i % 4];
-                    return (
-                      <div key={s.label} className="flex items-center gap-3 py-2">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#fbf3ec] text-[#c05f3c]">
-                          <Icon className="h-4 w-4" />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[13px] font-medium text-stone-700">{s.label}</p>
-                          <p className="text-[11px] text-stone-400">{s.desc}</p>
-                        </div>
-                        <button
-                          onClick={() => toggleSkill(current.id, s.label)}
-                          title={on ? "点击关闭" : "点击启用"}
-                          className={cn(
-                            "relative h-5 w-9 rounded-full transition",
-                            on ? "bg-[#ff6a3d]" : "bg-stone-300",
-                          )}
-                        >
-                          <span
-                            className={cn(
-                              "absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition",
-                              on ? "right-0.5" : "left-0.5",
-                            )}
-                          />
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* 知识库 */}
-              <div className="mt-5 px-5">
-                <p className="text-[13.5px] font-semibold text-stone-800">知识库</p>
-                <div className="mt-2 space-y-1">
-                  {[
-                    { name: "产品文档库", n: 45, icon: BookOpen, tint: "bg-orange-50 text-orange-600" },
-                    { name: "竞品资料库", n: 23, icon: Folder, tint: "bg-amber-50 text-amber-600" },
-                  ].map((k) => (
-                    <button
-                      key={k.name}
-                      onClick={() => router.push("/knowledge")}
-                      className="flex w-full items-center gap-2.5 rounded-xl px-2 py-2.5 text-left transition hover:bg-[#fdfaf5]"
-                    >
-                      <span
-                        className={cn(
-                          "flex h-8 w-8 items-center justify-center rounded-lg",
-                          k.tint,
-                        )}
-                      >
-                        <k.icon className="h-4 w-4" />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-[13px] font-medium text-stone-700">
-                          {k.name}
-                        </span>
-                        <span className="block text-[11px] text-stone-400">
-                          在知识库中查看 · 包含 {k.n} 个文档
-                        </span>
-                      </span>
-                      <ChevronRight className="h-4 w-4 text-stone-300" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-auto flex items-center gap-2 border-t border-[#f0eadf] p-4">
-                <button
-                  onClick={() => shareAgent(current.id)}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-[#ece6db] bg-white py-2.5 text-[13px] font-medium text-stone-600 transition hover:border-[#e0b79c]"
-                >
-                  <Share2 className="h-4 w-4" /> 分享智能体
-                </button>
-                <button
-                  onClick={() => void startChat(current.id)}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-orange-400 to-red-500 py-2.5 text-[13px] font-medium text-white shadow-sm transition hover:brightness-105"
-                >
-                  <MessageCircle className="h-4 w-4" /> 开始对话
-                </button>
-              </div>
-            </aside>
-          )}
-
-          {!detailOpen && (
-            <button
-              onClick={() => setDetailOpen(true)}
-              title="展开详情"
-              className="hidden w-8 shrink-0 flex-col items-center justify-center rounded-2xl border border-[#ece6db] bg-white text-stone-400 transition hover:text-stone-700 xl:flex"
-            >
-              <ChevronRight className="h-4 w-4 rotate-180" />
-            </button>
-          )}
         </div>
       </main>
+
 
       {/* 创建智能体 */}
       {pipelineOpen && (
@@ -915,7 +494,7 @@ export default function AgentsPage() {
             setCustom(loadCustomAgents());
             setSelected(a.id);
             setDetailOpen(true);
-            setTab("自定义");
+            setTab("工作");
           }}
         />
       )}
