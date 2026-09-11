@@ -292,63 +292,89 @@ export default function SkillsPage() {
 
           {list.length === 0 && <p className="mt-10 text-[13px] text-stone-500">没有匹配的技能。</p>}
 
-          <div className="mt-6 grid gap-5 pb-16 sm:grid-cols-2 xl:grid-cols-3">
-            {list.map((s) => {
-              const prog = progressOf(s.key);
-              const Icon = ICONS[s.key] ?? Sparkles;
-              const cover = COVERS[s.key];
+          <div className="mt-6 space-y-10 pb-16">
+            {(cat === "全部" && !q.trim() ? (["写作", "演示", "视觉"] as SkillCat[]) : [null]).map((section) => {
+              const rows = section ? list.filter((x) => x.cat === section) : list;
+              if (rows.length === 0) return null;
               return (
-                <article
-                  key={s.key}
-                  className="group flex flex-col overflow-hidden rounded-[26px] border border-stone-200/80 bg-white shadow-[0_10px_30px_-22px_rgba(76,29,149,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-24px_rgba(196,92,42,0.45)]"
-                >
-                  <div className="relative h-[132px] overflow-hidden bg-[#fbf3ec]">
-                    {cover ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={cover} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]" />
-                    ) : (
-                      <div className="flex h-full items-center justify-center">
-                        <Icon className="h-10 w-10 text-[#e07a2f]/70" />
-                      </div>
-                    )}
-                    <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] text-stone-600 backdrop-blur">
-                      {s.cat}
-                    </span>
-                  </div>
-                  <div className="flex flex-1 flex-col p-5">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#fbf3ec] text-[#e07a2f]">
-                        <Icon className="h-5 w-5" />
-                      </span>
-                      <h2 className="text-[18px] font-semibold text-stone-900">{s.label}</h2>
-                    </div>
-                    <p className="mt-3 min-h-[64px] text-[13px] leading-6 text-stone-500">{s.desc}</p>
-                    <p className="mt-1 text-[12px] text-[#c45c2a]">{SAMPLES[s.key] ?? "自定义产出"}</p>
-                    <div className="mt-4 flex items-center gap-3">
-                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-stone-100">
-                        <div className="h-full rounded-full bg-[#e07a2f]" style={{ width: `${Math.max(prog.pct, 6)}%` }} />
-                      </div>
-                      <span className="text-[12px] text-stone-500">{prog.level}</span>
-                    </div>
-                    <p className="mt-1 text-[11px] text-stone-400">本机练习 {prog.uses} 次</p>
-                    <div className="mt-4 flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setOpen(s.key)}
-                        className="flex-1 rounded-full border border-stone-200 py-2 text-[13px] text-stone-700 hover:border-[#e07a2f]"
-                      >
-                        查看详情
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void start(s)}
-                        className="rounded-full bg-[#c45c2a] px-4 py-2 text-[13px] font-semibold text-white"
-                      >
-                        使用
+                <section key={section ?? cat}>
+                  {section && (
+                    <div className="mb-4 flex items-baseline justify-between">
+                      <h2 className="text-[18px] font-bold text-stone-900">{section}</h2>
+                      <button type="button" className="text-[12px] text-stone-400" onClick={() => setCat(section)}>
+                        只看{section} · {rows.length}
                       </button>
                     </div>
+                  )}
+                  <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                    {rows.map((s) => {
+                      const prog = progressOf(s.key);
+                      const Icon = ICONS[s.key] ?? Sparkles;
+                      const cover = COVERS[s.key];
+                      return (
+                        <article
+                          key={s.key}
+                          className="group flex flex-col overflow-hidden rounded-[26px] border border-stone-200/80 bg-white shadow-[0_10px_30px_-22px_rgba(76,29,149,0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-24px_rgba(196,92,42,0.45)]"
+                        >
+                          <div className="relative h-[132px] overflow-hidden bg-[#fbf3ec]">
+                            {cover ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={cover} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]" />
+                            ) : (
+                              <div className="flex h-full items-center justify-center">
+                                <Icon className="h-10 w-10 text-[#e07a2f]/70" />
+                              </div>
+                            )}
+                            <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] text-stone-600 backdrop-blur">
+                              {s.cat} · {MODE_TAG[s.mode]}
+                            </span>
+                            <button
+                              type="button"
+                              aria-label="收藏"
+                              onClick={() => toggleFav(s.key)}
+                              className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-stone-400"
+                            >
+                              <Heart className={`h-4 w-4 ${fav.includes(s.key) ? "fill-[#c45c2a] text-[#c45c2a]" : ""}`} />
+                            </button>
+                          </div>
+                          <div className="flex flex-1 flex-col p-5">
+                            <div className="flex items-center gap-3">
+                              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#fbf3ec] text-[#e07a2f]">
+                                <Icon className="h-5 w-5" />
+                              </span>
+                              <h3 className="text-[18px] font-semibold text-stone-900">{s.label}</h3>
+                            </div>
+                            <p className="mt-3 min-h-[64px] text-[13px] leading-6 text-stone-500">{s.desc}</p>
+                            <p className="mt-1 text-[12px] text-[#c45c2a]">{SAMPLES[s.key] ?? "自定义产出"}</p>
+                            <div className="mt-4 flex items-center gap-3">
+                              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-stone-100">
+                                <div className="h-full rounded-full bg-[#e07a2f]" style={{ width: `${Math.max(prog.pct, 6)}%` }} />
+                              </div>
+                              <span className="text-[12px] text-stone-500">{prog.level}</span>
+                            </div>
+                            <p className="mt-1 text-[11px] text-stone-400">本机练习 {prog.uses} 次</p>
+                            <div className="mt-4 flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setOpen(s.key)}
+                                className="flex-1 rounded-full border border-stone-200 py-2 text-[13px] text-stone-700 hover:border-[#e07a2f]"
+                              >
+                                查看详情
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => void start(s)}
+                                className="rounded-full bg-[#c45c2a] px-4 py-2 text-[13px] font-semibold text-white"
+                              >
+                                使用
+                              </button>
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })}
                   </div>
-                </article>
+                </section>
               );
             })}
           </div>
