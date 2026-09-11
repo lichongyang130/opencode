@@ -1,19 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   Bell,
   Folder,
-  Home,
   Info,
   MessageSquare,
   Search,
-  Settings,
   Share2,
-  Star,
-  Users,
 } from "lucide-react";
+import { ShellSidebar } from "@/components/mockup/ShellSidebar";
 import { toast } from "@/lib/store/toast";
 import { Toaster } from "@/components/Toaster";
 import {
@@ -28,11 +24,6 @@ import { KbFormModal } from "@/components/knowledge/KbFormModal";
 import { readJSON, writeJSON } from "@/lib/safe-storage";
 
 const FAV_KEY = "oc:kb.fav";
-
-const GROUPS: { id: string; label: string; match: (r: KbRow) => boolean }[] = [
-  { id: "product", label: "产品中心", match: (r) => ["kb-prod", "kb-market", "kb-case", "kb-marketing"].includes(r.id) || r.tags.includes("产品") },
-  { id: "rd", label: "研发中心", match: (r) => ["kb-tech", "kb-deploy"].includes(r.id) || r.tags.includes("技术") },
-];
 
 const FOLDERS: Record<string, { name: string; count: number }[]> = {
   "kb-prod": [
@@ -62,9 +53,7 @@ const MEMBERS = [
 const MAIN_TABS = ["文档", "成员", "应用"] as const;
 
 export default function KnowledgePage() {
-  const router = useRouter();
   const [rows, setRows] = useState<KbRow[]>([]);
-  const [nav, setNav] = useState<"all" | "product" | "rd" | "team" | "fav">("product");
   const [selectedId, setSelectedId] = useState("kb-prod");
   const [mainTab, setMainTab] = useState<(typeof MAIN_TABS)[number]>("文档");
   const [q, setQ] = useState("");
@@ -144,61 +133,7 @@ export default function KnowledgePage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#f7f1e8] text-stone-800">
-      <aside className="flex w-[220px] shrink-0 flex-col border-r border-[#efe6d8] bg-[#f4eee4] px-3 py-5">
-        <button type="button" onClick={() => router.push("/")} className="mb-6 flex items-center gap-2 px-2 text-left">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-red-500 text-[13px] font-bold text-white">
-            O
-          </span>
-          <span className="text-[16px] font-semibold">OpenCanvas</span>
-        </button>
-        <nav className="flex flex-col gap-0.5 text-[13.5px]">
-          <button type="button" onClick={() => router.push("/")} className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-stone-600 hover:bg-white/70">
-            <Home className="h-4 w-4" /> 首页
-          </button>
-          <button
-            type="button"
-            onClick={() => setNav("all")}
-            className={`mt-2 flex items-center justify-between rounded-xl px-3 py-2 ${nav === "all" ? "bg-[#f3ddd0] text-[#c45c2a]" : "text-stone-600 hover:bg-white/70"}`}
-          >
-            <span className="flex items-center gap-2.5">
-              <Folder className="h-4 w-4" /> 所有知识库
-            </span>
-            <span className="text-[12px] text-stone-400">{rows.length}</span>
-          </button>
-          {GROUPS.map((g) => {
-            const n = rows.filter(g.match).length;
-            const id = g.id as "product" | "rd";
-            return (
-              <button
-                key={g.id}
-                type="button"
-                onClick={() => setNav(id)}
-                className={`ml-5 flex items-center justify-between rounded-xl px-3 py-2 ${nav === id ? "bg-[#f3ddd0] text-[#c45c2a]" : "text-stone-500 hover:bg-white/70"}`}
-              >
-                {g.label}
-                <span className="text-[12px] text-stone-400">{n}</span>
-              </button>
-            );
-          })}
-          <button
-            type="button"
-            onClick={() => setNav("team")}
-            className={`mt-3 flex items-center gap-2.5 rounded-xl px-3 py-2 ${nav === "team" ? "bg-[#f3ddd0] text-[#c45c2a]" : "text-stone-600 hover:bg-white/70"}`}
-          >
-            <Users className="h-4 w-4" /> 团队空间
-          </button>
-          <button
-            type="button"
-            onClick={() => setNav("fav")}
-            className={`flex items-center gap-2.5 rounded-xl px-3 py-2 ${nav === "fav" ? "bg-[#f3ddd0] text-[#c45c2a]" : "text-stone-600 hover:bg-white/70"}`}
-          >
-            <Star className="h-4 w-4" /> 收藏
-          </button>
-        </nav>
-        <button type="button" onClick={() => router.push("/settings")} className="mt-auto flex items-center gap-2.5 rounded-xl px-3 py-2 text-[13.5px] text-stone-500 hover:bg-white/70">
-          <Settings className="h-4 w-4" /> 设置
-        </button>
-      </aside>
+      <ShellSidebar active="knowledge" />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex shrink-0 items-center gap-6 border-b border-[#efe6d8] bg-[#fbf8f2] px-6 py-3">
