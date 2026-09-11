@@ -1239,6 +1239,8 @@ export const useChatStore = create<ChatState>((set, get) => {
       }
       // 能力开关 / 附件作为附加系统指令（不污染用户气泡里显示的原文）
       const extras: string[] = [];
+      const skillCtx = readJSON<{ system?: string }>("oc:skills.context", {});
+      if (skillCtx.system) extras.push(skillCtx.system);
       if (opts?.deep) extras.push(DEEP_THINK_PROMPT);
       if (opts?.attachment?.content) {
         const body = opts.attachment.content.slice(0, 12000);

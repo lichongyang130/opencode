@@ -1203,6 +1203,12 @@ export function ChatPanel() {
       removeKey("oc:experts.launch");
       inputRef.current?.focus();
     }
+    const skill = readJSON<{ text?: string; label?: string; ts?: number }>("oc:skills.launch", {});
+    if (skill.text && skill.ts && Date.now() - skill.ts < 30_000) {
+      setInput(skill.text);
+      removeKey("oc:skills.launch");
+      inputRef.current?.focus();
+    }
   }, [activeId]);
 
   const applyChip = (chip: PromptChip) => {
@@ -1656,6 +1662,13 @@ export function ChatPanel() {
             </div>
           ) : (
             <div className="space-y-5">
+              {readJSON<{ label?: string }>("oc:skills.context", {}).label && (
+                <div className="flex justify-center">
+                  <span className="rounded-full bg-[#fbf3ec] px-3 py-1 text-[12px] text-[#c45c2a]">
+                    技能 · {readJSON<{ label?: string }>("oc:skills.context", {}).label}
+                  </span>
+                </div>
+              )}
               {mode === "chat" && convo?.personaId && convo.personaId !== "none" && (
                 <div className="flex flex-wrap items-center justify-center gap-2 text-[12px]">
                   <span className="rounded-full bg-[#fbf3ec] px-3 py-1 text-[#c45c2a]">

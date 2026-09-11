@@ -17,6 +17,7 @@ import { Sidebar } from "@/components/workspace/Sidebar";
 import { useChatStore, type WorkspaceMode } from "@/lib/store/chat";
 import { toast } from "@/lib/store/toast";
 import { Toaster } from "@/components/Toaster";
+import { readJSON, writeJSON } from "@/lib/safe-storage";
 
 type Cat = "写作" | "演示" | "视觉";
 type Level = "精通" | "进阶" | "入门";
@@ -31,6 +32,8 @@ const SKILLS: {
   icon: LucideIcon;
   level: Level;
   pct: number;
+  system: string;
+  draft: string;
 }[] = [
   {
     key: "copy",
@@ -46,6 +49,9 @@ const SKILLS: {
     icon: PenLine,
     level: "精通",
     pct: 92,
+    system:
+      "【技能：文案写作】你是爆款文案教练。先问对象与渠道，再给多版标题和钩子-利益-行动正文。禁止编造客户评价与未验证功效。",
+    draft: "帮我给一款降噪耳机写 3 个小红书标题，并选一条写成种草正文。",
   },
   {
     key: "speech",
@@ -61,6 +67,9 @@ const SKILLS: {
     icon: Mic,
     level: "进阶",
     pct: 68,
+    system:
+      "【技能：演讲技巧】你是演讲教练。把稿子改成能讲的节奏：开场、强攻页、带过页、收束与可能被追问的三题。控制时间，不堆装饰页。",
+    draft: "帮我把「对话即成品」改成 12 分钟路演口播，标出停顿和翻页。",
   },
   {
     key: "ui",
@@ -76,6 +85,9 @@ const SKILLS: {
     icon: Layout,
     level: "精通",
     pct: 46,
+    system:
+      "【技能：界面设计】你是交互与界面顾问。先流程和状态，再视觉。输出页面清单与空态，不把未提供的像素稿当成已开发。",
+    draft: "帮我画「团队周报」后台的关键路径：列表、编辑、空态。",
   },
   {
     key: "video",
@@ -91,6 +103,9 @@ const SKILLS: {
     icon: Clapperboard,
     level: "精通",
     pct: 58,
+    system:
+      "【技能：视频编辑】你是分镜与口播教练。先脚本再镜头：时长、画面、旁白、字幕。不承诺未拍摄素材已成片。",
+    draft: "为新款降噪耳机写一条 15 秒带货分镜，含字幕。",
   },
   {
     key: "data",
@@ -106,6 +121,9 @@ const SKILLS: {
     icon: BarChart3,
     level: "进阶",
     pct: 54,
+    system:
+      "【技能：数据分析】你是指标口径教练。先定义再结论。未知数据标待核实，禁止编造统计显著。",
+    draft: "帮我定义「周活跃」口径，并给三周对比该怎么画。",
   },
   {
     key: "pm",
@@ -121,6 +139,9 @@ const SKILLS: {
     icon: Calendar,
     level: "进阶",
     pct: 50,
+    system:
+      "【技能：项目管理】你是交付教练。里程碑、依赖、风险、负责人。缓冲公开，不编造完成度。",
+    draft: "把「技能页改版」切成 4 个里程碑，标黄灯风险。",
   },
 ];
 
@@ -143,12 +164,22 @@ export default function SkillsPage() {
   }, [q, cat]);
 
   const current = SKILLS.find((x) => x.key === open) ?? null;
+  const tried = readJSON<Record<string, boolean>>("oc:skills.tried", {});
 
-  const start = async (mode: WorkspaceMode, label: string, hint?: string) => {
-    const id = await newConversation(mode);
+  const start = async (s: (typeof SKILLS)[number]) => {
+    const tried = readJSON<Record<string, boolean>>("oc:skills.tried", {});
+    writeJSON("oc:skills.tried", { ...tried, [s.key]: true });
+    writeJSON("oc:skills.launch", {
+      text: s.draft,
+      system: s.system,
+      label: s.label,
+      ts: Date.now(),
+    });
+    writeJSON("oc:skills.context", { system: s.system, label: s.label, ts: Date.now() });
+    const id = await newConversation(s.mode);
     await selectConversation(id);
-    toast(`已打开「${label}」技能`, "success");
-    router.push(hint ? `/chat?skill=${encodeURIComponent(label)}` : "/chat");
+    toast(`已带上「${s.label}」技能提示词`, "success");
+    router.push("/chat");
   };
 
   return (
@@ -205,10 +236,14 @@ export default function SkillsPage() {
               <p className="mt-3 min-h-[72px] text-[13px] leading-6 text-stone-500">{s.desc}</p>
               <div className="mt-3 flex items-center gap-3">
                 <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-stone-100">
-                  <div className="h-full rounded-full bg-[#e07a2f]" style={{ width: `${s.pct}%` }} />
+                  <div
+                    className="h-full rounded-full bg-[#e07a2f]"
+                    style={{ width: `${tried[s.key] ? Math.max(s.pct, 20) : Math.round(s.pct * 0.35)}%` }}
+                  />
                 </div>
-                <span className="text-[12px] text-stone-500">{s.level}</span>
+                <span className="text-[12px] text-stone-500">示例完成度</span>
               </div>
+              <p className="mt-1 text-[11px] text-stone-400">示意目录进度，不是真实熟练度{tried[s.key] ? " · 已试用" : ""}</p>
               <button
                 type="button"
                 onClick={() => setOpen(s.key)}
